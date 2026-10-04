@@ -4,11 +4,11 @@
 // - 무슨 일이 생겼는지(events)를 돌려준다 → "자리를 비운 동안" 요약과 알림 예측에 쓴다.
 import {
   SPEEDS, PER_HOUR_AWAKE, PER_HOUR_ASLEEP, MOOD_PER_POOP_PER_HOUR, HEALTH_PER_HOUR, BUSY_FACTOR,
-  POOP, CLEAN, SICK, SNACK_BINGE, NAP_MIN, NAP_ENERGY_PER_HOUR, ACTIONS, STAGE_MIN, BRANCH, MISTAKE, CALL, DEFAULT_SETTINGS,
-} from "./rules.js?v=4539d03-1791117312";
-import { clampStat } from "./state.js?v=4539d03-1791117312";
-import { nextRandom, randomInt } from "./rng.js?v=4539d03-1791117312";
-import { isSleepTime, isBusyTime } from "./daytime.js?v=4539d03-1791117312";
+  POOP, CLEAN, SICK, SNACK_BINGE, NAP_MIN, NAP_ENERGY_PER_HOUR, ACTIONS, STAGE_MIN, BRANCH, MISTAKE, CALL, DEFAULT_SETTINGS, ENDING, SECRET,
+} from "./rules.js?v=922cf11-1791119342";
+import { clampStat } from "./state.js?v=922cf11-1791119342";
+import { nextRandom, randomInt } from "./rng.js?v=922cf11-1791119342";
+import { isSleepTime, isBusyTime } from "./daytime.js?v=922cf11-1791119342";
 
 const MINUTE = 60000;
 const NEXT_STAGE = { egg: "baby", baby: "child", child: "teen", teen: "adult" };
@@ -32,8 +32,10 @@ function growUp(pet, ts, events) {
   if (from === "child") {
     branch = pet.mistakes.stage <= BRANCH.childGoodMaxMistakes ? "good" : "normal";
   } else if (from === "teen") {
-    if (pet.branch === "good") branch = pet.counts.plays >= pet.counts.snacks ? "A" : "B";
+    if (pet.mistakes.total <= SECRET.maxMistakes && (pet.pats || 0) >= SECRET.minPats) branch = "S"; // 숨은 어른
+    else if (pet.branch === "good") branch = pet.counts.plays >= pet.counts.snacks ? "A" : "B";
     else branch = pet.mistakes.stage <= BRANCH.teenFreeMaxMistakes ? "C" : "D";
+    pet.lifespan = randomInt(pet, ENDING.classicLifeMin[0], ENDING.classicLifeMin[1]);
   }
   pet.stage = to;
   pet.branch = branch;
@@ -41,6 +43,44 @@ function growUp(pet, ts, events) {
   pet.mistakes.stage = 0;
   pet.counts = { plays: 0, snacks: 0 };
   events.push({ t: ts, type: from === "egg" ? "hatch" : "evolve", stage: to, branch });
+}
+
+// 어른이 떠나는 시점(게임 분, 어른 단계 기준). 끝 방식을 도중에 바꾸면 적어도 하루는 더 함께한다.
+export function departureAt(pet, mode) {
+  if (pet.stage !== "adult") return null;
+  let at = mode === "journey" ? ENDING.journeyAdultMin : mode === "classic" ? pet.lifespan || ENDING.classicLifeMin[0] : null;
+  if (at === null) return null;
+  const sw = pet.endSwitch;
+  if (sw && sw.mode === mode && sw.stage === "adult") at = Math.max(at, sw.at + ENDING.switchGraceMin);
+  return at;
+}
+
+function endPet(pet, ts, type, events) {
+  pet.ended = { type, at: ts };
+  events.push({ t: ts, type: "ended", how: type });
+}
+
+function checkEnding(pet, ts, settings, events, dGame) {
+  const mode = settings.endMode || "journey";
+  const s = pet.stats;
+  // 방치: 건강 0
+  if (s.health <= 0) {
+    if (pet.zeroHealthMin === 0) events.push({ t: ts, type: "danger" });
+    pet.zeroHealthMin += dGame;
+    if (mode === "forever") {
+      if (!pet.sick) { pet.sick = true; events.push({ t: ts, type: "sick" }); }
+      pet.medsNeeded = Math.max(pet.medsNeeded, 2); // 앓아누움: 약 두 번
+    } else if (pet.zeroHealthMin >= ENDING.neglectMin) {
+      endPet(pet, ts, mode === "classic" ? "star" : "runaway", events);
+      return;
+    }
+  } else pet.zeroHealthMin = 0;
+  // 수명·여행
+  const dep = departureAt(pet, mode);
+  if (dep !== null) {
+    if (!pet.farewellWarned && pet.stageMin >= dep - ENDING.warnBeforeMin) { pet.farewellWarned = true; events.push({ t: ts, type: "farewellSoon", how: mode }); }
+    if (pet.stageMin >= dep) endPet(pet, ts, mode === "classic" ? "star" : "journey", events);
+  }
 }
 
 // 실제 1분(ts부터 ts+1분까지)을 계산한다.
@@ -70,7 +110,7 @@ export function tickMinute(pet, ts, settings = DEFAULT_SETTINGS, events = []) {
     pet.lightOn = true;
     events.push({
       t: ts, type: "wake",
-      pending: { hunger: s.hunger, mood: s.mood, poops: pet.poops, sick: pet.sick },
+      pending: { hunger: s.hunger, mood: s.mood, poops: pet.poops, sick: pet.sick, health: s.health },
     });
   }
 
@@ -145,12 +185,13 @@ export function tickMinute(pet, ts, settings = DEFAULT_SETTINGS, events = []) {
   if (t.sick > MISTAKE.sickGraceMin && !fl.sickMistake) { fl.sickMistake = true; addMistake(pet, ts, "sick", events); }
 
   growUp(pet, ts, events);
+  if (!pet.ended) checkEnding(pet, ts, settings, events, dGame);
   return events;
 }
 
 // now까지 밀린 시간을 모두 계산한다. 시계가 뒤로 가면 아무것도 안 한다(두 번 세지 않음).
 export function advance(pet, now, settings = DEFAULT_SETTINGS, events = []) {
-  while (pet.lastTickAt + MINUTE <= now) {
+  while (pet.lastTickAt + MINUTE <= now && !pet.ended) {
     tickMinute(pet, pet.lastTickAt, settings, events);
     pet.lastTickAt += MINUTE;
   }
@@ -162,6 +203,7 @@ export function advance(pet, now, settings = DEFAULT_SETTINGS, events = []) {
 
 function begin(pet, now, settings) {
   const events = advance(pet, now, settings);
+  if (pet.ended) return { ok: false, reason: "ended", events };
   if (pet.stage === "egg") return { ok: false, reason: "egg", events };
   if (pet.asleep) return { ok: false, reason: "asleep", events };
   return { ok: true, events };
@@ -249,4 +291,27 @@ export function giveMedicine(pet, now, settings = DEFAULT_SETTINGS) {
   if (pet.medsNeeded <= 0) { pet.sick = false; pet.medsNeeded = 0; }
   clampAll(pet);
   return r;
+}
+
+// 쓰다듬기: 수치는 그대로, 횟수만 센다(숨은 어른 조건). 1분에 최대 3번까지만 센다.
+export function patPet(pet, now, settings = DEFAULT_SETTINGS) {
+  const events = advance(pet, now, settings);
+  if (pet.ended || pet.stage === "egg") return { ok: false, events };
+  const minute = Math.floor(now / MINUTE);
+  if (pet.patMinute !== minute) { pet.patMinute = minute; pet.patInMinute = 0; }
+  if (pet.patInMinute < 3) { pet.patInMinute++; pet.pats = (pet.pats || 0) + 1; }
+  return { ok: true, events, pats: pet.pats };
+}
+
+// 끝 방식 바꾸기: 지금부터 적용(적어도 하루는 더 함께)
+export function switchEndMode(pet, mode, now, settings) {
+  advance(pet, now, settings);
+  pet.endSwitch = { mode, stage: pet.stage, at: pet.stageMin };
+  pet.farewellWarned = false;
+}
+
+// "계속 살기"에서 직접 마무리하고 새 알 받기
+export function retirePet(pet, now, settings) {
+  advance(pet, now, settings);
+  if (!pet.ended) pet.ended = { type: "retired", at: now };
 }

@@ -2,8 +2,38 @@
 // 메시지는 Declarative Web Push 형식({ web_push: 8030, notification: {...} }).
 // iOS 18.4+는 이 JSON만으로도 알림을 띄우고, 여기서 다시 띄우면 그걸로 바꿔 보여 준다.
 // 주의(iPhone): 푸시를 받고 알림을 안 띄우면 구독이 취소된다. 어떤 경우에도 반드시 showNotification 한다.
+// 오프라인 실행: 인터넷이 되면 항상 서버에서 새로 받고(새 버전이 바로 뜨게), 안 되면 저장해 둔 것을 쓴다.
+const CACHE = "pocket-pet-v1";
+const MAX_ENTRIES = 150;
+
 self.addEventListener("install", () => self.skipWaiting());
-self.addEventListener("activate", (e) => e.waitUntil(self.clients.claim()));
+self.addEventListener("activate", (e) => e.waitUntil((async () => {
+  for (const k of await caches.keys()) if (k !== CACHE) await caches.delete(k);
+  await self.clients.claim();
+})()));
+
+async function trim(cache) {
+  const keys = await cache.keys();
+  for (let i = 0; i < keys.length - MAX_ENTRIES; i++) await cache.delete(keys[i]); // 오래된 것부터
+}
+
+self.addEventListener("fetch", (event) => {
+  const req = event.request;
+  const url = new URL(req.url);
+  if (req.method !== "GET" || url.origin !== self.location.origin) return; // 알림 서버 등 바깥 요청은 그대로
+  event.respondWith((async () => {
+    const cache = await caches.open(CACHE);
+    try {
+      const res = await fetch(req, { cache: "no-store" });
+      if (res.ok) { await cache.put(req, res.clone()); trim(cache); }
+      return res;
+    } catch {
+      const hit = await cache.match(req) || (req.mode === "navigate" ? await cache.match(req, { ignoreSearch: true }) || await cache.match(new URL("./", self.registration.scope).href) || await cache.match(new URL("./index.html", self.registration.scope).href) : null);
+      if (hit) return hit;
+      return new Response("오프라인이에요", { status: 503, headers: { "content-type": "text/plain; charset=utf-8" } });
+    }
+  })());
+});
 
 self.addEventListener("push", (event) => {
   let data = {};

@@ -1,7 +1,7 @@
 // 펫 상태의 단일 정의. 화면·저장 코드는 이 모양만 믿어요.
-import { SPEEDS, POOP } from "./rules.js?v=4539d03-1791117312";
+import { SPEEDS, POOP } from "./rules.js?v=922cf11-1791119342";
 
-export const SAVE_VERSION = 2;
+export const SAVE_VERSION = 3;
 
 export const STAT_KEYS = ["hunger", "mood", "clean", "energy", "health"];
 export const STAT_MIN = 0;
@@ -46,5 +46,26 @@ export function createPet({ now, seed = 1, theme = "animal", name = "", speed = 
     mistakes: { total: 0, stage: 0 },
     counts: { plays: 0, snacks: 0 }, // 이번 단계
     snackTimes: [], // 최근 간식 시각(게임 분)
+    pats: 0, // 평생 쓰다듬은 횟수(숨은 어른 조건)
+    zeroHealthMin: 0, // 건강 0인 채로 지난 게임 분
+    lifespan: null, // 원작 방식 어른 수명(게임 분), 어른이 될 때 정해짐
+    endSwitch: null, // { mode, stage, at } 끝 방식을 바꾼 시점
+    farewellWarned: false,
+    ended: null, // { type: journey|runaway|star|retired, at }
   };
+}
+
+// 옛 저장을 새 모양으로(펫을 버리지 않는다)
+export function migratePet(pet) {
+  if (!pet || typeof pet !== "object") return null;
+  if (pet.version === 2) {
+    pet.pats = pet.pats || 0;
+    pet.zeroHealthMin = pet.zeroHealthMin || 0;
+    pet.lifespan = pet.lifespan ?? null;
+    pet.endSwitch = pet.endSwitch ?? null;
+    pet.farewellWarned = !!pet.farewellWarned;
+    pet.ended = pet.ended ?? null;
+    pet.version = 3;
+  }
+  return pet.version === SAVE_VERSION ? pet : null;
 }

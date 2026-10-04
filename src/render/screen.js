@@ -1,9 +1,9 @@
 // 방 화면 그리기. 게임 규칙은 모르고 받은 상태만 그린다.
 // 캔버스는 "도트 해상도"로 그리고 CSS가 정수배로 키운다.
-import { PALETTE } from "./palette.js?v=4539d03-1791117312";
-import { SPRITES, drawSprite, spriteSize } from "./sprites.js?v=4539d03-1791117312";
-import { buildCreature, paintGrid, formKey } from "./creature.js?v=4539d03-1791117312";
-import { drawFace } from "./face.js?v=4539d03-1791117312";
+import { PALETTE } from "./palette.js?v=922cf11-1791119342";
+import { SPRITES, drawSprite, spriteSize } from "./sprites.js?v=922cf11-1791119342";
+import { buildCreature, paintGrid, formKey } from "./creature.js?v=922cf11-1791119342";
+import { drawFace } from "./face.js?v=922cf11-1791119342";
 
 const FLOOR = "#f5b98c";
 const FLOOR_LINE = "#e9a274";
@@ -62,7 +62,7 @@ export function drawRoom(ctx, { w, h, now, scene, f }) {
   const fr = f || { pose: { dx: 0, dy: 0, sx: 1, sy: 1, eyes: null, mouth: null, facing: 1 }, props: [], texts: [], fx: [], darkness: sc.lightOn === false ? 0.62 : sc.asleep ? 0.18 : 0, flash: 0 };
   const baseY = rugY + 4;
   const poopRects = drawPoops(ctx, sc.poopSlots || [], { cx, rugY, w, pop: fr.poopPop || 0 });
-  const box = drawPet(ctx, sc, fr, { cx, baseY, now });
+  const box = fr.hidePet ? null : drawPet(ctx, sc, fr, { cx, baseY, now });
   const px = cx + Math.round(fr.pose.dx);
   for (const pr of fr.props) {
     const sp = SPRITES[pr.sprite]; if (!sp || pr.alpha <= 0) continue;
@@ -171,7 +171,7 @@ function drawPet(ctx, scene, fr, { cx, baseY, now }) {
   ctx.fillStyle = "rgba(59,44,53,0.18)";
   const shw = Math.round(built.P.rx * 2 * CELL * (1 - Math.min(0.5, -pose.dy / 30)));
   ctx.fillRect(Math.round(cx + pose.dx - shw / 2), baseY - 1, shw, 3);
-  const box = paintGrid(ctx, built.g, x, base, CELL, { tint: scene.sick && !fr.silhouette ? "rgba(150,210,150,0.22)" : null });
+  const box = paintGrid(ctx, built.g, x, base, CELL, { alpha: fr.petAlpha ?? 1, tint: scene.sick && !fr.silhouette ? "rgba(150,210,150,0.22)" : null });
   if (faceInfo) {
     // 눈물
     if (pose.tears) {

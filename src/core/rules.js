@@ -42,6 +42,17 @@ export const ACTIONS = {
 
 // 단계 길이(게임 분)
 export const STAGE_MIN = { egg: 10, baby: 120, child: 1440, teen: 2880 };
+// 끝 방식(GDD 8절). 단위: 게임 분
+export const ENDING = {
+  journeyAdultMin: 7 * 1440, // 여행: 어른 7일 뒤 떠남
+  classicLifeMin: [10 * 1440, 16 * 1440], // 원작: 어른 10~16일 사이 별이 됨
+  neglectMin: 12 * 60, // 건강 0인 채로 12시간이면(여행: 삐져서 떠남, 원작: 별이 됨, 계속 살기: 앓아누움)
+  warnBeforeMin: 1440, // 하루 전 이별 예고
+  switchGraceMin: 1440, // 끝 방식을 바꾸면 적어도 하루는 더 함께
+};
+// 숨은 어른: 평생 돌봄 실수 0 + 쓰다듬기 30번 이상
+export const SECRET = { maxMistakes: 0, minPats: 30 };
+
 export const BRANCH = {
   childGoodMaxMistakes: 1, // 어린이 기간 실수 0~1 → 청소년 좋음
   teenFreeMaxMistakes: 3, // 청소년 보통에서 실수 0~3 → C, 4+ → D

@@ -2,7 +2,7 @@
 // 몸 모양(타원·물방울·구름) + 귀·뿔·날개·꼬리·발·무늬를 도트 격자(칸)에 칠하고,
 // 바깥 테두리와 그림자를 자동으로 입힌다. 자세(늘어남·찌그러짐·바라보는 방향)는 매 프레임 반영된다.
 // 얼굴(표정)은 face.js 가 이 격자 위에 따로 얹는다.
-import { PALETTE } from "./palette.js?v=4539d03-1791117312";
+import { PALETTE } from "./palette.js?v=922cf11-1791119342";
 
 const GW = 64, GH = 50; // 격자 크기(칸): 가장 큰 형태가 통통+늘어남이어도 안 잘리게
 
@@ -187,6 +187,35 @@ export const FORMS = {
     messyTufts(g, P, "W");
   } },
 
+  "animal.adult.S": { name: "별빛 사모예드", secret: true, size: [12.5, 10.5], draw(g, P) {
+    // 복슬복슬 말린 꼬리
+    ellipse(g, X(P, -P.rx * 0.9), P.cy - P.ry * 0.5, 3.8, 3.6, "w"); ellipse(g, X(P, -P.rx * 0.9), P.cy - P.ry * 0.5, 1.6, 1.5, "S");
+    ellipse(g, P.cx, P.cy, P.rx, P.ry, "w", { shade: "S" });
+    for (let i = 0; i < 16; i++) { const a = (i / 16) * Math.PI * 2; put(g, P.cx + Math.cos(a) * (P.rx + 0.7), P.cy + Math.sin(a) * (P.ry + 0.7), i % 2 ? "w" : "S"); } // 솜털 테두리
+    feet(g, P, "S", 0.5, 2.4);
+    for (const s of [-1, 1]) {
+      tri(g, [X(P, s * P.rx * 0.3), P.cy - P.ry * 0.75], [X(P, s * P.rx * 0.8), P.cy - P.ry * 0.6], [X(P, s * P.rx * 0.6), P.cy - P.ry * 1.35], "w");
+      put(g, X(P, s * P.rx * 0.58), P.cy - P.ry * 1.0, P.spot);
+    }
+    // 이마의 금빛 별
+    const sx = P.cx, sy = P.cy - P.ry * 0.62;
+    for (const [dx, dy] of [[0, -1], [-1, 0], [0, 0], [1, 0], [0, 1]]) put(g, sx + dx, sy + dy, "Y");
+  } },
+  "fantasy.adult.S": { name: "별 유니콘", secret: true, size: [12.5, 10], draw(g, P) {
+    // 무지개 꼬리
+    ["p", "v", "b"].forEach((c, i) => ellipse(g, X(P, -P.rx * (1.0 + i * 0.12)), P.cy + P.ry * (0.0 + i * 0.2), 2.4, 2.2, c));
+    ellipse(g, P.cx, P.cy, P.rx, P.ry, "w", { shade: "W" });
+    feet(g, P, "v", 0.5, 2.3);
+    // 무지개 갈기(뒤통수)
+    ["p", "y", "b", "v"].forEach((c, i) => ellipse(g, X(P, -P.rx * (0.25 + i * 0.16)), P.cy - P.ry * (0.85 - i * 0.18), 2.2, 2, c));
+    // 귀
+    tri(g, [X(P, P.rx * 0.45), P.cy - P.ry * 0.7], [X(P, P.rx * 0.8), P.cy - P.ry * 0.55], [X(P, P.rx * 0.7), P.cy - P.ry * 1.15], "w");
+    // 금빛 뿔(줄무늬)
+    const hx = X(P, P.rx * 0.12);
+    tri(g, [hx - 1.6, P.cy - P.ry * 0.85], [hx + 1.6, P.cy - P.ry * 0.85], [hx + 0.4 * P.f, P.cy - P.ry * 1.75], "Y");
+    for (const k of [1.05, 1.3]) put(g, hx, P.cy - P.ry * k, "w");
+    put(g, X(P, -P.rx * 0.45), P.cy + P.ry * 0.35, P.spot); put(g, X(P, P.rx * 0.5), P.cy + P.ry * 0.4, P.spot);
+  } },
   // ===== 상상 속 생물 =====
   "fantasy.baby": { name: "말랑이", size: [7.5, 7], draw(g, P) {
     drop(g, P.cx, P.cy, P.rx, P.ry, "v", "V");

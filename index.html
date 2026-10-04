@@ -55,6 +55,27 @@
     .choice { border: 0; border-radius: 18px; background: var(--cream); box-shadow: 0 3px 0 var(--line); padding: 16px; text-align: left; }
     .choice b { display: block; font-size: 17px; margin-bottom: 2px; } .choice span { font-size: 13px; opacity: .75; }
     #name-input { width: 100%; font-size: 18px; text-align: center; margin-bottom: 8px; }
+    #mg { position: absolute; left: 0; right: 0; bottom: 0; background: linear-gradient(transparent, rgba(255,241,228,.96) 30%); padding: 40px 16px calc(env(safe-area-inset-bottom) + 16px); text-align: center; }
+    #mg-text { font-weight: 800; font-size: 17px; margin-bottom: 8px; }
+    #mg-dots { display: flex; gap: 8px; justify-content: center; margin-bottom: 12px; }
+    #mg-dots i { width: 14px; height: 14px; border-radius: 50%; background: var(--line); display: block; }
+    #mg-dots i.hit { background: #4fae7a; } #mg-dots i.miss { background: #ff6b6b; }
+    .mg-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .mg-row button { border: 0; border-radius: 18px; background: var(--deep); color: #fff; font-size: 22px; font-weight: 900; padding: 22px 0; box-shadow: 0 4px 0 #b84d6b; }
+    .mg-row button:active { transform: translateY(3px); box-shadow: 0 1px 0 #b84d6b; }
+    #mg-quit { margin-top: 10px; background: none; border: 0; text-decoration: underline; opacity: .7; }
+    #ending { position: absolute; inset: 0; background: rgba(59,44,53,.45); display: flex; align-items: center; justify-content: center; padding: 20px; }
+    #ending .card { background: #fffaf2; border-radius: 22px; padding: 20px; max-width: 360px; width: 100%; text-align: center; box-shadow: 0 8px 30px rgba(0,0,0,.25); }
+    #ending canvas { width: 112px; height: 92px; image-rendering: pixelated; margin: 4px auto 8px; display: block; }
+    #ending-letter { white-space: pre-line; text-align: left; background: #fff; border: 1px dashed var(--line); border-radius: 12px; padding: 14px; line-height: 1.6; font-size: 15px; }
+    .dex { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .dex figure { margin: 0; background: var(--cream); border-radius: 12px; padding: 6px 2px; text-align: center; font-size: 12px; box-shadow: 0 2px 0 var(--line); }
+    .dex figure.unseen { opacity: .7; }
+    .dex canvas, .pastrow canvas { width: 84px; height: 69px; image-rendering: pixelated; display: block; margin: 0 auto; }
+    .sheet h3 { font-size: 15px; margin: 16px 0 8px; }
+    .pastrow { display: flex; gap: 10px; align-items: center; background: var(--cream); border-radius: 12px; padding: 6px 10px; margin-bottom: 8px; }
+    .pastrow canvas { width: 56px; height: 46px; margin: 0; }
+    #save-code { width: 100%; height: 90px; font: 12px ui-monospace, monospace; border-radius: 10px; border: 1px solid var(--line); padding: 8px; word-break: break-all; }
     [hidden] { display: none !important; }
   </style>
 </head>
@@ -82,8 +103,10 @@
     <div id="backdrop" hidden></div>
     <section class="sheet" data-sheet="menu" hidden>
       <h2>메뉴</h2>
+      <button class="big ghost" data-open="dex">도감</button>
       <button class="big ghost" data-open="notify">알림</button>
       <button class="big ghost" data-open="settings">설정</button>
+      <button class="big ghost" data-open="save">저장 (기기 옮기기)</button>
       <button class="big ghost" data-close>닫기</button>
     </section>
     <section class="sheet" data-sheet="food" hidden>
@@ -102,6 +125,36 @@
       <button class="big ghost" data-close>닫기</button>
     </section>
 
+    <section class="sheet" data-sheet="dex" hidden>
+      <h2>도감</h2>
+      <div id="dex-body"></div>
+      <div id="dex-retire"></div>
+      <button class="big ghost" data-close>닫기</button>
+    </section>
+    <section class="sheet" data-sheet="save" hidden>
+      <h2>저장 (기기 옮기기)</h2>
+      <p class="small">다른 휴대폰이나 홈 화면 앱으로 옮길 때 써요. <b>내보내기</b>로 코드를 복사하고, 옮길 곳에서 코드를 붙여 넣은 뒤 <b>불러오기</b>를 눌러요.</p>
+      <button class="big" id="btn-export">내보내기 (코드 복사)</button>
+      <textarea id="save-code" placeholder="여기에 저장 코드를 붙여 넣으세요"></textarea>
+      <button class="big ghost" id="btn-import">불러오기</button>
+      <p class="small" id="save-msg"></p>
+      <button class="big ghost" data-close>닫기</button>
+    </section>
+    <div id="mg" hidden>
+      <div id="mg-text"></div>
+      <div id="mg-dots"></div>
+      <div class="mg-row"><button id="mg-left" aria-label="왼쪽">◀ 왼쪽</button><button id="mg-right" aria-label="오른쪽">오른쪽 ▶</button></div>
+      <button id="mg-quit">그만하기</button>
+    </div>
+    <div id="ending" hidden>
+      <div class="card">
+        <h2 id="ending-title"></h2>
+        <canvas id="ending-portrait" width="56" height="46"></canvas>
+        <div id="ending-letter"></div>
+        <p class="small dim" id="ending-meta"></p>
+        <button class="big" id="btn-ending">도감에 남기고 새 알 받기</button>
+      </div>
+    </div>
     <div id="start" hidden>
       <div class="step" data-step="theme">
         <h1>어떤 알을 키울까요?</h1>
@@ -128,6 +181,6 @@
       </div>
     </div>
   </div>
-  <script type="module" src="src/main.js?v=4539d03-1791117312"></script>
+  <script type="module" src="src/main.js?v=922cf11-1791119342"></script>
 </body>
 </html>

@@ -6,7 +6,7 @@
 export const DUR = {
   meal: 1800, snack: 1400, play: 2200, wash: 1800, lightOff: 900, lightOn: 700,
   medicine: 1600, refuse: 900, sleepyRefuse: 1000, hatch: 2600, evolve: 3000, pet: 800, poop: 500,
-  greet: 2200, greetBig: 3200, tidy: 700,
+  greet: 2200, greetBig: 3200, tidy: 700, mgLook: 1100, farewell: 3800,
 };
 
 const clamp01 = (x) => Math.max(0, Math.min(1, x));
@@ -21,6 +21,7 @@ export function createAnimator() {
     hop: { at: -1e9, nextAt: 6000 },
     lastT: 0,
     fx: [], // 화면 위치에 붙는 짧은 효과(똥 치우기 연기 등)
+    minigame: false, // 미니게임 중이면 가운데에서 고민하는 자세
   };
 }
 
@@ -55,6 +56,14 @@ export function frame(a, now, scene, { roam = 20 } = {}) {
   a.fx = a.fx.filter((x) => now - x.start < x.dur);
   f.fx = a.fx.map((x) => ({ ...x, t: (now - x.start) / x.dur }));
   const p = f.pose;
+  f.hidePet = false; f.petAlpha = 1;
+  // 떠난 뒤: 펫은 없고 편지(여행) 또는 별(별이 됨)만 남는다
+  if (scene.ended && !(a.cur && a.cur.type === "farewell")) {
+    f.hidePet = true;
+    if (scene.ended === "star") f.props.push({ sprite: "bigStar", x: 0, y: -70 + Math.sin(now / 600) * 3, scale: 2, alpha: 0.6 + Math.sin(now / 300) * 0.4 });
+    else f.props.push({ sprite: "letter", x: 0, y: -2, scale: 2, alpha: 1 });
+    return f;
+  }
   const calm = scene.stage !== "egg" && !scene.asleep && !scene.napping;
   const crying = scene.hunger <= 0 || scene.mood <= 0;
 
@@ -84,6 +93,13 @@ export function frame(a, now, scene, { roam = 20 } = {}) {
   if (calm && scene.mood > 80 && !busy(a, now) && now > a.hop.nextAt) { a.hop.at = now; a.hop.nextAt = now + 7000 + hash(now) * 6000; }
   const ht = (now - a.hop.at) / 450;
   if (ht >= 0 && ht < 1) { p.dy -= Math.sin(ht * Math.PI) * 6; p.eyes = "happy"; }
+
+  // 미니게임 중: 가운데에서 어느 쪽 볼지 고민
+  if (a.minigame && !busy(a, now)) {
+    w.target = 0; w.x += (0 - w.x) * 0.2; p.dx = w.x;
+    p.eyes = Math.floor(now / 700) % 4 === 0 ? "closed" : null; p.mouth = "o";
+    p.sx *= 1 + Math.sin(now / 160) * 0.02;
+  }
 
   // ---- 상태 표현 ----
   if (scene.asleep || scene.napping) {
@@ -274,6 +290,29 @@ function applyOneShot(f, c, t, now, scene) {
         if (ht > 0 && ht < 1) f.props.push({ sprite: "heart", x: (i - (n - 1) / 2) * 12, y: -36 - ht * 30, scale: 2, alpha: 1 - ht });
       }
       if (big && t > 0.3 && t < 0.8) f.texts.push({ text: "!", x: 16, y: -44, alpha: 1, size: 12 });
+      break;
+    }
+    case "mgLook": {
+      // 미니게임: 한쪽으로 휙 → 맞히면 신나고, 틀리면 갸웃
+      const side = c.data.side || 1;
+      p.facing = side; p.dx = side * 10 * ease(t / 0.25);
+      if (t > 0.3) {
+        if (c.data.correct) { p.eyes = "happy"; p.mouth = "bigsmile"; p.dy -= Math.sin(clamp01((t - 0.3) / 0.5) * Math.PI) * 6; f.props.push({ sprite: "sparkle", x: side * 14, y: -34, scale: 2, alpha: 1 - t }); }
+        else { p.mouth = "o"; p.sx *= 1 + Math.sin(t * 20) * 0.03; f.texts.push({ text: "?", x: side * 16, y: -38, alpha: 1 - t * 0.6, size: 11 }); }
+      }
+      break;
+    }
+    case "farewell": {
+      const how = c.data.how;
+      if (how === "star") { // 하늘로 올라가며 사라지고 별이 반짝
+        p.dy -= ease(t) * 70; f.petAlpha = 1 - clamp01((t - 0.4) / 0.5); p.eyes = "happy"; p.mouth = "smile";
+        if (t > 0.6) f.props.push({ sprite: "bigStar", x: 0, y: -70, scale: 2, alpha: clamp01((t - 0.6) / 0.3) });
+      } else { // 손 흔들고(뛰고) 오른쪽으로 걸어 나감, 편지가 남음
+        const walk = clamp01((t - 0.25) / 0.65);
+        if (t < 0.25) { p.dy -= Math.abs(Math.sin(t * 40)) * 3; p.eyes = how === "runaway" ? "closed" : "happy"; p.mouth = how === "runaway" ? "sad" : "smile"; }
+        else { p.facing = 1; p.dx += walk * 140; p.dy -= Math.abs(Math.sin(now / 90)) * 2; p.eyes = how === "runaway" ? "closed" : null; }
+        if (t > 0.3) f.props.push({ sprite: "letter", x: -p.dx, y: -2, scale: 2, alpha: clamp01((t - 0.3) / 0.2) });
+      }
       break;
     }
     case "tidy": {
