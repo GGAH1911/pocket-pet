@@ -5,10 +5,10 @@
 import {
   SPEEDS, PER_HOUR_AWAKE, PER_HOUR_ASLEEP, MOOD_PER_POOP_PER_HOUR, HEALTH_PER_HOUR, BUSY_FACTOR,
   POOP, CLEAN, SICK, SNACK_BINGE, NAP_MIN, NAP_ENERGY_PER_HOUR, ACTIONS, STAGE_MIN, BRANCH, MISTAKE, CALL, DEFAULT_SETTINGS,
-} from "./rules.js?v=0d5f74b-1791117259";
-import { clampStat } from "./state.js?v=0d5f74b-1791117259";
-import { nextRandom, randomInt } from "./rng.js?v=0d5f74b-1791117259";
-import { isSleepTime, isBusyTime } from "./daytime.js?v=0d5f74b-1791117259";
+} from "./rules.js?v=4539d03-1791117312";
+import { clampStat } from "./state.js?v=4539d03-1791117312";
+import { nextRandom, randomInt } from "./rng.js?v=4539d03-1791117312";
+import { isSleepTime, isBusyTime } from "./daytime.js?v=4539d03-1791117312";
 
 const MINUTE = 60000;
 const NEXT_STAGE = { egg: "baby", baby: "child", child: "teen", teen: "adult" };

@@ -1,9 +1,9 @@
 // 방 화면 그리기. 게임 규칙은 모르고 받은 상태만 그린다.
 // 캔버스는 "도트 해상도"로 그리고 CSS가 정수배로 키운다.
-import { PALETTE } from "./palette.js?v=0d5f74b-1791117259";
-import { SPRITES, drawSprite, spriteSize } from "./sprites.js?v=0d5f74b-1791117259";
-import { buildCreature, paintGrid, formKey } from "./creature.js?v=0d5f74b-1791117259";
-import { drawFace } from "./face.js?v=0d5f74b-1791117259";
+import { PALETTE } from "./palette.js?v=4539d03-1791117312";
+import { SPRITES, drawSprite, spriteSize } from "./sprites.js?v=4539d03-1791117312";
+import { buildCreature, paintGrid, formKey } from "./creature.js?v=4539d03-1791117312";
+import { drawFace } from "./face.js?v=4539d03-1791117312";
 
 const FLOOR = "#f5b98c";
 const FLOOR_LINE = "#e9a274";

@@ -1,17 +1,17 @@
 // 부팅 순서는 이 파일 한 곳에서만 정해요.
 // (지난 게임에서 파일 읽는 순서 때문에 저장 기본값이 빠지는 버그가 있었어요.)
 // 순서: 저장 불러오기 → 꺼져 있던 시간 계산 → 화면 시작 → 서비스 워커·알림 확인 → 알림 일정 올리기
-import { createPet } from "./core/state.js?v=0d5f74b-1791117259";
-import { advance, feed, play, wash, cleanPoop, toggleLight, giveMedicine } from "./core/sim.js?v=0d5f74b-1791117259";
-import { predictNotifications } from "./core/notify.js?v=0d5f74b-1791117259";
-import { josa } from "./core/josa.js?v=0d5f74b-1791117259";
-import { drawRoom, drawIcon } from "./render/screen.js?v=0d5f74b-1791117259";
-import { createAnimator, play as playAnim, frame as animFrame, addFx } from "./render/anim.js?v=0d5f74b-1791117259";
-import { formKey, lookOf } from "./render/creature.js?v=0d5f74b-1791117259";
-import { createFacePicker, pickFace } from "./render/face.js?v=0d5f74b-1791117259";
-import { SPRITES } from "./render/sprites.js?v=0d5f74b-1791117259";
-import { loadProfile, saveProfile, freshProfile } from "./app/store.js?v=0d5f74b-1791117259";
-import { deviceInfo, registerSW, enablePush, ensurePush, uploadSchedule, sendTest, serverStatus } from "./app/push.js?v=0d5f74b-1791117259";
+import { createPet } from "./core/state.js?v=4539d03-1791117312";
+import { advance, feed, play, wash, cleanPoop, toggleLight, giveMedicine } from "./core/sim.js?v=4539d03-1791117312";
+import { predictNotifications } from "./core/notify.js?v=4539d03-1791117312";
+import { josa } from "./core/josa.js?v=4539d03-1791117312";
+import { drawRoom, drawIcon } from "./render/screen.js?v=4539d03-1791117312";
+import { createAnimator, play as playAnim, frame as animFrame, addFx } from "./render/anim.js?v=4539d03-1791117312";
+import { formKey, lookOf } from "./render/creature.js?v=4539d03-1791117312";
+import { createFacePicker, pickFace } from "./render/face.js?v=4539d03-1791117312";
+import { SPRITES } from "./render/sprites.js?v=4539d03-1791117312";
+import { loadProfile, saveProfile, freshProfile } from "./app/store.js?v=4539d03-1791117312";
+import { deviceInfo, registerSW, enablePush, ensurePush, uploadSchedule, sendTest, serverStatus } from "./app/push.js?v=4539d03-1791117312";
 
 const clock = { offset: 0, now() { return Date.now() + this.offset; } }; // offset은 개발 도구만 바꾼다
 
@@ -424,7 +424,7 @@ function boot() {
   // 개발 도구(공개 배포에는 없음): ?dev 로 열기
   if (QS.has("dev")) {
     window.__pp = { clock, getProfile: () => profile, tick, anim, playAnim: (n, d) => playAnim(anim, n, performance.now(), d) };
-    import("./dev/panel.js?v=0d5f74b-1791117259").then((m) => m.mount({ clock, getProfile: () => profile, tick, renderStats, syncNow, serverStatus })).catch(() => {});
+    import("./dev/panel.js?v=4539d03-1791117312").then((m) => m.mount({ clock, getProfile: () => profile, tick, renderStats, syncNow, serverStatus })).catch(() => {});
   }
 }
 
