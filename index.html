@@ -3,48 +3,131 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
-  <meta name="theme-color" content="#ffe3cf" />
+  <meta name="theme-color" content="#fff1e4" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="포켓 펫" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="icons/icon-180.png" />
+  <link rel="icon" href="icons/icon-192.png" />
   <title>포켓 펫 (가제)</title>
   <style>
-    :root { --ink: #3b2c35; --cream: #fff7ec; --pink: #ff9fb2; --deep: #e86a8a; --bar: #fff1e4; }
+    :root { --ink: #3b2c35; --cream: #fff7ec; --pink: #ff9fb2; --deep: #e86a8a; --bar: #fff1e4; --line: #e8cdb8; }
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     html, body { margin: 0; height: 100%; background: #ffe3cf; color: var(--ink); font-family: system-ui, -apple-system, "Apple SD Gothic Neo", sans-serif; overscroll-behavior: none; }
-    #app { height: 100dvh; max-width: 520px; margin: 0 auto; display: flex; flex-direction: column; background: var(--bar); }
-    header { display: flex; align-items: center; gap: 10px; padding: calc(env(safe-area-inset-top) + 10px) 16px 10px; background: var(--bar); }
+    button { font: inherit; color: inherit; cursor: pointer; }
+    #app { height: 100dvh; max-width: 520px; margin: 0 auto; display: flex; flex-direction: column; background: var(--bar); position: relative; overflow: hidden; }
+    header { display: flex; align-items: center; gap: 10px; padding: calc(env(safe-area-inset-top) + 10px) 16px 8px; }
     header .name { font-weight: 800; font-size: 18px; }
-    header .sub { font-size: 13px; opacity: .7; }
+    header .sub { font-size: 12px; opacity: .7; }
     header .clock { margin-left: auto; font-weight: 700; font-variant-numeric: tabular-nums; }
-    header .menu { border: 0; background: var(--cream); width: 36px; height: 36px; border-radius: 10px; box-shadow: 0 2px 0 #e8cdb8; font-size: 18px; color: var(--ink); }
+    .iconbtn { border: 0; background: var(--cream); width: 38px; height: 38px; border-radius: 10px; box-shadow: 0 2px 0 var(--line); font-size: 18px; }
     #stage { flex: 1; min-height: 0; display: grid; place-items: center; overflow: hidden; background: #ffe3cf; }
     #room { display: block; image-rendering: pixelated; image-rendering: crisp-edges; }
-    .status { padding: 8px 16px; font-size: 14px; text-align: center; background: var(--bar); }
-    nav { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; padding: 8px 12px calc(env(safe-area-inset-bottom) + 12px); background: var(--bar); }
-    nav button { border: 0; border-radius: 16px; background: var(--cream); box-shadow: 0 3px 0 #e8cdb8; padding: 8px 0 6px; display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--ink); font-size: 12px; font-weight: 700; }
-    nav button:disabled { opacity: .55; }
+    #stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; padding: 8px 12px 0; }
+    .stat { position: relative; background: var(--cream); border-radius: 10px; padding: 4px 0 7px; text-align: center; font-size: 11px; overflow: hidden; box-shadow: 0 2px 0 var(--line); }
+    .stat b { display: block; font-size: 15px; font-variant-numeric: tabular-nums; }
+    .stat i { position: absolute; left: 0; bottom: 0; height: 4px; background: #8fd694; }
+    .stat.mid i { background: #ffd866; } .stat.low i { background: #ff6b6b; } .stat.low b { color: #d64545; }
+    #msg { min-height: 36px; padding: 8px 16px 2px; font-size: 14px; text-align: center; }
+    nav { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; padding: 6px 12px calc(env(safe-area-inset-bottom) + 12px); }
+    nav button { border: 0; border-radius: 16px; background: var(--cream); box-shadow: 0 3px 0 var(--line); padding: 8px 0 6px; display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 12px; font-weight: 700; }
+    nav button:active, .big:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--line); }
     nav canvas { width: 30px; height: 24px; image-rendering: pixelated; }
+    #backdrop { position: absolute; inset: 0; background: rgba(59,44,53,.35); }
+    .sheet { position: absolute; left: 0; right: 0; bottom: 0; max-height: 85%; overflow: auto; background: var(--bar); border-radius: 20px 20px 0 0; padding: 18px 18px calc(env(safe-area-inset-bottom) + 18px); box-shadow: 0 -4px 20px rgba(0,0,0,.15); }
+    .sheet h2 { margin: 0 0 12px; font-size: 18px; }
+    .sheet label { display: block; margin: 12px 0; font-size: 14px; font-weight: 600; }
+    .sheet label.check { display: flex; gap: 8px; align-items: center; font-weight: 500; }
+    .sheet select, .sheet input[type=time], #name-input { font: inherit; padding: 8px; border-radius: 10px; border: 1px solid var(--line); background: #fff; margin-top: 4px; }
+    .sheet select { width: 100%; }
+    .row { display: flex; gap: 6px; align-items: center; }
+    .big { display: block; width: 100%; border: 0; border-radius: 14px; background: var(--deep); color: #fff; padding: 14px; font-weight: 800; font-size: 16px; margin: 10px 0; box-shadow: 0 3px 0 #b84d6b; }
+    .big.ghost { background: var(--cream); color: var(--ink); box-shadow: 0 3px 0 var(--line); }
+    .big.danger { color: #c0392b; }
+    .small { font-size: 13px; } .dim { opacity: .6; } .warn { background: #fff3c4; padding: 10px; border-radius: 10px; }
+    .sheet ol { padding-left: 20px; line-height: 1.6; font-size: 14px; }
+    #start { position: absolute; inset: 0; background: #ffe3cf; display: flex; align-items: center; justify-content: center; padding: 24px; }
+    #start .step { width: 100%; max-width: 380px; text-align: center; }
+    #start h1 { font-size: 22px; margin: 0 0 6px; } #start p { margin: 0 0 18px; opacity: .8; }
+    .choices { display: grid; gap: 12px; }
+    .choice { border: 0; border-radius: 18px; background: var(--cream); box-shadow: 0 3px 0 var(--line); padding: 16px; text-align: left; }
+    .choice b { display: block; font-size: 17px; margin-bottom: 2px; } .choice span { font-size: 13px; opacity: .75; }
+    #name-input { width: 100%; font-size: 18px; text-align: center; margin-bottom: 8px; }
+    [hidden] { display: none !important; }
   </style>
 </head>
 <body>
   <div id="app">
     <header>
       <div>
-        <div class="name">포켓 펫</div>
-        <div class="sub">알이 깨어나길 기다리는 중</div>
+        <div class="name" id="petname">포켓 펫</div>
+        <div class="sub" id="sub"></div>
       </div>
       <div class="clock" id="clock"></div>
-      <button class="menu" aria-label="메뉴" disabled>≡</button>
+      <button class="iconbtn" id="btn-menu" aria-label="메뉴">≡</button>
     </header>
     <main id="stage"><canvas id="room"></canvas></main>
-    <div class="status">준비 중 · 돌보기는 다음 단계(M2)에서 들어가요</div>
+    <div id="stats"></div>
+    <div id="msg"></div>
     <nav>
-      <button data-icon="iconFood" disabled><canvas></canvas>밥</button>
-      <button data-icon="iconPlay" disabled><canvas></canvas>놀기</button>
-      <button data-icon="iconWash" disabled><canvas></canvas>씻기</button>
-      <button data-icon="iconLight" disabled><canvas></canvas>불</button>
-      <button data-icon="iconMedicine" disabled><canvas></canvas>약</button>
+      <button data-icon="iconFood" data-act="food"><canvas></canvas><span>밥</span></button>
+      <button data-icon="iconPlay" data-act="play"><canvas></canvas><span>놀기</span></button>
+      <button data-icon="iconWash" data-act="wash"><canvas></canvas><span>씻기</span></button>
+      <button data-icon="iconLight" data-act="light" id="btn-light"><canvas></canvas><span>불 끄기</span></button>
+      <button data-icon="iconMedicine" data-act="medicine"><canvas></canvas><span>약</span></button>
     </nav>
+
+    <div id="backdrop" hidden></div>
+    <section class="sheet" data-sheet="menu" hidden>
+      <h2>메뉴</h2>
+      <button class="big ghost" data-open="notify">알림</button>
+      <button class="big ghost" data-open="settings">설정</button>
+      <button class="big ghost" data-close>닫기</button>
+    </section>
+    <section class="sheet" data-sheet="food" hidden>
+      <h2>무엇을 줄까요?</h2>
+      <button class="big" data-act="meal">밥 (배부름 +30)</button>
+      <button class="big ghost" data-act="snack">간식 (기분 +15, 너무 많이 주면 배탈)</button>
+    </section>
+    <section class="sheet" data-sheet="notify" hidden>
+      <h2>알림</h2>
+      <div id="notify-body"></div>
+      <button class="big ghost" data-close>닫기</button>
+    </section>
+    <section class="sheet" data-sheet="settings" hidden>
+      <h2>설정</h2>
+      <div id="settings-body"></div>
+      <button class="big ghost" data-close>닫기</button>
+    </section>
+
+    <div id="start" hidden>
+      <div class="step" data-step="theme">
+        <h1>어떤 알을 키울까요?</h1>
+        <p>알에 따라 자라는 친구들이 달라요</p>
+        <div class="choices">
+          <button class="choice" data-theme="animal"><b>점박이 알 · 동물</b><span>강아지, 고양이, 토끼, 여우…</span></button>
+          <button class="choice" data-theme="fantasy"><b>무지개 알 · 상상 속 생물</b><span>슬라임, 아기 용, 구름 고래, 유니콘…</span></button>
+        </div>
+      </div>
+      <div class="step" data-step="speed" hidden>
+        <h1>얼마나 빨리 자랄까요?</h1>
+        <p>빠를수록 자주 챙겨야 해요. 나중에 설정에서 바꿀 수 있어요</p>
+        <div class="choices">
+          <button class="choice" data-speed="slow"><b>느긋</b><span>어른까지 약 6일 · 하루 1~2번 들여다보기</span></button>
+          <button class="choice" data-speed="normal"><b>보통</b><span>어른까지 약 3일 · 하루 3~4번</span></button>
+          <button class="choice" data-speed="fast"><b>빠름</b><span>어른까지 약 1일 · 2시간마다</span></button>
+        </div>
+      </div>
+      <div class="step" data-step="name" hidden>
+        <h1>이름을 지어 주세요</h1>
+        <p>최대 6글자</p>
+        <input id="name-input" maxlength="6" autocomplete="off" placeholder="토리" />
+        <button class="big" id="btn-start">시작하기</button>
+      </div>
+    </div>
   </div>
-  <script type="module" src="src/main.js?v=497c29d-1791112943"></script>
+  <script type="module" src="src/main.js?v=0a4f52f-1791114689"></script>
 </body>
 </html>
