@@ -1,20 +1,21 @@
 // 부팅 순서는 이 파일 한 곳에서만 정해요.
 // (지난 게임에서 파일 읽는 순서 때문에 저장 기본값이 빠지는 버그가 있었어요.)
 // 순서: 저장 불러오기 → 꺼져 있던 시간 계산 → 화면 시작 → 서비스 워커·알림 확인 → 알림 일정 올리기
-import { createPet } from "./core/state.js?v=557acfa-1791122272";
-import { advance, feed, play, wash, cleanPoop, toggleLight, giveMedicine, patPet, switchEndMode, retirePet } from "./core/sim.js?v=557acfa-1791122272";
-import { predictNotifications } from "./core/notify.js?v=557acfa-1791122272";
-import { josa } from "./core/josa.js?v=557acfa-1791122272";
-import { drawRoom, drawIcon } from "./render/screen.js?v=557acfa-1791122272";
-import { createAnimator, play as playAnim, frame as animFrame, addFx } from "./render/anim.js?v=557acfa-1791122272";
-import { formKey, lookOf, FORMS as FORMS_REF } from "./render/creature.js?v=557acfa-1791122272";
-import { guessLocation, sunTimes, moonIllumination, moonPosition, moonPhaseName } from "./core/astro.js?v=557acfa-1791122272";
-import { createFacePicker, pickFace } from "./render/face.js?v=557acfa-1791122272";
-import { SPRITES } from "./render/sprites.js?v=557acfa-1791122272";
-import { loadProfile, saveProfile, freshProfile, exportCode, importCode } from "./app/store.js?v=557acfa-1791122272";
-import { sfx, setSoundEnabled } from "./app/sound.js?v=557acfa-1791122272";
-import { markSeen, recordPet, renderCollection, letterText, portrait, currentKey, HOW_KO } from "./app/collection.js?v=557acfa-1791122272";
-import { deviceInfo, registerSW, enablePush, ensurePush, uploadSchedule, sendTest, serverStatus } from "./app/push.js?v=557acfa-1791122272";
+import { createPet } from "./core/state.js?v=f6105a2-1791123013";
+import { advance, feed, play, wash, cleanPoop, toggleLight, giveMedicine, patPet, switchEndMode, retirePet } from "./core/sim.js?v=f6105a2-1791123013";
+import { predictNotifications } from "./core/notify.js?v=f6105a2-1791123013";
+import { josa } from "./core/josa.js?v=f6105a2-1791123013";
+import { drawRoom, drawIcon } from "./render/screen.js?v=f6105a2-1791123013";
+import { createAnimator, play as playAnim, frame as animFrame, addFx } from "./render/anim.js?v=f6105a2-1791123013";
+import { formKey, lookOf, FORMS as FORMS_REF } from "./render/creature.js?v=f6105a2-1791123013";
+import { guessLocation, sunTimes, moonIllumination, moonPosition, moonPhaseName } from "./core/astro.js?v=f6105a2-1791123013";
+import { classifyWeather, weatherUrl, parseWeather } from "./core/weather.js?v=f6105a2-1791123013";
+import { createFacePicker, pickFace } from "./render/face.js?v=f6105a2-1791123013";
+import { SPRITES } from "./render/sprites.js?v=f6105a2-1791123013";
+import { loadProfile, saveProfile, freshProfile, exportCode, importCode } from "./app/store.js?v=f6105a2-1791123013";
+import { sfx, setSoundEnabled } from "./app/sound.js?v=f6105a2-1791123013";
+import { markSeen, recordPet, renderCollection, letterText, portrait, currentKey, HOW_KO } from "./app/collection.js?v=f6105a2-1791123013";
+import { deviceInfo, registerSW, enablePush, ensurePush, uploadSchedule, sendTest, serverStatus } from "./app/push.js?v=f6105a2-1791123013";
 
 const clock = { offset: 0, now() { return Date.now() + this.offset; } }; // offset은 개발 도구만 바꾼다
 
@@ -30,6 +31,27 @@ const faces = createFacePicker();
 let petBox = null; // 마지막으로 그린 펫 위치(쓰다듬기 판정용)
 let poopRects = []; // 마지막으로 그린 똥 위치(톡 치우기 판정용)
 let windowBox = null; // 창문 위치(누르면 하늘 정보)
+
+// ---------- 실제 날씨 (Open-Meteo, 20분마다) ----------
+let weatherNow = classifyWeather(null);
+const DEV_WEATHER = { rain: 63, heavyrain: 65, drizzle: 51, snow: 73, heavysnow: 75, thunder: 95, fog: 45, cloudy: 3, sleet: 66 };
+function refreshWeatherView() {
+  const force = QS.has("dev") && QS.get("weather");
+  if (force && DEV_WEATHER[force] !== undefined) weatherNow = classifyWeather({ code: DEV_WEATHER[force], cloud: 100, at: Date.now() });
+  else weatherNow = profile.settings.weather === false ? classifyWeather(null) : classifyWeather(profile.weatherRaw);
+}
+async function updateWeather(force = false) {
+  if (profile.settings.weather === false || !navigator.onLine) return refreshWeatherView();
+  const last = profile.weatherRaw;
+  const loc = profile.settings.location;
+  if (!force && last && Date.now() - last.at < 20 * 60 * 1000 && last.lat === loc.lat && last.lon === loc.lon) return refreshWeatherView();
+  try {
+    const res = await fetch(weatherUrl(loc.lat, loc.lon));
+    const raw = parseWeather(await res.json());
+    if (raw) { profile.weatherRaw = { ...raw, lat: loc.lat, lon: loc.lon }; persist(); }
+  } catch { /* 날씨를 못 받으면 지난 날씨(3시간까지) 또는 맑음 */ }
+  refreshWeatherView();
+}
 let lookCache = { key: "", look: null };
 const I = (n) => josa(n, "이", "가");
 
@@ -199,7 +221,8 @@ function skyText() {
   const loc = profile.settings.location, now = clock.now();
   const st = sunTimes(now, loc.lat, loc.lon), ill = moonIllumination(now), mp = moonPosition(now, loc.lat, loc.lon);
   const sun = st.sunrise ? `일출 ${hm(st.sunrise)} · 일몰 ${hm(st.sunset)}` : "오늘은 해가 뜨거나 지지 않아요";
-  return `${loc.label} · ${sun} · 달: ${moonPhaseName(ill.phase)} ${Math.round(ill.fraction * 100)}%${mp.altitude > 0 ? "" : " (지금은 지평선 아래라 안 보여요)"}`;
+  const wx = weatherNow.label ? ` · 날씨: ${weatherNow.label}${typeof weatherNow.temp === "number" ? ` ${Math.round(weatherNow.temp)}°C` : ""}` : "";
+  return `${loc.label}${wx} · ${sun} · 달: ${moonPhaseName(ill.phase)} ${Math.round(ill.fraction * 100)}%${mp.altitude > 0 ? "" : " (실제로는 지평선 아래)"}`;
 }
 
 function onTap(ev) {
@@ -458,7 +481,8 @@ function renderSettings() {
     <label class="check"><input type="checkbox" id="set-sound" ${s.sound ? "checked" : ""}> 소리 켜기</label>
     <label>창밖 하늘 위치</label>
     <p class="small" id="loc-info">${skyText()}</p>
-    <button class="big ghost" id="btn-loc">내 위치로 일출·일몰 맞추기</button>
+    <button class="big ghost" id="btn-loc">내 위치로 일출·일몰·날씨 맞추기</button>
+    <label class="check"><input type="checkbox" id="set-weather" ${s.weather === false ? "" : "checked"}> 창밖에 실제 날씨 보여 주기 (Open-Meteo에서 20분마다 받아옴)</label>
     <button class="big ghost danger" id="btn-reset">처음부터 다시</button>`;
   if (p) $("set-speed").value = p.speed;
   $("set-end").value = s.endMode || "journey";
@@ -474,6 +498,7 @@ function renderSettings() {
     const newEnd = $("set-end").value;
     if (newEnd !== (s.endMode || "journey")) { if (profile.pet && !profile.pet.ended) switchEndMode(profile.pet, newEnd, clock.now(), s); s.endMode = newEnd; }
     s.sound = $("set-sound").checked; setSoundEnabled(s.sound); if (s.sound) sfx("happy");
+    const wxOn = $("set-weather").checked; if (wxOn !== (s.weather !== false)) { s.weather = wxOn; updateWeather(true); }
     if (profile.pet) profile.pet.speed = $("set-speed").value;
     persist(); renderStats(); scheduleSync(300);
   };
@@ -484,7 +509,7 @@ function renderSettings() {
     navigator.geolocation.getCurrentPosition((pos) => {
       // 일출·일몰에는 대략적인 위치면 충분: 소수 둘째 자리(약 1km)로 줄여 저장
       s.location = { lat: Math.round(pos.coords.latitude * 100) / 100, lon: Math.round(pos.coords.longitude * 100) / 100, label: "내 위치", source: "gps" };
-      persist(); renderSettings(); say("창밖 하늘을 지금 있는 곳에 맞췄어요");
+      persist(); renderSettings(); updateWeather(true); say("창밖 하늘과 날씨를 지금 있는 곳에 맞췄어요");
     }, () => { $("loc-info").textContent = "위치 권한이 없어서 시간대 기준으로 둘게요"; }, { enableHighAccuracy: false, timeout: 10000, maximumAge: 3600000 });
   });
   $("btn-reset").addEventListener("click", () => {
@@ -507,7 +532,7 @@ function frame() {
     scene = { stage: p.stage, branch: p.branch, theme: p.theme, poops: p.poops, poopSlots: syncPoopSlots(), asleep: p.asleep, lightOn: p.lightOn, sick: p.sick, mood: p.stats.mood, hunger: p.stats.hunger, napping: p.napLeft > 0, look: lookCache.look, face: pickFace(faces, p, t), ended: p.ended ? p.ended.type : null };
   } else scene = { stage: "egg", theme: "animal", lightOn: true, mood: 100, hunger: 100, poopSlots: [] };
   const fr = animFrame(anim, t, scene, { roam: Math.min(26, Math.round(view.w * 0.18)) });
-  const drawn = drawRoom(ctx, { ...view, now: t, scene, f: fr, wall: clock.now(), loc: profile.settings.location });
+  const drawn = drawRoom(ctx, { ...view, now: t, scene, f: fr, wall: clock.now(), loc: profile.settings.location, weather: weatherNow });
   petBox = drawn.pet; poopRects = drawn.poops; windowBox = drawn.window;
   const d = new Date(clock.now());
   $("clock").textContent = `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
@@ -535,6 +560,8 @@ function boot() {
   for (const btn of document.querySelectorAll("[data-speed]")) btn.addEventListener("click", () => { draft.speed = btn.dataset.speed; stepTo("name"); });
   setSoundEnabled(profile.settings.sound);
   if (!profile.settings.location) { profile.settings.location = guessLocation(Intl.DateTimeFormat().resolvedOptions().timeZone, new Date().getTimezoneOffset()); persist(); }
+  updateWeather();
+  setInterval(() => { if (document.visibilityState === "visible") updateWeather(); }, 5 * 60 * 1000);
   $("btn-start").addEventListener("click", startGame);
   $("mg-left").addEventListener("click", () => mgGuess(-1));
   $("mg-right").addEventListener("click", () => mgGuess(1));
@@ -578,7 +605,7 @@ function boot() {
   // 앱을 닫거나 다른 앱으로 갈 때 일정 올리기
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "hidden") { profile.lastSeen = Date.now(); persist(); syncNow({ keepalive: true }); }
-    else { tick(); navigator.clearAppBadge?.().catch(() => {}); }
+    else { tick(); updateWeather(); navigator.clearAppBadge?.().catch(() => {}); }
   });
   navigator.clearAppBadge?.().catch(() => {});
   setInterval(() => syncNow(), 10 * 60 * 1000);
@@ -600,7 +627,7 @@ function boot() {
   // 개발 도구(공개 배포에는 없음): ?dev 로 열기
   if (QS.has("dev")) {
     window.__pp = { clock, getProfile: () => profile, tick, anim, playAnim: (n, d) => playAnim(anim, n, performance.now(), d) };
-    import("./dev/panel.js?v=557acfa-1791122272").then((m) => m.mount({ clock, getProfile: () => profile, tick, renderStats, syncNow, serverStatus })).catch(() => {});
+    import("./dev/panel.js?v=f6105a2-1791123013").then((m) => m.mount({ clock, getProfile: () => profile, tick, renderStats, syncNow, serverStatus })).catch(() => {});
   }
 }
 

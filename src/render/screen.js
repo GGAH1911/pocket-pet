@@ -1,16 +1,16 @@
 // 방 화면 그리기. 게임 규칙은 모르고 받은 상태만 그린다.
 // 캔버스는 "도트 해상도"로 그리고 CSS가 정수배로 키운다.
-import { PALETTE } from "./palette.js?v=557acfa-1791122272";
-import { SPRITES, drawSprite, spriteSize } from "./sprites.js?v=557acfa-1791122272";
-import { buildCreature, paintGrid, formKey } from "./creature.js?v=557acfa-1791122272";
-import { drawFace } from "./face.js?v=557acfa-1791122272";
-import { drawSky } from "./sky.js?v=557acfa-1791122272";
+import { PALETTE } from "./palette.js?v=f6105a2-1791123013";
+import { SPRITES, drawSprite, spriteSize } from "./sprites.js?v=f6105a2-1791123013";
+import { buildCreature, paintGrid, formKey } from "./creature.js?v=f6105a2-1791123013";
+import { drawFace } from "./face.js?v=f6105a2-1791123013";
+import { drawSky } from "./sky.js?v=f6105a2-1791123013";
 
 const FLOOR = "#f5b98c";
 const FLOOR_LINE = "#e9a274";
 const BASEBOARD = "#e8a37e";
 
-export function drawRoom(ctx, { w, h, now, scene, f, wall = Date.now(), loc = { lat: 37.57, lon: 126.98 } }) {
+export function drawRoom(ctx, { w, h, now, scene, f, wall = Date.now(), loc = { lat: 37.57, lon: 126.98 }, weather = null }) {
   const floorY = Math.round(h * 0.5);
 
   // 벽 + 작은 무늬
@@ -23,7 +23,7 @@ export function drawRoom(ctx, { w, h, now, scene, f, wall = Date.now(), loc = { 
 
   // 창문: 실제 시각·위치의 하늘(낮·노을·밤, 해·달·별)
   const win = windowRect(w, floorY);
-  const skyInfo = drawWindow(ctx, win, wall, loc, now, 0);
+  const skyInfo = drawWindow(ctx, win, wall, loc, now, 0, weather);
 
   // 액자
   const fx = Math.round(w * 0.7), fy = Math.round(floorY * 0.36);
@@ -67,7 +67,7 @@ export function drawRoom(ctx, { w, h, now, scene, f, wall = Date.now(), loc = { 
   for (const fx of fr.fx || []) drawFx(ctx, fx);
   if (fr.darkness > 0) {
     ctx.fillStyle = `rgba(20,16,60,${fr.darkness})`; ctx.fillRect(0, 0, w, h);
-    drawWindow(ctx, win, wall, loc, now, fr.darkness * 0.3); // 방이 어두워도 창밖(달빛·별)은 보이게
+    drawWindow(ctx, win, wall, loc, now, fr.darkness * 0.3, weather); // 방이 어두워도 창밖(달빛·별)은 보이게
   }
   for (const t of fr.texts) {
     if (t.alpha <= 0) continue;
@@ -87,14 +87,16 @@ function windowRect(w, floorY) {
   return { x: Math.round(w * 0.08), y: Math.round(floorY * 0.24), w: ww, h: wh };
 }
 
-function drawWindow(ctx, r, wall, loc, now, dim) {
+function drawWindow(ctx, r, wall, loc, now, dim, weather) {
   ctx.fillStyle = PALETTE.N; ctx.fillRect(r.x - 2, r.y - 2, r.w + 4, r.h + 4); // 창틀
-  const info = drawSky(ctx, r, wall, loc, now);
+  const info = drawSky(ctx, r, wall, loc, now, weather);
   if (dim > 0) { ctx.fillStyle = `rgba(20,16,60,${dim})`; ctx.fillRect(r.x, r.y, r.w, r.h); }
   ctx.fillStyle = PALETTE.N;
   ctx.fillRect(r.x + Math.round(r.w / 2) - 1, r.y, 2, r.h); ctx.fillRect(r.x, r.y + Math.round(r.h / 2) - 1, r.w, 2);
   // 창턱
   ctx.fillStyle = PALETTE.n; ctx.fillRect(r.x - 4, r.y + r.h + 2, r.w + 8, 3);
+  if (info.snowy) { ctx.fillStyle = "#f4f7ff"; ctx.fillRect(r.x - 4, r.y + r.h + 1, r.w + 8, 2); } // 창턱에 쌓인 눈
+  if (weather && ["rain", "thunder", "drizzle"].includes(weather.kind)) { ctx.fillStyle = "rgba(140,180,230,0.8)"; for (let i = 0; i < 4; i++) if ((Math.floor(now / 300) + i) % 3 === 0) ctx.fillRect(r.x + 4 + i * Math.round(r.w / 4), r.y + r.h + 1, 2, 1); } // 창턱에 튀는 빗방울
   return info;
 }
 
