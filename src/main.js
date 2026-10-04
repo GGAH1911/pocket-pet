@@ -1,20 +1,20 @@
 // 부팅 순서는 이 파일 한 곳에서만 정해요.
 // (지난 게임에서 파일 읽는 순서 때문에 저장 기본값이 빠지는 버그가 있었어요.)
 // 순서: 저장 불러오기 → 꺼져 있던 시간 계산 → 화면 시작 → 서비스 워커·알림 확인 → 알림 일정 올리기
-import { createPet } from "./core/state.js?v=cfc4ae6-1791122258";
-import { advance, feed, play, wash, cleanPoop, toggleLight, giveMedicine, patPet, switchEndMode, retirePet } from "./core/sim.js?v=cfc4ae6-1791122258";
-import { predictNotifications } from "./core/notify.js?v=cfc4ae6-1791122258";
-import { josa } from "./core/josa.js?v=cfc4ae6-1791122258";
-import { drawRoom, drawIcon } from "./render/screen.js?v=cfc4ae6-1791122258";
-import { createAnimator, play as playAnim, frame as animFrame, addFx } from "./render/anim.js?v=cfc4ae6-1791122258";
-import { formKey, lookOf, FORMS as FORMS_REF } from "./render/creature.js?v=cfc4ae6-1791122258";
-import { guessLocation, sunTimes, moonIllumination, moonPosition, moonPhaseName } from "./core/astro.js?v=cfc4ae6-1791122258";
-import { createFacePicker, pickFace } from "./render/face.js?v=cfc4ae6-1791122258";
-import { SPRITES } from "./render/sprites.js?v=cfc4ae6-1791122258";
-import { loadProfile, saveProfile, freshProfile, exportCode, importCode } from "./app/store.js?v=cfc4ae6-1791122258";
-import { sfx, setSoundEnabled } from "./app/sound.js?v=cfc4ae6-1791122258";
-import { markSeen, recordPet, renderCollection, letterText, portrait, currentKey, HOW_KO } from "./app/collection.js?v=cfc4ae6-1791122258";
-import { deviceInfo, registerSW, enablePush, ensurePush, uploadSchedule, sendTest, serverStatus } from "./app/push.js?v=cfc4ae6-1791122258";
+import { createPet } from "./core/state.js?v=557acfa-1791122272";
+import { advance, feed, play, wash, cleanPoop, toggleLight, giveMedicine, patPet, switchEndMode, retirePet } from "./core/sim.js?v=557acfa-1791122272";
+import { predictNotifications } from "./core/notify.js?v=557acfa-1791122272";
+import { josa } from "./core/josa.js?v=557acfa-1791122272";
+import { drawRoom, drawIcon } from "./render/screen.js?v=557acfa-1791122272";
+import { createAnimator, play as playAnim, frame as animFrame, addFx } from "./render/anim.js?v=557acfa-1791122272";
+import { formKey, lookOf, FORMS as FORMS_REF } from "./render/creature.js?v=557acfa-1791122272";
+import { guessLocation, sunTimes, moonIllumination, moonPosition, moonPhaseName } from "./core/astro.js?v=557acfa-1791122272";
+import { createFacePicker, pickFace } from "./render/face.js?v=557acfa-1791122272";
+import { SPRITES } from "./render/sprites.js?v=557acfa-1791122272";
+import { loadProfile, saveProfile, freshProfile, exportCode, importCode } from "./app/store.js?v=557acfa-1791122272";
+import { sfx, setSoundEnabled } from "./app/sound.js?v=557acfa-1791122272";
+import { markSeen, recordPet, renderCollection, letterText, portrait, currentKey, HOW_KO } from "./app/collection.js?v=557acfa-1791122272";
+import { deviceInfo, registerSW, enablePush, ensurePush, uploadSchedule, sendTest, serverStatus } from "./app/push.js?v=557acfa-1791122272";
 
 const clock = { offset: 0, now() { return Date.now() + this.offset; } }; // offset은 개발 도구만 바꾼다
 
@@ -199,7 +199,7 @@ function skyText() {
   const loc = profile.settings.location, now = clock.now();
   const st = sunTimes(now, loc.lat, loc.lon), ill = moonIllumination(now), mp = moonPosition(now, loc.lat, loc.lon);
   const sun = st.sunrise ? `일출 ${hm(st.sunrise)} · 일몰 ${hm(st.sunset)}` : "오늘은 해가 뜨거나 지지 않아요";
-  return `${loc.label} · ${sun} · 달: ${moonPhaseName(ill.phase)} ${Math.round(ill.fraction * 100)}%${mp.altitude > 0 ? "" : " (아직 안 떴어요)"}`;
+  return `${loc.label} · ${sun} · 달: ${moonPhaseName(ill.phase)} ${Math.round(ill.fraction * 100)}%${mp.altitude > 0 ? "" : " (지금은 지평선 아래라 안 보여요)"}`;
 }
 
 function onTap(ev) {
@@ -600,7 +600,7 @@ function boot() {
   // 개발 도구(공개 배포에는 없음): ?dev 로 열기
   if (QS.has("dev")) {
     window.__pp = { clock, getProfile: () => profile, tick, anim, playAnim: (n, d) => playAnim(anim, n, performance.now(), d) };
-    import("./dev/panel.js?v=cfc4ae6-1791122258").then((m) => m.mount({ clock, getProfile: () => profile, tick, renderStats, syncNow, serverStatus })).catch(() => {});
+    import("./dev/panel.js?v=557acfa-1791122272").then((m) => m.mount({ clock, getProfile: () => profile, tick, renderStats, syncNow, serverStatus })).catch(() => {});
   }
 }
 
