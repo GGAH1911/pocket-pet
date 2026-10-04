@@ -1,15 +1,16 @@
 // 방 화면 그리기. 게임 규칙은 모르고 받은 상태만 그린다.
 // 캔버스는 "도트 해상도"로 그리고 CSS가 정수배로 키운다.
-import { PALETTE } from "./palette.js?v=922cf11-1791119342";
-import { SPRITES, drawSprite, spriteSize } from "./sprites.js?v=922cf11-1791119342";
-import { buildCreature, paintGrid, formKey } from "./creature.js?v=922cf11-1791119342";
-import { drawFace } from "./face.js?v=922cf11-1791119342";
+import { PALETTE } from "./palette.js?v=757dd3d-1791122203";
+import { SPRITES, drawSprite, spriteSize } from "./sprites.js?v=757dd3d-1791122203";
+import { buildCreature, paintGrid, formKey } from "./creature.js?v=757dd3d-1791122203";
+import { drawFace } from "./face.js?v=757dd3d-1791122203";
+import { drawSky } from "./sky.js?v=757dd3d-1791122203";
 
 const FLOOR = "#f5b98c";
 const FLOOR_LINE = "#e9a274";
 const BASEBOARD = "#e8a37e";
 
-export function drawRoom(ctx, { w, h, now, scene, f }) {
+export function drawRoom(ctx, { w, h, now, scene, f, wall = Date.now(), loc = { lat: 37.57, lon: 126.98 } }) {
   const floorY = Math.round(h * 0.5);
 
   // 벽 + 작은 무늬
@@ -20,21 +21,12 @@ export function drawRoom(ctx, { w, h, now, scene, f }) {
     for (let x = (y / 12) % 2 ? 10 : 4; x < w; x += 12) ctx.fillRect(x, y, 2, 2);
   }
 
-  // 창문(하늘 + 구름)
-  const winW = Math.min(48, Math.round(w * 0.38)), winH = Math.round(winW * 0.75);
-  const winX = Math.round(w * 0.1), winY = Math.round(floorY * 0.3);
-  ctx.fillStyle = PALETTE.N; ctx.fillRect(winX - 2, winY - 2, winW + 4, winH + 4);
-  ctx.fillStyle = PALETTE.b; ctx.fillRect(winX, winY, winW, winH);
-  ctx.fillStyle = PALETTE.w;
-  const cloudX = winX + ((Math.floor(now / 400) % (winW + 20)) - 10);
-  ctx.save(); ctx.beginPath(); ctx.rect(winX, winY, winW, winH); ctx.clip();
-  ctx.fillRect(cloudX, winY + 8, 12, 4); ctx.fillRect(cloudX + 3, winY + 5, 6, 3);
-  ctx.restore();
-  ctx.fillStyle = PALETTE.N;
-  ctx.fillRect(winX + Math.round(winW / 2) - 1, winY, 2, winH); ctx.fillRect(winX, winY + Math.round(winH / 2) - 1, winW, 2);
+  // 창문: 실제 시각·위치의 하늘(낮·노을·밤, 해·달·별)
+  const win = windowRect(w, floorY);
+  const skyInfo = drawWindow(ctx, win, wall, loc, now, 0);
 
   // 액자
-  const fx = Math.round(w * 0.66), fy = Math.round(floorY * 0.38);
+  const fx = Math.round(w * 0.7), fy = Math.round(floorY * 0.36);
   ctx.fillStyle = PALETTE.o; ctx.fillRect(fx, fy, 22, 18);
   ctx.fillStyle = PALETTE.g; ctx.fillRect(fx + 2, fy + 2, 18, 14);
   ctx.fillStyle = PALETTE.G; ctx.fillRect(fx + 4, fy + 9, 6, 7); ctx.fillRect(fx + 11, fy + 6, 6, 10);
@@ -73,7 +65,10 @@ export function drawRoom(ctx, { w, h, now, scene, f }) {
     ctx.globalAlpha = 1;
   }
   for (const fx of fr.fx || []) drawFx(ctx, fx);
-  if (fr.darkness > 0) { ctx.fillStyle = `rgba(20,16,60,${fr.darkness})`; ctx.fillRect(0, 0, w, h); }
+  if (fr.darkness > 0) {
+    ctx.fillStyle = `rgba(20,16,60,${fr.darkness})`; ctx.fillRect(0, 0, w, h);
+    drawWindow(ctx, win, wall, loc, now, fr.darkness * 0.3); // 방이 어두워도 창밖(달빛·별)은 보이게
+  }
   for (const t of fr.texts) {
     if (t.alpha <= 0) continue;
     ctx.globalAlpha = Math.min(1, t.alpha);
@@ -84,7 +79,23 @@ export function drawRoom(ctx, { w, h, now, scene, f }) {
     ctx.globalAlpha = 1;
   }
   if (fr.flash > 0) { ctx.fillStyle = `rgba(255,255,255,${fr.flash})`; ctx.fillRect(0, 0, w, h); }
-  return { pet: box, poops: poopRects };
+  return { pet: box, poops: poopRects, window: win, sky: skyInfo };
+}
+
+function windowRect(w, floorY) {
+  const ww = Math.min(56, Math.round(w * 0.42)), wh = Math.round(ww * 0.72);
+  return { x: Math.round(w * 0.08), y: Math.round(floorY * 0.24), w: ww, h: wh };
+}
+
+function drawWindow(ctx, r, wall, loc, now, dim) {
+  ctx.fillStyle = PALETTE.N; ctx.fillRect(r.x - 2, r.y - 2, r.w + 4, r.h + 4); // 창틀
+  const info = drawSky(ctx, r, wall, loc, now);
+  if (dim > 0) { ctx.fillStyle = `rgba(20,16,60,${dim})`; ctx.fillRect(r.x, r.y, r.w, r.h); }
+  ctx.fillStyle = PALETTE.N;
+  ctx.fillRect(r.x + Math.round(r.w / 2) - 1, r.y, 2, r.h); ctx.fillRect(r.x, r.y + Math.round(r.h / 2) - 1, r.w, 2);
+  // 창턱
+  ctx.fillStyle = PALETTE.n; ctx.fillRect(r.x - 4, r.y + r.h + 2, r.w + 8, 3);
+  return info;
 }
 
 const POOP_SPRITE = [

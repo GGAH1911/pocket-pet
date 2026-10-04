@@ -1,19 +1,20 @@
 // 부팅 순서는 이 파일 한 곳에서만 정해요.
 // (지난 게임에서 파일 읽는 순서 때문에 저장 기본값이 빠지는 버그가 있었어요.)
 // 순서: 저장 불러오기 → 꺼져 있던 시간 계산 → 화면 시작 → 서비스 워커·알림 확인 → 알림 일정 올리기
-import { createPet } from "./core/state.js?v=922cf11-1791119342";
-import { advance, feed, play, wash, cleanPoop, toggleLight, giveMedicine, patPet, switchEndMode, retirePet } from "./core/sim.js?v=922cf11-1791119342";
-import { predictNotifications } from "./core/notify.js?v=922cf11-1791119342";
-import { josa } from "./core/josa.js?v=922cf11-1791119342";
-import { drawRoom, drawIcon } from "./render/screen.js?v=922cf11-1791119342";
-import { createAnimator, play as playAnim, frame as animFrame, addFx } from "./render/anim.js?v=922cf11-1791119342";
-import { formKey, lookOf, FORMS as FORMS_REF } from "./render/creature.js?v=922cf11-1791119342";
-import { createFacePicker, pickFace } from "./render/face.js?v=922cf11-1791119342";
-import { SPRITES } from "./render/sprites.js?v=922cf11-1791119342";
-import { loadProfile, saveProfile, freshProfile, exportCode, importCode } from "./app/store.js?v=922cf11-1791119342";
-import { sfx, setSoundEnabled } from "./app/sound.js?v=922cf11-1791119342";
-import { markSeen, recordPet, renderCollection, letterText, portrait, currentKey, HOW_KO } from "./app/collection.js?v=922cf11-1791119342";
-import { deviceInfo, registerSW, enablePush, ensurePush, uploadSchedule, sendTest, serverStatus } from "./app/push.js?v=922cf11-1791119342";
+import { createPet } from "./core/state.js?v=757dd3d-1791122203";
+import { advance, feed, play, wash, cleanPoop, toggleLight, giveMedicine, patPet, switchEndMode, retirePet } from "./core/sim.js?v=757dd3d-1791122203";
+import { predictNotifications } from "./core/notify.js?v=757dd3d-1791122203";
+import { josa } from "./core/josa.js?v=757dd3d-1791122203";
+import { drawRoom, drawIcon } from "./render/screen.js?v=757dd3d-1791122203";
+import { createAnimator, play as playAnim, frame as animFrame, addFx } from "./render/anim.js?v=757dd3d-1791122203";
+import { formKey, lookOf, FORMS as FORMS_REF } from "./render/creature.js?v=757dd3d-1791122203";
+import { guessLocation, sunTimes, moonIllumination, moonPosition, moonPhaseName } from "./core/astro.js?v=757dd3d-1791122203";
+import { createFacePicker, pickFace } from "./render/face.js?v=757dd3d-1791122203";
+import { SPRITES } from "./render/sprites.js?v=757dd3d-1791122203";
+import { loadProfile, saveProfile, freshProfile, exportCode, importCode } from "./app/store.js?v=757dd3d-1791122203";
+import { sfx, setSoundEnabled } from "./app/sound.js?v=757dd3d-1791122203";
+import { markSeen, recordPet, renderCollection, letterText, portrait, currentKey, HOW_KO } from "./app/collection.js?v=757dd3d-1791122203";
+import { deviceInfo, registerSW, enablePush, ensurePush, uploadSchedule, sendTest, serverStatus } from "./app/push.js?v=757dd3d-1791122203";
 
 const clock = { offset: 0, now() { return Date.now() + this.offset; } }; // offset은 개발 도구만 바꾼다
 
@@ -28,6 +29,7 @@ const anim = createAnimator();
 const faces = createFacePicker();
 let petBox = null; // 마지막으로 그린 펫 위치(쓰다듬기 판정용)
 let poopRects = []; // 마지막으로 그린 똥 위치(톡 치우기 판정용)
+let windowBox = null; // 창문 위치(누르면 하늘 정보)
 let lookCache = { key: "", look: null };
 const I = (n) => josa(n, "이", "가");
 
@@ -192,12 +194,21 @@ function syncPoopSlots() {
   return slots;
 }
 
+const hm = (ms) => (ms ? new Date(ms).toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit", hour12: false }) : "-");
+function skyText() {
+  const loc = profile.settings.location, now = clock.now();
+  const st = sunTimes(now, loc.lat, loc.lon), ill = moonIllumination(now), mp = moonPosition(now, loc.lat, loc.lon);
+  const sun = st.sunrise ? `일출 ${hm(st.sunrise)} · 일몰 ${hm(st.sunset)}` : "오늘은 해가 뜨거나 지지 않아요";
+  return `창밖(${loc.label}): ${sun} · 달: ${moonPhaseName(ill.phase)} ${Math.round(ill.fraction * 100)}%${mp.altitude > 0 ? "" : " (지금은 지평선 아래)"}`;
+}
+
 function onTap(ev) {
   const p = profile.pet; if (!p) return;
   const r = canvas.getBoundingClientRect();
   const x = ((ev.clientX - r.left) / r.width) * canvas.width, y = ((ev.clientY - r.top) / r.height) * canvas.height;
   // 똥을 먼저 본다(누르기 쉽게 여유 6px)
   const hit = poopRects.find((pr) => x >= pr.x - 6 && x <= pr.x + pr.w + 6 && y >= pr.y - 6 && y <= pr.y + pr.h + 6);
+  if (windowBox && x >= windowBox.x - 3 && x <= windowBox.x + windowBox.w + 3 && y >= windowBox.y - 3 && y <= windowBox.y + windowBox.h + 3) { say(skyText(), 7000); sfx("tap"); return; }
   if (hit) {
     const res = cleanPoop(p, clock.now(), S());
     if (res.ok) {
@@ -445,6 +456,9 @@ function renderSettings() {
       <option value="classic">원작 (어른 10~16일 사이 별이 됨)</option></select></label>
     <p class="small dim">끝 방식을 바꾸면 지금부터 적용되고, 적어도 하루는 더 함께해요.</p>
     <label class="check"><input type="checkbox" id="set-sound" ${s.sound ? "checked" : ""}> 소리 켜기</label>
+    <label>창밖 하늘 위치</label>
+    <p class="small" id="loc-info">${s.location.label} · ${skyText().replace(/^창밖\([^)]*\): /, "")}</p>
+    <button class="big ghost" id="btn-loc">내 위치로 일출·일몰 맞추기</button>
     <button class="big ghost danger" id="btn-reset">처음부터 다시</button>`;
   if (p) $("set-speed").value = p.speed;
   $("set-end").value = s.endMode || "journey";
@@ -464,6 +478,15 @@ function renderSettings() {
     persist(); renderStats(); scheduleSync(300);
   };
   for (const el of box.querySelectorAll("input,select")) el.addEventListener("change", save);
+  $("btn-loc").addEventListener("click", () => {
+    if (!navigator.geolocation) { $("loc-info").textContent = "이 기기는 위치를 알려 주지 않아요"; return; }
+    $("loc-info").textContent = "위치 확인 중...";
+    navigator.geolocation.getCurrentPosition((pos) => {
+      // 일출·일몰에는 대략적인 위치면 충분: 소수 둘째 자리(약 1km)로 줄여 저장
+      s.location = { lat: Math.round(pos.coords.latitude * 100) / 100, lon: Math.round(pos.coords.longitude * 100) / 100, label: "내 위치", source: "gps" };
+      persist(); renderSettings(); say("창밖 하늘을 지금 있는 곳에 맞췄어요");
+    }, () => { $("loc-info").textContent = "위치 권한이 없어서 시간대 기준으로 둘게요"; }, { enableHighAccuracy: false, timeout: 10000, maximumAge: 3600000 });
+  });
   $("btn-reset").addEventListener("click", () => {
     if (!confirm("지금 펫을 지우고 처음부터 시작할까요? (도감 기록은 남아요)")) return;
     const keep = { deviceId: profile.deviceId, push: profile.push, settings: profile.settings, seenGuide: true, collection: profile.collection, seen: profile.seen };
@@ -484,8 +507,8 @@ function frame() {
     scene = { stage: p.stage, branch: p.branch, theme: p.theme, poops: p.poops, poopSlots: syncPoopSlots(), asleep: p.asleep, lightOn: p.lightOn, sick: p.sick, mood: p.stats.mood, hunger: p.stats.hunger, napping: p.napLeft > 0, look: lookCache.look, face: pickFace(faces, p, t), ended: p.ended ? p.ended.type : null };
   } else scene = { stage: "egg", theme: "animal", lightOn: true, mood: 100, hunger: 100, poopSlots: [] };
   const fr = animFrame(anim, t, scene, { roam: Math.min(26, Math.round(view.w * 0.18)) });
-  const drawn = drawRoom(ctx, { ...view, now: t, scene, f: fr });
-  petBox = drawn.pet; poopRects = drawn.poops;
+  const drawn = drawRoom(ctx, { ...view, now: t, scene, f: fr, wall: clock.now(), loc: profile.settings.location });
+  petBox = drawn.pet; poopRects = drawn.poops; windowBox = drawn.window;
   const d = new Date(clock.now());
   $("clock").textContent = `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
   requestAnimationFrame(frame);
@@ -511,6 +534,7 @@ function boot() {
   for (const btn of document.querySelectorAll("[data-theme]")) btn.addEventListener("click", () => { draft.theme = btn.dataset.theme; stepTo("speed"); });
   for (const btn of document.querySelectorAll("[data-speed]")) btn.addEventListener("click", () => { draft.speed = btn.dataset.speed; stepTo("name"); });
   setSoundEnabled(profile.settings.sound);
+  if (!profile.settings.location) { profile.settings.location = guessLocation(Intl.DateTimeFormat().resolvedOptions().timeZone, new Date().getTimezoneOffset()); persist(); }
   $("btn-start").addEventListener("click", startGame);
   $("mg-left").addEventListener("click", () => mgGuess(-1));
   $("mg-right").addEventListener("click", () => mgGuess(1));
@@ -576,7 +600,7 @@ function boot() {
   // 개발 도구(공개 배포에는 없음): ?dev 로 열기
   if (QS.has("dev")) {
     window.__pp = { clock, getProfile: () => profile, tick, anim, playAnim: (n, d) => playAnim(anim, n, performance.now(), d) };
-    import("./dev/panel.js?v=922cf11-1791119342").then((m) => m.mount({ clock, getProfile: () => profile, tick, renderStats, syncNow, serverStatus })).catch(() => {});
+    import("./dev/panel.js?v=757dd3d-1791122203").then((m) => m.mount({ clock, getProfile: () => profile, tick, renderStats, syncNow, serverStatus })).catch(() => {});
   }
 }
 
