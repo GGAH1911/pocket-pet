@@ -2,26 +2,49 @@
 <html lang="ko">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+  <meta name="theme-color" content="#ffe3cf" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
   <title>포켓 펫 (가제)</title>
   <style>
-    html, body { margin: 0; height: 100%; background: #f3efe6; }
-    body { display: grid; place-items: center; font-family: system-ui, sans-serif; }
-    .device { background: #f08a8a; padding: 32px 28px 40px; border-radius: 48% 48% 44% 44%; box-shadow: 0 8px 0 #c86a6a; }
-    canvas { display: block; width: 240px; height: 240px; image-rendering: pixelated; border: 6px solid #5a5a5a; border-radius: 12px; }
-    .buttons { display: flex; justify-content: center; gap: 22px; margin-top: 22px; }
-    .buttons button { width: 40px; height: 40px; border-radius: 50%; border: 0; background: #ffe08a; box-shadow: 0 4px 0 #c9a94f; font-weight: bold; }
+    :root { --ink: #3b2c35; --cream: #fff7ec; --pink: #ff9fb2; --deep: #e86a8a; --bar: #fff1e4; }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { margin: 0; height: 100%; background: #ffe3cf; color: var(--ink); font-family: system-ui, -apple-system, "Apple SD Gothic Neo", sans-serif; overscroll-behavior: none; }
+    #app { height: 100dvh; max-width: 520px; margin: 0 auto; display: flex; flex-direction: column; background: var(--bar); }
+    header { display: flex; align-items: center; gap: 10px; padding: calc(env(safe-area-inset-top) + 10px) 16px 10px; background: var(--bar); }
+    header .name { font-weight: 800; font-size: 18px; }
+    header .sub { font-size: 13px; opacity: .7; }
+    header .clock { margin-left: auto; font-weight: 700; font-variant-numeric: tabular-nums; }
+    header .menu { border: 0; background: var(--cream); width: 36px; height: 36px; border-radius: 10px; box-shadow: 0 2px 0 #e8cdb8; font-size: 18px; color: var(--ink); }
+    #stage { flex: 1; min-height: 0; display: grid; place-items: center; overflow: hidden; background: #ffe3cf; }
+    #room { display: block; image-rendering: pixelated; image-rendering: crisp-edges; }
+    .status { padding: 8px 16px; font-size: 14px; text-align: center; background: var(--bar); }
+    nav { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; padding: 8px 12px calc(env(safe-area-inset-bottom) + 12px); background: var(--bar); }
+    nav button { border: 0; border-radius: 16px; background: var(--cream); box-shadow: 0 3px 0 #e8cdb8; padding: 8px 0 6px; display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--ink); font-size: 12px; font-weight: 700; }
+    nav button:disabled { opacity: .55; }
+    nav canvas { width: 30px; height: 24px; image-rendering: pixelated; }
   </style>
 </head>
 <body>
-  <div class="device">
-    <canvas id="screen" width="240" height="240"></canvas>
-    <div class="buttons">
-      <button data-btn="A" aria-label="고르기">A</button>
-      <button data-btn="B" aria-label="정하기">B</button>
-      <button data-btn="C" aria-label="취소">C</button>
-    </div>
+  <div id="app">
+    <header>
+      <div>
+        <div class="name">포켓 펫</div>
+        <div class="sub">알이 깨어나길 기다리는 중</div>
+      </div>
+      <div class="clock" id="clock"></div>
+      <button class="menu" aria-label="메뉴" disabled>≡</button>
+    </header>
+    <main id="stage"><canvas id="room"></canvas></main>
+    <div class="status">준비 중 · 돌보기는 다음 단계(M2)에서 들어가요</div>
+    <nav>
+      <button data-icon="iconFood" disabled><canvas></canvas>밥</button>
+      <button data-icon="iconPlay" disabled><canvas></canvas>놀기</button>
+      <button data-icon="iconWash" disabled><canvas></canvas>씻기</button>
+      <button data-icon="iconLight" disabled><canvas></canvas>불</button>
+      <button data-icon="iconMedicine" disabled><canvas></canvas>약</button>
+    </nav>
   </div>
-  <script type="module" src="src/main.js?v=6197e8f-1791112662"></script>
+  <script type="module" src="src/main.js?v=497c29d-1791112943"></script>
 </body>
 </html>

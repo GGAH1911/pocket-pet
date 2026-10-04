@@ -1,0 +1,88 @@
+// 코드 속 도트 그림. 한 글자 = 한 도트, 색은 palette.js.
+import { PALETTE } from "./palette.js?v=497c29d-1791112943";
+
+export const SPRITES = {
+  egg: [
+    "......kkkk......",
+    "....kkwwwwkk....",
+    "...kwwwwwwwwk...",
+    "..kwwppwwwwwwk..",
+    "..kwwppwwwggwk..",
+    ".kwwwwwwwwggwwk.",
+    ".kwwwwwwwwwwwwk.",
+    ".kwggwwwwwwwwwk.",
+    "kwwggwwwwppwwwwk",
+    "kwwwwwwwwppwwwwk",
+    "kwwwwwwwwwwwwwwk",
+    "kwwwwppwwwwwggwk",
+    "kwwwwppwwwwwggwk",
+    ".kwwwwwwwwwwwwk.",
+    ".kswwwwwwwwwwsk.",
+    "..kssswwwwsssk..",
+    "...kkssssssskk..",
+    ".....kkkkkk.....",
+  ],
+  // 아래 행동 버튼 아이콘 (10칸 폭)
+  iconFood: [
+    "...w..w...",
+    "..w..w....",
+    "..wwwwwww.",
+    ".kkkkkkkk.",
+    ".kooooook.",
+    "..kooook..",
+    "...kkkk...",
+  ],
+  iconPlay: [
+    "...kkkk...",
+    "..kyyrrk..",
+    ".kyyyrrrk.",
+    ".krryyyyk.",
+    ".krrryyyk.",
+    "..krryyk..",
+    "...kkkk...",
+  ],
+  iconWash: [
+    "....kk....",
+    "...kbbk...",
+    "..kbbbbk..",
+    ".kbwbbbbk.",
+    ".kbwbbbbk.",
+    ".kbbbbbbk.",
+    "..kbbbbk..",
+    "...kkkk...",
+  ],
+  iconLight: [
+    "...kkkk...",
+    "..kyyyyk..",
+    ".kyywyyyk.",
+    ".kyyyyyyk.",
+    "..kyyyyk..",
+    "...kyyk...",
+    "...kNNk...",
+    "...kkkk...",
+  ],
+  iconMedicine: [
+    "..kkkkkk..",
+    ".kpppwwwk.",
+    "kppppwwwwk",
+    "kppppwwwwk",
+    ".kpppwwwk.",
+    "..kkkkkk..",
+  ],
+};
+
+export function spriteSize(sprite) {
+  return { w: sprite[0].length, h: sprite.length };
+}
+
+export function drawSprite(ctx, sprite, x, y, scale = 1) {
+  for (let row = 0; row < sprite.length; row++) {
+    const line = sprite[row];
+    for (let col = 0; col < line.length; col++) {
+      const color = PALETTE[line[col]];
+      if (!color) continue;
+      ctx.fillStyle = color;
+      ctx.fillRect(Math.round(x + col * scale), Math.round(y + row * scale), scale, scale);
+    }
+  }
+}
