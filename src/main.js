@@ -1,14 +1,14 @@
 // 부팅 순서는 이 파일 한 곳에서만 정해요.
 // (지난 게임에서 파일 읽는 순서 때문에 저장 기본값이 빠지는 버그가 있었어요.)
 // 순서: 저장 불러오기 → 꺼져 있던 시간 계산 → 화면 시작 → 서비스 워커·알림 확인 → 알림 일정 올리기
-import { createPet } from "./core/state.js?v=0a4f52f-1791114689";
-import { advance, feed, play, wash, toggleLight, giveMedicine } from "./core/sim.js?v=0a4f52f-1791114689";
-import { predictNotifications } from "./core/notify.js?v=0a4f52f-1791114689";
-import { josa } from "./core/josa.js?v=0a4f52f-1791114689";
-import { drawRoom, drawIcon } from "./render/screen.js?v=0a4f52f-1791114689";
-import { SPRITES } from "./render/sprites.js?v=0a4f52f-1791114689";
-import { loadProfile, saveProfile, freshProfile } from "./app/store.js?v=0a4f52f-1791114689";
-import { deviceInfo, registerSW, enablePush, ensurePush, uploadSchedule, sendTest, serverStatus } from "./app/push.js?v=0a4f52f-1791114689";
+import { createPet } from "./core/state.js?v=8a40262-1791115246";
+import { advance, feed, play, wash, toggleLight, giveMedicine } from "./core/sim.js?v=8a40262-1791115246";
+import { predictNotifications } from "./core/notify.js?v=8a40262-1791115246";
+import { josa } from "./core/josa.js?v=8a40262-1791115246";
+import { drawRoom, drawIcon } from "./render/screen.js?v=8a40262-1791115246";
+import { SPRITES } from "./render/sprites.js?v=8a40262-1791115246";
+import { loadProfile, saveProfile, freshProfile } from "./app/store.js?v=8a40262-1791115246";
+import { deviceInfo, registerSW, enablePush, ensurePush, uploadSchedule, sendTest, serverStatus } from "./app/push.js?v=8a40262-1791115246";
 
 const clock = { offset: 0, now() { return Date.now() + this.offset; } }; // offset은 개발 도구만 바꾼다
 
@@ -180,23 +180,34 @@ function renderNotify() {
     html += `<p class="warn">이 브라우저는 알림을 지원하지 않아요. ${d.android ? "크롬으로 열어 주세요." : ""}</p>`;
   } else {
     const on = profile.push.subscribed && d.permission === "granted";
-    html += `<p>상태: <b>${on ? "알림 받는 중" : d.permission === "denied" ? "알림 막힘(휴대폰 설정에서 허용해 주세요)" : "아직 안 켬"}</b></p>`;
-    html += `<button class="big" id="btn-enable">${on ? "알림 다시 연결" : "알림 받기"}</button>`;
     if (on) {
-      html += `<button class="big ghost" id="btn-test">시험 알림 (1분 뒤)</button><p class="small">누른 뒤 앱을 닫고(홈으로 나가기) 1~2분 기다려 보세요.</p>`;
-      if (profile.push.nextAt) html += `<p class="small">다음 알림 예정: ${new Date(profile.push.nextAt).toLocaleString("ko-KR", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" })}</p>`;
+      html += `<p class="ok" id="push-state">알림 켜짐 · 서버 연결 확인 중...</p>`;
+      html += `<button class="big" id="btn-test">시험 알림 보내기 (1분 뒤)</button><p class="small">누른 뒤 앱을 닫고(홈으로 나가기) 1~2분 기다려 보세요.</p>`;
+      html += `<button class="big ghost" id="btn-enable">알림이 안 오면: 연결 새로 하기</button>`;
+    } else {
+      html += `<p>상태: <b>${d.permission === "denied" ? "알림 막힘(휴대폰 설정에서 이 앱의 알림을 허용해 주세요)" : "아직 안 켬"}</b></p>`;
+      html += `<button class="big" id="btn-enable">알림 받기</button>`;
     }
     if (d.android && !d.standalone) html += `<p class="small">크롬 메뉴(⋮) → <b>홈 화면에 추가</b>(또는 앱 설치)를 하면 앱처럼 열려요.</p>`;
   }
   html += `<p class="small dim">기기 ID ${profile.deviceId.slice(0, 8)} · ${d.ios ? "iPhone" : d.android ? "안드로이드" : "기타"} · ${d.standalone ? "홈 화면 앱" : "브라우저"}</p>`;
   box.innerHTML = html;
+  if (profile.push.subscribed && d.permission === "granted") {
+    serverStatus(profile.deviceId).then((st) => {
+      const el = $("push-state"); if (!el) return;
+      if (!st.subscribed) { el.className = "warn"; el.textContent = "서버에 이 휴대폰이 등록돼 있지 않아요. 아래 '연결 새로 하기'를 눌러 주세요"; return; }
+      const next = st.next && st.next[0] ? new Date(st.next[0].at).toLocaleString("ko-KR", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" }) : null;
+      const last = st.log && st.log[0];
+      el.textContent = `알림 켜짐 · 서버 연결됨${next ? ` · 다음 알림 ${next}` : ""}${last ? ` · 마지막 전송 ${last.status === 201 || last.status === 200 ? "성공" : "실패(" + (last.status || last.note) + ")"}` : ""}`;
+    }).catch(() => { const el = $("push-state"); if (el) { el.className = "warn"; el.textContent = "알림 켜짐 · 서버에 닿지 않아요(인터넷 연결을 확인해 주세요)"; } });
+  }
   $("btn-enable")?.addEventListener("click", async () => {
     say("알림을 켜는 중...", 0);
     try {
       await enablePush(profile.deviceId);
       profile.push.subscribed = true; persist();
       await syncNow();
-      say("알림을 켰어요");
+      say("알림을 켰어요. 시험 알림으로 확인해 보세요", 8000);
     } catch (e) { say(e.message || "알림을 켜지 못했어요", 8000); }
     renderNotify();
   });
@@ -314,7 +325,7 @@ function boot() {
 
   // 개발 도구(공개 배포에는 없음): ?dev 로 열기
   if (new URLSearchParams(location.search).has("dev")) {
-    import("./dev/panel.js?v=0a4f52f-1791114689").then((m) => m.mount({ clock, getProfile: () => profile, tick, renderStats, syncNow, serverStatus })).catch(() => {});
+    import("./dev/panel.js?v=8a40262-1791115246").then((m) => m.mount({ clock, getProfile: () => profile, tick, renderStats, syncNow, serverStatus })).catch(() => {});
   }
 }
 
