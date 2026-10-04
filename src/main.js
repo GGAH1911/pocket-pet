@@ -1,14 +1,15 @@
 // 부팅 순서는 이 파일 한 곳에서만 정해요.
 // (지난 게임에서 파일 읽는 순서 때문에 저장 기본값이 빠지는 버그가 있었어요.)
 // 순서: 저장 불러오기 → 꺼져 있던 시간 계산 → 화면 시작 → 서비스 워커·알림 확인 → 알림 일정 올리기
-import { createPet } from "./core/state.js?v=8a40262-1791115246";
-import { advance, feed, play, wash, toggleLight, giveMedicine } from "./core/sim.js?v=8a40262-1791115246";
-import { predictNotifications } from "./core/notify.js?v=8a40262-1791115246";
-import { josa } from "./core/josa.js?v=8a40262-1791115246";
-import { drawRoom, drawIcon } from "./render/screen.js?v=8a40262-1791115246";
-import { SPRITES } from "./render/sprites.js?v=8a40262-1791115246";
-import { loadProfile, saveProfile, freshProfile } from "./app/store.js?v=8a40262-1791115246";
-import { deviceInfo, registerSW, enablePush, ensurePush, uploadSchedule, sendTest, serverStatus } from "./app/push.js?v=8a40262-1791115246";
+import { createPet } from "./core/state.js?v=fb4c507-1791115840";
+import { advance, feed, play, wash, toggleLight, giveMedicine } from "./core/sim.js?v=fb4c507-1791115840";
+import { predictNotifications } from "./core/notify.js?v=fb4c507-1791115840";
+import { josa } from "./core/josa.js?v=fb4c507-1791115840";
+import { drawRoom, drawIcon } from "./render/screen.js?v=fb4c507-1791115840";
+import { createAnimator, play as playAnim, frame as animFrame } from "./render/anim.js?v=fb4c507-1791115840";
+import { SPRITES } from "./render/sprites.js?v=fb4c507-1791115840";
+import { loadProfile, saveProfile, freshProfile } from "./app/store.js?v=fb4c507-1791115840";
+import { deviceInfo, registerSW, enablePush, ensurePush, uploadSchedule, sendTest, serverStatus } from "./app/push.js?v=fb4c507-1791115840";
 
 const clock = { offset: 0, now() { return Date.now() + this.offset; } }; // offset은 개발 도구만 바꾼다
 
@@ -16,7 +17,11 @@ const DOT_WIDTH = 128;
 const $ = (id) => document.getElementById(id);
 const stage = $("stage"), canvas = $("room"), ctx = canvas.getContext("2d");
 let view = { w: DOT_WIDTH, h: 200 };
+const QS = new URLSearchParams(location.search);
+if (QS.has("dev") && QS.has("reset")) { localStorage.clear(); history.replaceState(null, "", location.pathname + "?dev"); } // 개발용 초기화
 let profile = loadProfile();
+const anim = createAnimator();
+let petBox = null; // 마지막으로 그린 펫 위치(쓰다듬기 판정용)
 const I = (n) => josa(n, "이", "가");
 
 // ---------- 화면 크기 ----------
@@ -50,6 +55,10 @@ function statusLine() {
   if (p.poops >= 2) return "똥을 치워 주세요";
   if (p.stats.mood <= 20) return `${I(n)} 놀아 달래요`;
   if (p.napLeft > 0) return `${I(n)} 낮잠 자는 중`;
+  if (p.poops === 1) return "똥이 하나 있어요";
+  if (p.stats.hunger < 50 && p.stats.mood < 50) return `${I(n)} 출출하고 심심해요`;
+  if (p.stats.hunger < 50) return `${I(n)} 조금 출출해요`;
+  if (p.stats.mood < 50) return `${I(n)} 조금 심심해요`;
   return `${I(n)} 기분이 좋아요`;
 }
 
@@ -108,29 +117,56 @@ const REFUSE = {
   egg: "아직 알이에요", asleep: "자고 있어요. 깨면 해 주세요", full: "배불러서 안 먹는대요",
   tired: "너무 지쳐서 못 논대요. 좀 쉬게 해 주세요", "not-sick": "안 아픈데 약을 줘서 싫어해요",
 };
-function act(fn, okText) {
+// 행동 → 애니메이션: anims(결과) 가 재생할 애니메이션 이름과 데이터를 돌려준다
+function act(fn, okText, anims) {
   const p = profile.pet; if (!p) return;
+  const before = { poops: p.poops, lightOn: p.lightOn, sick: p.sick };
   const r = fn(p, clock.now());
   handleEvents(r.events);
-  if (r.ok) say(okText(p, r)); else say(REFUSE[r.reason] || "지금은 안 된대요");
+  const t = performance.now();
+  if (r.ok) { say(okText(p, r)); const [name, data] = anims(r, before); if (name) playAnim(anim, name, t, data); }
+  else {
+    say(REFUSE[r.reason] || "지금은 안 된대요");
+    if (r.reason === "asleep") playAnim(anim, "sleepyRefuse", t);
+    else if (r.reason === "not-sick") playAnim(anim, "medicine", t, { bitter: true });
+    else if (r.reason !== "egg") playAnim(anim, "refuse", t);
+  }
   renderStats(); persist(); scheduleSync();
 }
 const S = () => profile.settings;
 const ACTIONS = {
   food: () => openSheet("food"),
-  meal: () => { closeSheet(); act((p, t) => feed(p, "meal", t, S()), (p) => `${I(p.name)} 냠냠 먹었어요`); },
-  snack: () => { closeSheet(); act((p, t) => feed(p, "snack", t, S()), (p) => `${I(p.name)} 간식을 좋아해요`); },
-  play: () => act((p, t) => play(p, t, S(), { win: Math.random() < 0.7 }), (p) => `${josa(p.name, "과", "와")} 신나게 놀았어요`),
-  wash: () => act((p, t) => wash(p, t, S()), () => "깨끗해졌어요"),
-  light: () => act((p, t) => toggleLight(p, t, S()), (p) => (p.lightOn ? "불을 켰어요" : "불을 껐어요")),
-  medicine: () => act((p, t) => giveMedicine(p, t, S()), (p) => (p.sick ? "약을 먹었어요. 한 번 더 필요해요" : "다 나았어요")),
+  meal: () => { closeSheet(); act((p, t) => feed(p, "meal", t, S()), (p) => `${I(p.name)} 냠냠 먹었어요`, () => ["meal"]); },
+  snack: () => { closeSheet(); act((p, t) => feed(p, "snack", t, S()), (p) => `${I(p.name)} 간식을 좋아해요`, () => ["snack"]); },
+  play: () => {
+    const win = Math.random() < 0.7;
+    act((p, t) => play(p, t, S(), { win }), (p) => (win ? `${josa(p.name, "과", "와")} 신나게 놀았어요` : `${josa(p.name, "과", "와")} 놀았어요. 아깝게 졌어요`), () => ["play", { win }]);
+  },
+  wash: () => act((p, t) => wash(p, t, S()), () => "깨끗해졌어요", (r, b) => ["wash", { poopsBefore: b.poops }]),
+  light: () => act((p, t) => toggleLight(p, t, S()), (p) => (p.lightOn ? "불을 켰어요" : "불을 껐어요"), (r) => [r.lightOn ? "lightOn" : "lightOff"]),
+  medicine: () => act((p, t) => giveMedicine(p, t, S()), (p) => (p.sick ? "약을 먹었어요. 한 번 더 필요해요" : "다 나았어요"), () => ["medicine"]),
 };
 
+const PREV_STAGE = { baby: "egg", child: "baby", teen: "child", adult: "teen" };
 function handleEvents(events) {
+  const t = performance.now();
   for (const e of events) {
-    if (e.type === "hatch") say(`알이 깨어났어요! ${josa(profile.pet.name, "이에요", "예요")}`, 6000);
-    if (e.type === "evolve") say(`${I(profile.pet.name)} ${I(STAGE_KO[e.stage])} 됐어요!`, 6000);
+    if (e.type === "hatch") { say(`알이 깨어났어요! ${josa(profile.pet.name, "이에요", "예요")}`, 6000); playAnim(anim, "hatch", t); }
+    if (e.type === "evolve") { say(`${I(profile.pet.name)} ${I(STAGE_KO[e.stage])} 됐어요!`, 6000); playAnim(anim, "evolve", t, { from: PREV_STAGE[e.stage] }); }
+    if (e.type === "poop" && !anim.cur) playAnim(anim, "poop", t);
   }
+}
+
+// 펫을 톡 건드리면 쓰다듬기
+function onTap(ev) {
+  const p = profile.pet; if (!p || !petBox) return;
+  const r = canvas.getBoundingClientRect();
+  const x = ((ev.clientX - r.left) / r.width) * canvas.width, y = ((ev.clientY - r.top) / r.height) * canvas.height;
+  const m = 8;
+  if (x < petBox.x - m || x > petBox.x + petBox.w + m || y < petBox.y - m || y > petBox.y + petBox.h + m) return;
+  if (p.asleep) { playAnim(anim, "sleepyRefuse", performance.now()); say(`${I(p.name)} 자고 있어요. 쉿!`); return; }
+  playAnim(anim, "pet", performance.now());
+  say(`${josa(p.name, "을", "를")} 쓰다듬었어요`, 2500);
 }
 
 // ---------- 시작 화면 ----------
@@ -258,10 +294,12 @@ function renderSettings() {
 // ---------- 그리기 루프 ----------
 function frame() {
   const p = profile.pet;
-  const scene = p ? { stage: p.stage, theme: p.theme, poops: p.poops, asleep: p.asleep, lightOn: p.lightOn, sick: p.sick, mood: p.stats.mood, napping: p.napLeft > 0 } : { stage: "egg" };
-  drawRoom(ctx, { ...view, now: clock.now(), scene });
-  const t = new Date(clock.now());
-  $("clock").textContent = `${String(t.getHours()).padStart(2, "0")}:${String(t.getMinutes()).padStart(2, "0")}`;
+  const scene = p ? { stage: p.stage, theme: p.theme, poops: p.poops, asleep: p.asleep, lightOn: p.lightOn, sick: p.sick, mood: p.stats.mood, hunger: p.stats.hunger, napping: p.napLeft > 0 } : { stage: "egg", lightOn: true, mood: 100, hunger: 100 };
+  const t = performance.now();
+  const fr = animFrame(anim, t, scene, { roam: Math.min(26, Math.round(view.w * 0.18)) });
+  petBox = drawRoom(ctx, { ...view, now: t, scene, f: fr });
+  const d = new Date(clock.now());
+  $("clock").textContent = `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
   requestAnimationFrame(frame);
 }
 
@@ -291,6 +329,7 @@ function boot() {
   for (const btn of document.querySelectorAll("[data-open]")) btn.addEventListener("click", () => openSheet(btn.dataset.open));
   for (const btn of document.querySelectorAll("[data-close]")) btn.addEventListener("click", closeSheet);
 
+  canvas.addEventListener("pointerdown", onTap);
   new ResizeObserver(fitCanvas).observe(stage);
   fitCanvas();
 
@@ -324,8 +363,9 @@ function boot() {
   });
 
   // 개발 도구(공개 배포에는 없음): ?dev 로 열기
-  if (new URLSearchParams(location.search).has("dev")) {
-    import("./dev/panel.js?v=8a40262-1791115246").then((m) => m.mount({ clock, getProfile: () => profile, tick, renderStats, syncNow, serverStatus })).catch(() => {});
+  if (QS.has("dev")) {
+    window.__pp = { clock, getProfile: () => profile, tick, anim, playAnim: (n, d) => playAnim(anim, n, performance.now(), d) };
+    import("./dev/panel.js?v=fb4c507-1791115840").then((m) => m.mount({ clock, getProfile: () => profile, tick, renderStats, syncNow, serverStatus })).catch(() => {});
   }
 }
 

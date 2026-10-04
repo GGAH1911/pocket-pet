@@ -1,5 +1,5 @@
 // 코드 속 도트 그림. 한 글자 = 한 도트, 색은 palette.js.
-import { PALETTE } from "./palette.js?v=8a40262-1791115246";
+import { PALETTE } from "./palette.js?v=fb4c507-1791115840";
 
 export const SPRITES = {
   egg: [
@@ -68,6 +68,103 @@ export const SPRITES = {
     "kppppwwwwk",
     ".kpppwwwk.",
     "..kkkkkk..",
+  ],
+  // ----- 애니메이션 소품 -----
+  bowlFull: [
+    "...wwww...",
+    ".wwwwwwww.",
+    "kkkkkkkkkk",
+    "kbbbbbbbbk",
+    ".kbbbbbbk.",
+    "..kkkkkk..",
+  ],
+  bowlHalf: [
+    "..........",
+    "...wwwww..",
+    "kkkkkkkkkk",
+    "kbbbbbbbbk",
+    ".kbbbbbbk.",
+    "..kkkkkk..",
+  ],
+  bowlEmpty: [
+    "..........",
+    "..........",
+    "kkkkkkkkkk",
+    "kbbbbbbbbk",
+    ".kbbbbbbk.",
+    "..kkkkkk..",
+  ],
+  cookie: [
+    ".kkkk.",
+    "koonok",
+    "kooook",
+    "knoook",
+    "koonok",
+    ".kkkk.",
+  ],
+  ball: [
+    "..kkkk..",
+    ".kyyrrk.",
+    "kyyyrrrk",
+    "kyyyyrrk",
+    "krryyyyk",
+    "krrryyyk",
+    ".krryyk.",
+    "..kkkk..",
+  ],
+  heart: [
+    ".PP.PP.",
+    "PppPppP",
+    "PpppppP",
+    ".PpppP.",
+    "..PpP..",
+    "...P...",
+  ],
+  sparkle: [
+    "..y..",
+    "..y..",
+    "yywyy",
+    "..y..",
+    "..y..",
+  ],
+  bubble: [
+    ".bbb.",
+    "bw..b",
+    "b...b",
+    "b...b",
+    ".bbb.",
+  ],
+  drop: [
+    ".b.",
+    "bbb",
+    "bwb",
+    ".b.",
+  ],
+  crumb: [
+    "ww",
+    "ws",
+  ],
+  tear: [
+    "b",
+    "b",
+  ],
+  puff: [
+    "..ss...",
+    ".swwss.",
+    "swwwwws",
+    ".sssss.",
+  ],
+  hungryBubble: [
+    "..kkkkkkkk..",
+    ".kwwwwwwwwk.",
+    "kwwwwwwwwwwk",
+    "kwwowowwwwwk",
+    "kwkkkkkkkwwk",
+    "kwwkooookwwk",
+    ".kwwkkkkwwk.",
+    "..kkkkkkkk..",
+    "....kwk.....",
+    ".....k......",
   ],
 };
 

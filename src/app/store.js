@@ -1,6 +1,6 @@
 // 저장: 휴대폰 브라우저 저장소(localStorage). 직전 저장본을 백업으로 하나 더 둔다.
-import { DEFAULT_SETTINGS } from "../core/rules.js?v=8a40262-1791115246";
-import { SAVE_VERSION } from "../core/state.js?v=8a40262-1791115246";
+import { DEFAULT_SETTINGS } from "../core/rules.js?v=fb4c507-1791115840";
+import { SAVE_VERSION } from "../core/state.js?v=fb4c507-1791115840";
 
 const KEY = "pocket-pet:save";
 const BACKUP = "pocket-pet:save:backup";
