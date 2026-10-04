@@ -1,20 +1,20 @@
 // 부팅 순서는 이 파일 한 곳에서만 정해요.
 // (지난 게임에서 파일 읽는 순서 때문에 저장 기본값이 빠지는 버그가 있었어요.)
 // 순서: 저장 불러오기 → 꺼져 있던 시간 계산 → 화면 시작 → 서비스 워커·알림 확인 → 알림 일정 올리기
-import { createPet } from "./core/state.js?v=757dd3d-1791122203";
-import { advance, feed, play, wash, cleanPoop, toggleLight, giveMedicine, patPet, switchEndMode, retirePet } from "./core/sim.js?v=757dd3d-1791122203";
-import { predictNotifications } from "./core/notify.js?v=757dd3d-1791122203";
-import { josa } from "./core/josa.js?v=757dd3d-1791122203";
-import { drawRoom, drawIcon } from "./render/screen.js?v=757dd3d-1791122203";
-import { createAnimator, play as playAnim, frame as animFrame, addFx } from "./render/anim.js?v=757dd3d-1791122203";
-import { formKey, lookOf, FORMS as FORMS_REF } from "./render/creature.js?v=757dd3d-1791122203";
-import { guessLocation, sunTimes, moonIllumination, moonPosition, moonPhaseName } from "./core/astro.js?v=757dd3d-1791122203";
-import { createFacePicker, pickFace } from "./render/face.js?v=757dd3d-1791122203";
-import { SPRITES } from "./render/sprites.js?v=757dd3d-1791122203";
-import { loadProfile, saveProfile, freshProfile, exportCode, importCode } from "./app/store.js?v=757dd3d-1791122203";
-import { sfx, setSoundEnabled } from "./app/sound.js?v=757dd3d-1791122203";
-import { markSeen, recordPet, renderCollection, letterText, portrait, currentKey, HOW_KO } from "./app/collection.js?v=757dd3d-1791122203";
-import { deviceInfo, registerSW, enablePush, ensurePush, uploadSchedule, sendTest, serverStatus } from "./app/push.js?v=757dd3d-1791122203";
+import { createPet } from "./core/state.js?v=cfc4ae6-1791122258";
+import { advance, feed, play, wash, cleanPoop, toggleLight, giveMedicine, patPet, switchEndMode, retirePet } from "./core/sim.js?v=cfc4ae6-1791122258";
+import { predictNotifications } from "./core/notify.js?v=cfc4ae6-1791122258";
+import { josa } from "./core/josa.js?v=cfc4ae6-1791122258";
+import { drawRoom, drawIcon } from "./render/screen.js?v=cfc4ae6-1791122258";
+import { createAnimator, play as playAnim, frame as animFrame, addFx } from "./render/anim.js?v=cfc4ae6-1791122258";
+import { formKey, lookOf, FORMS as FORMS_REF } from "./render/creature.js?v=cfc4ae6-1791122258";
+import { guessLocation, sunTimes, moonIllumination, moonPosition, moonPhaseName } from "./core/astro.js?v=cfc4ae6-1791122258";
+import { createFacePicker, pickFace } from "./render/face.js?v=cfc4ae6-1791122258";
+import { SPRITES } from "./render/sprites.js?v=cfc4ae6-1791122258";
+import { loadProfile, saveProfile, freshProfile, exportCode, importCode } from "./app/store.js?v=cfc4ae6-1791122258";
+import { sfx, setSoundEnabled } from "./app/sound.js?v=cfc4ae6-1791122258";
+import { markSeen, recordPet, renderCollection, letterText, portrait, currentKey, HOW_KO } from "./app/collection.js?v=cfc4ae6-1791122258";
+import { deviceInfo, registerSW, enablePush, ensurePush, uploadSchedule, sendTest, serverStatus } from "./app/push.js?v=cfc4ae6-1791122258";
 
 const clock = { offset: 0, now() { return Date.now() + this.offset; } }; // offset은 개발 도구만 바꾼다
 
@@ -199,7 +199,7 @@ function skyText() {
   const loc = profile.settings.location, now = clock.now();
   const st = sunTimes(now, loc.lat, loc.lon), ill = moonIllumination(now), mp = moonPosition(now, loc.lat, loc.lon);
   const sun = st.sunrise ? `일출 ${hm(st.sunrise)} · 일몰 ${hm(st.sunset)}` : "오늘은 해가 뜨거나 지지 않아요";
-  return `창밖(${loc.label}): ${sun} · 달: ${moonPhaseName(ill.phase)} ${Math.round(ill.fraction * 100)}%${mp.altitude > 0 ? "" : " (지금은 지평선 아래)"}`;
+  return `${loc.label} · ${sun} · 달: ${moonPhaseName(ill.phase)} ${Math.round(ill.fraction * 100)}%${mp.altitude > 0 ? "" : " (아직 안 떴어요)"}`;
 }
 
 function onTap(ev) {
@@ -457,7 +457,7 @@ function renderSettings() {
     <p class="small dim">끝 방식을 바꾸면 지금부터 적용되고, 적어도 하루는 더 함께해요.</p>
     <label class="check"><input type="checkbox" id="set-sound" ${s.sound ? "checked" : ""}> 소리 켜기</label>
     <label>창밖 하늘 위치</label>
-    <p class="small" id="loc-info">${s.location.label} · ${skyText().replace(/^창밖\([^)]*\): /, "")}</p>
+    <p class="small" id="loc-info">${skyText()}</p>
     <button class="big ghost" id="btn-loc">내 위치로 일출·일몰 맞추기</button>
     <button class="big ghost danger" id="btn-reset">처음부터 다시</button>`;
   if (p) $("set-speed").value = p.speed;
@@ -600,7 +600,7 @@ function boot() {
   // 개발 도구(공개 배포에는 없음): ?dev 로 열기
   if (QS.has("dev")) {
     window.__pp = { clock, getProfile: () => profile, tick, anim, playAnim: (n, d) => playAnim(anim, n, performance.now(), d) };
-    import("./dev/panel.js?v=757dd3d-1791122203").then((m) => m.mount({ clock, getProfile: () => profile, tick, renderStats, syncNow, serverStatus })).catch(() => {});
+    import("./dev/panel.js?v=cfc4ae6-1791122258").then((m) => m.mount({ clock, getProfile: () => profile, tick, renderStats, syncNow, serverStatus })).catch(() => {});
   }
 }
 
