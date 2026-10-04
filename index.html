@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>포켓 펫 (가제)</title>
+  <style>
+    html, body { margin: 0; height: 100%; background: #f3efe6; }
+    body { display: grid; place-items: center; font-family: system-ui, sans-serif; }
+    .device { background: #f08a8a; padding: 32px 28px 40px; border-radius: 48% 48% 44% 44%; box-shadow: 0 8px 0 #c86a6a; }
+    canvas { display: block; width: 240px; height: 240px; image-rendering: pixelated; border: 6px solid #5a5a5a; border-radius: 12px; }
+    .buttons { display: flex; justify-content: center; gap: 22px; margin-top: 22px; }
+    .buttons button { width: 40px; height: 40px; border-radius: 50%; border: 0; background: #ffe08a; box-shadow: 0 4px 0 #c9a94f; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <div class="device">
+    <canvas id="screen" width="240" height="240"></canvas>
+    <div class="buttons">
+      <button data-btn="A" aria-label="고르기">A</button>
+      <button data-btn="B" aria-label="정하기">B</button>
+      <button data-btn="C" aria-label="취소">C</button>
+    </div>
+  </div>
+  <script type="module" src="src/main.js?v=6197e8f-1791112662"></script>
+</body>
+</html>
