@@ -4,11 +4,11 @@
 // - 무슨 일이 생겼는지(events)를 돌려준다 → "자리를 비운 동안" 요약과 알림 예측에 쓴다.
 import {
   SPEEDS, PER_HOUR_AWAKE, PER_HOUR_ASLEEP, MOOD_PER_POOP_PER_HOUR, HEALTH_PER_HOUR, BUSY_FACTOR,
-  POOP, SICK, SNACK_BINGE, NAP_MIN, NAP_ENERGY_PER_HOUR, ACTIONS, STAGE_MIN, BRANCH, MISTAKE, CALL, DEFAULT_SETTINGS,
-} from "./rules.js?v=fb4c507-1791115840";
-import { clampStat } from "./state.js?v=fb4c507-1791115840";
-import { nextRandom, randomInt } from "./rng.js?v=fb4c507-1791115840";
-import { isSleepTime, isBusyTime } from "./daytime.js?v=fb4c507-1791115840";
+  POOP, CLEAN, SICK, SNACK_BINGE, NAP_MIN, NAP_ENERGY_PER_HOUR, ACTIONS, STAGE_MIN, BRANCH, MISTAKE, CALL, DEFAULT_SETTINGS,
+} from "./rules.js?v=0d5f74b-1791117259";
+import { clampStat } from "./state.js?v=0d5f74b-1791117259";
+import { nextRandom, randomInt } from "./rng.js?v=0d5f74b-1791117259";
+import { isSleepTime, isBusyTime } from "./daytime.js?v=0d5f74b-1791117259";
 
 const MINUTE = 60000;
 const NEXT_STAGE = { egg: "baby", baby: "child", child: "teen", teen: "adult" };
@@ -55,7 +55,7 @@ export function tickMinute(pet, ts, settings = DEFAULT_SETTINGS, events = []) {
   }
 
   const s = pet.stats;
-  const before = { hunger: s.hunger, mood: s.mood };
+  const before = { hunger: s.hunger, mood: s.mood, clean: s.clean };
 
   // 잠: 실제 시계의 취침·기상 시각을 따른다
   const sleepNow = isSleepTime(ts, settings);
@@ -103,16 +103,16 @@ export function tickMinute(pet, ts, settings = DEFAULT_SETTINGS, events = []) {
       pet.poopGap = randomInt(pet, POOP.minGap, POOP.maxGap);
       if (pet.poops < POOP.max) {
         pet.poops++;
-        s.clean -= POOP.cleanCost;
         events.push({ t: ts, type: "poop", count: pet.poops });
       }
     }
+    s.clean += ((CLEAN.perHourAwake + CLEAN.perPoopPerHour * pet.poops) / 60) * f;
 
     // 건강
     let dh = HEALTH_PER_HOUR.perPoop * pet.poops;
     if (s.hunger <= 0) dh += HEALTH_PER_HOUR.starving;
     if (pet.sick) dh += HEALTH_PER_HOUR.sick;
-    if (!pet.sick && pet.poops === 0 && s.hunger >= 20 && s.mood >= 20) dh += HEALTH_PER_HOUR.recover;
+    if (!pet.sick && pet.poops === 0 && s.hunger >= 20 && s.mood >= 20 && s.clean >= 20) dh += HEALTH_PER_HOUR.recover;
     s.health += (dh / 60) * f;
 
     // 아픔
@@ -130,6 +130,7 @@ export function tickMinute(pet, ts, settings = DEFAULT_SETTINGS, events = []) {
   // 알림용 문턱 넘김
   if (before.hunger > CALL.hungryAt && s.hunger <= CALL.hungryAt) events.push({ t: ts, type: "hungry" });
   if (before.mood > CALL.boredAt && s.mood <= CALL.boredAt) events.push({ t: ts, type: "bored" });
+  if (before.clean > CALL.dirtyAt && s.clean <= CALL.dirtyAt) events.push({ t: ts, type: "dirty" });
   if (before.hunger > 0 && s.hunger <= 0) events.push({ t: ts, type: "crying", what: "hunger" });
   if (before.mood > 0 && s.mood <= 0) events.push({ t: ts, type: "crying", what: "mood" });
 
@@ -203,6 +204,7 @@ export function play(pet, now, settings = DEFAULT_SETTINGS, { win = true } = {})
   const a = win ? ACTIONS.playWin : ACTIONS.playLose;
   pet.stats.mood += a.mood;
   pet.stats.energy += a.energy;
+  pet.stats.clean -= CLEAN.playCost;
   if (a.weight) pet.weight = Math.max(5, pet.weight + a.weight);
   pet.napLeft = 0;
   pet.counts.plays++;
@@ -210,12 +212,20 @@ export function play(pet, now, settings = DEFAULT_SETTINGS, { win = true } = {})
   return r;
 }
 
+// 씻기(목욕): 깨끗함만 100. 바닥의 똥은 따로 톡 눌러 치운다.
 export function wash(pet, now, settings = DEFAULT_SETTINGS) {
   const r = begin(pet, now, settings);
   if (!r.ok) return r;
-  pet.poops = 0;
   pet.stats.clean = 100;
   return r;
+}
+
+// 똥 하나 치우기(화면의 똥을 톡). 펫이 자고 있어도 바닥은 치울 수 있다.
+export function cleanPoop(pet, now, settings = DEFAULT_SETTINGS) {
+  const events = advance(pet, now, settings);
+  if (pet.poops <= 0) return { ok: false, reason: "no-poop", events };
+  pet.poops--;
+  return { ok: true, events, left: pet.poops };
 }
 
 // 불은 잘 때도 켜고 끌 수 있다(그게 목적이므로).

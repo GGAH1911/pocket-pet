@@ -57,7 +57,7 @@ export async function ensurePush(deviceId) {
 }
 
 export async function uploadSchedule(deviceId, notes, { keepalive = false } = {}) {
-  const url = location.origin + location.pathname;
+  const url = location.origin + location.pathname + "?from=push"; // 알림을 눌러 열면 크게 반긴다
   const events = notes.map((n) => ({ at: n.at, title: n.title, body: n.body, tag: n.tag, badge: n.badge, urgent: n.urgent, url }));
   return api("/schedule", "PUT", { device: deviceId, events }, { keepalive });
 }

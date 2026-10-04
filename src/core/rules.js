@@ -23,7 +23,9 @@ export const HEALTH_PER_HOUR = {
 };
 export const BUSY_FACTOR = 0.5; // 바쁜 시간에는 수치가 절반 속도로 준다
 
-export const POOP = { minGap: 180, maxGap: 300, max: 4, cleanCost: 20 }; // 게임 분
+export const POOP = { minGap: 180, maxGap: 300, max: 4 }; // 게임 분
+// 깨끗함: 깨어 있으면 조금씩, 바닥에 똥이 있으면 더 빨리, 놀면 조금 더러워진다. 씻기(목욕)로 100
+export const CLEAN = { perHourAwake: -1, perPoopPerHour: -4, playCost: 5 };
 export const SICK = { healthBelow: 40, chancePerHour: 0.1, lowHealthNeedsTwo: 20 };
 export const SNACK_BINGE = { count: 4, withinMin: 60, healthCost: 15 };
 export const NAP_MIN = 60; // 게임 분
@@ -54,7 +56,7 @@ export const MISTAKE = {
 };
 
 // 알림 발생 기준
-export const CALL = { hungryAt: 20, boredAt: 20, poopCount: 2 };
+export const CALL = { hungryAt: 20, boredAt: 20, poopCount: 2, dirtyAt: 20 };
 
 export const DEFAULT_SETTINGS = {
   sleep: { start: "23:00", end: "07:00" },

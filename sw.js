@@ -32,7 +32,7 @@ self.addEventListener("notificationclick", (event) => {
   const url = (event.notification.data && event.notification.data.url) || self.registration.scope;
   event.waitUntil((async () => {
     const all = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
-    for (const c of all) if (c.url.startsWith(self.registration.scope)) { await c.focus(); return; }
+    for (const c of all) if (c.url.startsWith(self.registration.scope)) { c.postMessage({ type: "push-click" }); await c.focus(); return; }
     await self.clients.openWindow(url);
   })());
 });

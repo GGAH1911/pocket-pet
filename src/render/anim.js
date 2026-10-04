@@ -5,7 +5,8 @@
 
 export const DUR = {
   meal: 1800, snack: 1400, play: 2200, wash: 1800, lightOff: 900, lightOn: 700,
-  medicine: 1600, refuse: 900, sleepyRefuse: 1000, hatch: 2600, evolve: 2400, pet: 800, poop: 500,
+  medicine: 1600, refuse: 900, sleepyRefuse: 1000, hatch: 2600, evolve: 3000, pet: 800, poop: 500,
+  greet: 2200, greetBig: 3200, tidy: 700,
 };
 
 const clamp01 = (x) => Math.max(0, Math.min(1, x));
@@ -19,7 +20,12 @@ export function createAnimator() {
     blink: { nextAt: 1500, until: 0 },
     hop: { at: -1e9, nextAt: 6000 },
     lastT: 0,
+    fx: [], // 화면 위치에 붙는 짧은 효과(똥 치우기 연기 등)
   };
+}
+
+export function addFx(a, type, x, y, now, dur = 600) {
+  a.fx.push({ type, x, y, start: now, dur });
 }
 
 export function play(a, type, now, data = {}) {
@@ -35,16 +41,19 @@ export function frame(a, now, scene, { roam = 20 } = {}) {
   const dt = Math.min(100, now - (a.lastT || now));
   a.lastT = now;
   const f = {
-    pose: { dx: 0, dy: 0, sx: 1, sy: 1, eyes: "open", mouth: "auto", tears: false, dizzy: false, facing: a.wander.facing },
+    pose: { dx: 0, dy: 0, sx: 1, sy: 1, eyes: null, mouth: null, tears: false, dizzy: false, facing: a.wander.facing }, // eyes·mouth가 null이면 표정 체계가 고른다
     props: [], // { sprite, x, y, scale, alpha } — x,y는 펫 발 밑 가운데 기준 도트 좌표
     texts: [], // { text, x, y, alpha, size }
     poopAlpha: 1, poopPop: 0,
     darkness: scene.lightOn ? (scene.asleep ? 0.18 : 0) : 0.62,
     flash: 0,
     egg: null, // { shake, cracks }
-    showStage: scene.stage,
-    evolveBlink: null,
+    showKey: null, // 진화·부화 중 다른 모습을 보여줄 때
+    silhouette: false,
+    fx: [],
   };
+  a.fx = a.fx.filter((x) => now - x.start < x.dur);
+  f.fx = a.fx.map((x) => ({ ...x, t: (now - x.start) / x.dur }));
   const p = f.pose;
   const calm = scene.stage !== "egg" && !scene.asleep && !scene.napping;
   const crying = scene.hunger <= 0 || scene.mood <= 0;
@@ -85,10 +94,10 @@ export function frame(a, now, scene, { roam = 20 } = {}) {
     }
   }
   if (calm && crying) {
-    p.tears = true; p.mouth = "sad";
+    p.tears = true;
     p.dx += Math.sin(now / 60) * 0.4; // 훌쩍
   }
-  if (scene.sick && !scene.asleep) { p.dizzy = true; p.dx += Math.sin(now / 500) * 1.5; if (p.mouth === "auto") p.mouth = "sad"; }
+  if (scene.sick && !scene.asleep) { p.dizzy = true; p.dx += Math.sin(now / 500) * 1.5; }
   if (calm && !crying && scene.hunger <= 20 && !busy(a, now)) {
     const ph = (now % 3000) / 3000;
     if (ph < 0.7) f.props.push({ sprite: "hungryBubble", edge: 1, x: -10, y: -40 - Math.sin(ph * Math.PI) * 2, scale: 2, alpha: Math.min(1, ph * 6, (0.7 - ph) * 6) });
@@ -168,8 +177,6 @@ function applyOneShot(f, c, t, now, scene) {
       }
       p.eyes = t < 0.7 ? "closed" : "happy"; p.mouth = "smile";
       p.dx += Math.sin(now / 50) * (t < 0.6 ? 0.8 : 0); // 부르르
-      f.poopAlpha = 1 - clamp01((t - 0.2) / 0.3);
-      f.poopsOverride = c.data.poopsBefore || 0;
       if (t > 0.7) for (let i = 0; i < 3; i++) f.props.push({ sprite: "sparkle", x: -14 + i * 14, y: -30 - Math.sin((t - 0.7) * 10 + i) * 4, scale: 2, alpha: 1 - (t - 0.7) * 3 });
       break;
     }
@@ -222,7 +229,7 @@ function applyOneShot(f, c, t, now, scene) {
       // 알이 점점 세게 흔들리고 금이 감 → 번쩍 → 아기가 톡 튀어나옴
       if (t < 0.72) {
         const k = t / 0.72;
-        f.showStage = "egg";
+        f.showKey = c.data.eggKey || "animal.egg";
         f.egg = { shake: Math.sin(now / (60 - k * 30)) * (0.5 + k * 3), cracks: k > 0.85 ? 3 : k > 0.6 ? 2 : k > 0.3 ? 1 : 0 };
       } else {
         f.flash = Math.max(0, 1 - (t - 0.72) / 0.18) * 0.85;
@@ -233,18 +240,46 @@ function applyOneShot(f, c, t, now, scene) {
       break;
     }
     case "evolve": {
-      // 옛 모습과 새 모습이 번갈아 깜빡이다가 번쩍 → 새 모습 + 반짝이 폭발
-      if (t < 0.7) {
-        const rate = 300 - (t / 0.7) * 230;
-        f.showStage = Math.floor((now - c.start) / rate) % 2 ? scene.stage : (c.data.from || scene.stage);
-        f.evolveBlink = true;
+      // 하얀 실루엣이 옛 모습 ↔ 새 모습으로 점점 빠르게 바뀜 → 번쩍 → 새 모습 공개 + 하트·반짝이 폭발
+      if (t < 0.72) {
+        const el = now - c.start;
+        const rate = Math.max(70, 420 - (t / 0.72) * 360);
+        const showNew = Math.floor(el / rate) % 2 === 1;
+        f.showKey = showNew ? c.data.toKey : c.data.fromKey;
+        f.silhouette = t > 0.08;
+        p.sy *= 1 + Math.sin(el / 90) * 0.03;
+        p.dy -= Math.min(4, t * 10); // 살짝 떠오름
       } else {
-        f.flash = Math.max(0, 1 - (t - 0.7) / 0.15) * 0.9;
-        const k = (t - 0.7) / 0.3;
-        p.eyes = "happy"; p.mouth = "open"; p.dy -= Math.sin(clamp01(k) * Math.PI) * 8;
-        for (let i = 0; i < 8; i++) { const ang = (i / 8) * Math.PI * 2; const r = 12 + k * 40; f.props.push({ sprite: i % 2 ? "sparkle" : "heart", x: Math.cos(ang) * r, y: -16 + Math.sin(ang) * r * 0.7, scale: 2, alpha: 1 - k }); }
+        f.flash = Math.max(0, 1 - (t - 0.72) / 0.14) * 0.9;
+        const k = (t - 0.72) / 0.28;
+        p.eyes = "happy"; p.mouth = "bigsmile"; p.dy -= Math.sin(clamp01(k) * Math.PI) * 8;
+        for (let i = 0; i < 8; i++) { const ang = (i / 8) * Math.PI * 2; const r = 14 + k * 44; f.props.push({ sprite: i % 2 ? "sparkle" : "heart", x: Math.cos(ang) * r, y: -20 + Math.sin(ang) * r * 0.7, scale: 2, alpha: 1 - k }); }
       }
       break;
     }
-  }
+    case "greet":
+    case "greetBig": {
+      // 반겨 주기: 화면 앞으로 다가와(조금 커짐) 콩콩 뛰고 하트
+      const big = c.type === "greetBig";
+      const near = Math.sin(clamp01(t / 0.25) * Math.PI / 2) * (t < 0.85 ? 1 : (1 - t) / 0.15);
+      p.dx *= 1 - near; // 가운데로
+      p.sx *= 1 + near * 0.15; p.sy *= 1 + near * 0.15;
+      const hops = big ? 3 : 2;
+      const ph = clamp01((t - 0.2) / 0.65) * hops;
+      if (t > 0.2 && t < 0.85) p.dy -= Math.abs(Math.sin(ph * Math.PI)) * (big ? 12 : 8);
+      p.eyes = "happy"; p.mouth = "bigsmile";
+      const n = big ? 5 : 3;
+      for (let i = 0; i < n; i++) {
+        const ht = clamp01((t - 0.25 - i * 0.08) / 0.6);
+        if (ht > 0 && ht < 1) f.props.push({ sprite: "heart", x: (i - (n - 1) / 2) * 12, y: -36 - ht * 30, scale: 2, alpha: 1 - ht });
+      }
+      if (big && t > 0.3 && t < 0.8) f.texts.push({ text: "!", x: 16, y: -44, alpha: 1, size: 12 });
+      break;
+    }
+    case "tidy": {
+      // 똥 치웠을 때 펫 반응: 좋아서 몸을 흔듦
+      p.eyes = "happy"; p.mouth = "smile";
+      p.sx *= 1 + Math.sin(t * Math.PI * 4) * 0.05 * (1 - t);
+      break;
+    }  }
 }

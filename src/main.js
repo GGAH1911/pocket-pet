@@ -1,15 +1,17 @@
 // 부팅 순서는 이 파일 한 곳에서만 정해요.
 // (지난 게임에서 파일 읽는 순서 때문에 저장 기본값이 빠지는 버그가 있었어요.)
 // 순서: 저장 불러오기 → 꺼져 있던 시간 계산 → 화면 시작 → 서비스 워커·알림 확인 → 알림 일정 올리기
-import { createPet } from "./core/state.js?v=fb4c507-1791115840";
-import { advance, feed, play, wash, toggleLight, giveMedicine } from "./core/sim.js?v=fb4c507-1791115840";
-import { predictNotifications } from "./core/notify.js?v=fb4c507-1791115840";
-import { josa } from "./core/josa.js?v=fb4c507-1791115840";
-import { drawRoom, drawIcon } from "./render/screen.js?v=fb4c507-1791115840";
-import { createAnimator, play as playAnim, frame as animFrame } from "./render/anim.js?v=fb4c507-1791115840";
-import { SPRITES } from "./render/sprites.js?v=fb4c507-1791115840";
-import { loadProfile, saveProfile, freshProfile } from "./app/store.js?v=fb4c507-1791115840";
-import { deviceInfo, registerSW, enablePush, ensurePush, uploadSchedule, sendTest, serverStatus } from "./app/push.js?v=fb4c507-1791115840";
+import { createPet } from "./core/state.js?v=0d5f74b-1791117259";
+import { advance, feed, play, wash, cleanPoop, toggleLight, giveMedicine } from "./core/sim.js?v=0d5f74b-1791117259";
+import { predictNotifications } from "./core/notify.js?v=0d5f74b-1791117259";
+import { josa } from "./core/josa.js?v=0d5f74b-1791117259";
+import { drawRoom, drawIcon } from "./render/screen.js?v=0d5f74b-1791117259";
+import { createAnimator, play as playAnim, frame as animFrame, addFx } from "./render/anim.js?v=0d5f74b-1791117259";
+import { formKey, lookOf } from "./render/creature.js?v=0d5f74b-1791117259";
+import { createFacePicker, pickFace } from "./render/face.js?v=0d5f74b-1791117259";
+import { SPRITES } from "./render/sprites.js?v=0d5f74b-1791117259";
+import { loadProfile, saveProfile, freshProfile } from "./app/store.js?v=0d5f74b-1791117259";
+import { deviceInfo, registerSW, enablePush, ensurePush, uploadSchedule, sendTest, serverStatus } from "./app/push.js?v=0d5f74b-1791117259";
 
 const clock = { offset: 0, now() { return Date.now() + this.offset; } }; // offset은 개발 도구만 바꾼다
 
@@ -21,7 +23,10 @@ const QS = new URLSearchParams(location.search);
 if (QS.has("dev") && QS.has("reset")) { localStorage.clear(); history.replaceState(null, "", location.pathname + "?dev"); } // 개발용 초기화
 let profile = loadProfile();
 const anim = createAnimator();
+const faces = createFacePicker();
 let petBox = null; // 마지막으로 그린 펫 위치(쓰다듬기 판정용)
+let poopRects = []; // 마지막으로 그린 똥 위치(톡 치우기 판정용)
+let lookCache = { key: "", look: null };
 const I = (n) => josa(n, "이", "가");
 
 // ---------- 화면 크기 ----------
@@ -52,10 +57,11 @@ function statusLine() {
   if (p.stats.hunger <= 0) return `${I(n)} 배고파서 울고 있어요`;
   if (p.stats.mood <= 0) return `${I(n)} 심심해서 울고 있어요`;
   if (p.stats.hunger <= 20) return `${I(n)} 배고파요`;
-  if (p.poops >= 2) return "똥을 치워 주세요";
+  if (p.poops >= 2) return "똥을 톡 눌러 치워 주세요";
   if (p.stats.mood <= 20) return `${I(n)} 놀아 달래요`;
   if (p.napLeft > 0) return `${I(n)} 낮잠 자는 중`;
-  if (p.poops === 1) return "똥이 하나 있어요";
+  if (p.poops === 1) return "똥을 톡 눌러 치워 주세요";
+  if (p.stats.clean <= 30) return `${I(n)} 꼬질꼬질해요. 씻겨 주세요`;
   if (p.stats.hunger < 50 && p.stats.mood < 50) return `${I(n)} 출출하고 심심해요`;
   if (p.stats.hunger < 50) return `${I(n)} 조금 출출해요`;
   if (p.stats.mood < 50) return `${I(n)} 조금 심심해요`;
@@ -124,7 +130,7 @@ function act(fn, okText, anims) {
   const r = fn(p, clock.now());
   handleEvents(r.events);
   const t = performance.now();
-  if (r.ok) { say(okText(p, r)); const [name, data] = anims(r, before); if (name) playAnim(anim, name, t, data); }
+  if (r.ok) { say(okText(p, r)); const [name, data] = anims(r, before); if (name) playAnim(anim, name, t, data); setTimeout(() => pickFace(faces, profile.pet, performance.now(), { force: true }), 1800); }
   else {
     say(REFUSE[r.reason] || "지금은 안 된대요");
     if (r.reason === "asleep") playAnim(anim, "sleepyRefuse", t);
@@ -142,7 +148,7 @@ const ACTIONS = {
     const win = Math.random() < 0.7;
     act((p, t) => play(p, t, S(), { win }), (p) => (win ? `${josa(p.name, "과", "와")} 신나게 놀았어요` : `${josa(p.name, "과", "와")} 놀았어요. 아깝게 졌어요`), () => ["play", { win }]);
   },
-  wash: () => act((p, t) => wash(p, t, S()), () => "깨끗해졌어요", (r, b) => ["wash", { poopsBefore: b.poops }]),
+  wash: () => act((p, t) => wash(p, t, S()), (p) => (p.poops ? "뽀득뽀득 깨끗해졌어요. 바닥의 똥은 톡 눌러 치워요" : "뽀득뽀득 깨끗해졌어요"), () => ["wash"]),
   light: () => act((p, t) => toggleLight(p, t, S()), (p) => (p.lightOn ? "불을 켰어요" : "불을 껐어요"), (r) => [r.lightOn ? "lightOn" : "lightOff"]),
   medicine: () => act((p, t) => giveMedicine(p, t, S()), (p) => (p.sick ? "약을 먹었어요. 한 번 더 필요해요" : "다 나았어요"), () => ["medicine"]),
 };
@@ -151,17 +157,50 @@ const PREV_STAGE = { baby: "egg", child: "baby", teen: "child", adult: "teen" };
 function handleEvents(events) {
   const t = performance.now();
   for (const e of events) {
-    if (e.type === "hatch") { say(`알이 깨어났어요! ${josa(profile.pet.name, "이에요", "예요")}`, 6000); playAnim(anim, "hatch", t); }
-    if (e.type === "evolve") { say(`${I(profile.pet.name)} ${I(STAGE_KO[e.stage])} 됐어요!`, 6000); playAnim(anim, "evolve", t, { from: PREV_STAGE[e.stage] }); }
-    if (e.type === "poop" && !anim.cur) playAnim(anim, "poop", t);
+    const th = profile.pet.theme;
+    if (e.type === "hatch") { say(`알이 깨어났어요! ${josa(profile.pet.name, "이에요", "예요")}`, 6000); playAnim(anim, "hatch", t, { eggKey: `${th}.egg` }); }
+    if (e.type === "evolve") {
+      const prevBranch = e.stage === "adult" ? (e.branch === "A" || e.branch === "B" ? "good" : "normal") : null;
+      say(`${I(profile.pet.name)} ${I(STAGE_KO[e.stage])} 됐어요!`, 6000);
+      playAnim(anim, "evolve", t, { fromKey: formKey(th, PREV_STAGE[e.stage], prevBranch), toKey: formKey(th, e.stage, e.branch) });
+      setTimeout(() => pickFace(faces, profile.pet, performance.now(), { force: true }), 3200);
+    }
+    if (e.type === "poop") { if (!anim.cur) playAnim(anim, "poop", t); if (!profile.pet.asleep) say("똥을 쌌어요. 톡 눌러 치워 주세요", 5000); }
   }
 }
 
 // 펫을 톡 건드리면 쓰다듬기
+// 똥 자리 관리(화면용): 몇 번째 자리에 똥이 있는지. 톡 누른 그 똥이 사라지게 한다.
+function syncPoopSlots() {
+  const p = profile.pet;
+  profile.ui = profile.ui || { poopSlots: [] };
+  const slots = profile.ui.poopSlots;
+  const n = p ? p.poops : 0;
+  while (slots.length > n) slots.pop();
+  while (slots.length < n) { const free = [0, 1, 2, 3].find((i) => !slots.includes(i)); slots.push(free ?? 0); }
+  return slots;
+}
+
 function onTap(ev) {
-  const p = profile.pet; if (!p || !petBox) return;
+  const p = profile.pet; if (!p) return;
   const r = canvas.getBoundingClientRect();
   const x = ((ev.clientX - r.left) / r.width) * canvas.width, y = ((ev.clientY - r.top) / r.height) * canvas.height;
+  // 똥을 먼저 본다(누르기 쉽게 여유 6px)
+  const hit = poopRects.find((pr) => x >= pr.x - 6 && x <= pr.x + pr.w + 6 && y >= pr.y - 6 && y <= pr.y + pr.h + 6);
+  if (hit) {
+    const res = cleanPoop(p, clock.now(), S());
+    if (res.ok) {
+      const slots = syncPoopSlots();
+      const i = slots.indexOf(hit.slot); if (i >= 0) slots.splice(i, 1);
+      slots.length = p.poops; // 혹시 어긋나면 맞춤
+      addFx(anim, "poof", hit.x + hit.w / 2, hit.y + hit.h / 2, performance.now());
+      if (!p.asleep && !anim.cur) playAnim(anim, "tidy", performance.now());
+      say(p.poops ? `똥을 치웠어요. ${p.poops}개 남았어요` : "똥을 다 치웠어요", 2500);
+      renderStats(); persist(); scheduleSync();
+    }
+    return;
+  }
+  if (!petBox) return;
   const m = 8;
   if (x < petBox.x - m || x > petBox.x + petBox.w + m || y < petBox.y - m || y > petBox.y + petBox.h + m) return;
   if (p.asleep) { playAnim(anim, "sleepyRefuse", performance.now()); say(`${I(p.name)} 자고 있어요. 쉿!`); return; }
@@ -294,10 +333,16 @@ function renderSettings() {
 // ---------- 그리기 루프 ----------
 function frame() {
   const p = profile.pet;
-  const scene = p ? { stage: p.stage, theme: p.theme, poops: p.poops, asleep: p.asleep, lightOn: p.lightOn, sick: p.sick, mood: p.stats.mood, hunger: p.stats.hunger, napping: p.napLeft > 0 } : { stage: "egg", lightOn: true, mood: 100, hunger: 100 };
   const t = performance.now();
+  let scene;
+  if (p) {
+    const lk = `${p.bornAt}|${p.weight}|${p.mistakes.total}`;
+    if (lookCache.key !== lk) lookCache = { key: lk, look: lookOf(p) };
+    scene = { stage: p.stage, branch: p.branch, theme: p.theme, poops: p.poops, poopSlots: syncPoopSlots(), asleep: p.asleep, lightOn: p.lightOn, sick: p.sick, mood: p.stats.mood, hunger: p.stats.hunger, napping: p.napLeft > 0, look: lookCache.look, face: pickFace(faces, p, t) };
+  } else scene = { stage: "egg", theme: "animal", lightOn: true, mood: 100, hunger: 100, poopSlots: [] };
   const fr = animFrame(anim, t, scene, { roam: Math.min(26, Math.round(view.w * 0.18)) });
-  petBox = drawRoom(ctx, { ...view, now: t, scene, f: fr });
+  const drawn = drawRoom(ctx, { ...view, now: t, scene, f: fr });
+  petBox = drawn.pet; poopRects = drawn.poops;
   const d = new Date(clock.now());
   $("clock").textContent = `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
   requestAnimationFrame(frame);
@@ -334,11 +379,18 @@ function boot() {
   fitCanvas();
 
   // 꺼져 있던 동안의 일 계산
+  const fromPush = QS.get("from") === "push";
+  if (fromPush) history.replaceState(null, "", location.pathname + (QS.has("dev") ? "?dev" : ""));
   if (profile.pet) {
+    const away = Date.now() - (profile.lastSeen || Date.now());
     const events = advance(profile.pet, clock.now(), profile.settings);
     persist();
     const sum = summarize(events);
     if (sum) say(`자리를 비운 동안: ${sum}`, 9000);
+    pickFace(faces, profile.pet, performance.now(), { force: true });
+    if (profile.pet.stage !== "egg" && !profile.pet.asleep && (fromPush || away >= 2 * 3600 * 1000)) {
+      setTimeout(() => { if (!anim.cur) { playAnim(anim, fromPush ? "greetBig" : "greet", performance.now()); if (!sum) say(fromPush ? `와 줬구나! ${I(profile.pet.name)} 기다렸어요` : `${I(profile.pet.name)} 반가워해요`, 5000); } }, 700);
+    }
   } else {
     showStart();
   }
@@ -349,11 +401,18 @@ function boot() {
 
   // 앱을 닫거나 다른 앱으로 갈 때 일정 올리기
   document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "hidden") { persist(); syncNow({ keepalive: true }); }
+    if (document.visibilityState === "hidden") { profile.lastSeen = Date.now(); persist(); syncNow({ keepalive: true }); }
     else { tick(); navigator.clearAppBadge?.().catch(() => {}); }
   });
   navigator.clearAppBadge?.().catch(() => {});
   setInterval(() => syncNow(), 10 * 60 * 1000);
+  setInterval(() => { if (document.visibilityState === "visible") profile.lastSeen = Date.now(); }, 30000);
+  // 알림을 눌러서 앱이 앞으로 나오면 크게 반기기(서비스 워커가 알려 줌)
+  navigator.serviceWorker?.addEventListener("message", (ev) => {
+    if (ev.data?.type === "push-click" && profile.pet && profile.pet.stage !== "egg" && !profile.pet.asleep) {
+      playAnim(anim, "greetBig", performance.now()); say(`와 줬구나! ${I(profile.pet.name)} 기다렸어요`, 5000);
+    }
+  });
 
   // 서비스 워커·알림 연결 확인
   registerSW().then(async () => {
@@ -365,7 +424,7 @@ function boot() {
   // 개발 도구(공개 배포에는 없음): ?dev 로 열기
   if (QS.has("dev")) {
     window.__pp = { clock, getProfile: () => profile, tick, anim, playAnim: (n, d) => playAnim(anim, n, performance.now(), d) };
-    import("./dev/panel.js?v=fb4c507-1791115840").then((m) => m.mount({ clock, getProfile: () => profile, tick, renderStats, syncNow, serverStatus })).catch(() => {});
+    import("./dev/panel.js?v=0d5f74b-1791117259").then((m) => m.mount({ clock, getProfile: () => profile, tick, renderStats, syncNow, serverStatus })).catch(() => {});
   }
 }
 
