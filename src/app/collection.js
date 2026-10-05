@@ -1,7 +1,8 @@
 // 도감: 본 적 있는 모습 표시, 지금까지 키운 펫 기록, 초상화 그리기
-import { FORMS, buildCreature, paintGrid, formKey, lookOf } from "../render/creature.js?v=87235f3-1791176029";
-import { drawFace, POOLS } from "../render/face.js?v=87235f3-1791176029";
-import { SPRITES, drawSprite } from "../render/sprites.js?v=87235f3-1791176029";
+import { FORMS, buildCreature, paintGrid, formKey, lookOf } from "../render/creature.js?v=9783e07-1791176507";
+import { drawFace, POOLS } from "../render/face.js?v=9783e07-1791176507";
+import { SPRITES, drawSprite } from "../render/sprites.js?v=9783e07-1791176507";
+import { BRANCH, SECRET } from "../core/rules.js?v=9783e07-1791176507";
 
 export const THEME_KO = { animal: "동물", fantasy: "상상 속 생물" };
 export const HOW_KO = { journey: "여행을 떠남", runaway: "삐져서 떠남", star: "별이 됨", retired: "새 알에게 자리를 물려줌" };
@@ -15,10 +16,109 @@ export function currentKey(pet) {
   return pet.stage === "egg" ? null : formKey(pet.theme, pet.stage, pet.branch);
 }
 
-export function markSeen(profile, pet) {
+// 처음 만난 시각을 남긴다(옛 저장은 true)
+export function markSeen(profile, pet, now = Date.now()) {
   const k = pet && currentKey(pet);
-  if (k && !profile.seen[k]) { profile.seen[k] = true; return true; }
+  if (k && !profile.seen[k]) { profile.seen[k] = now; return true; }
   return false;
+}
+
+// ---------- 모으기: 어른 수·보상·힌트·진행 예측 ----------
+export const THEMES_ALL = ["animal", "fantasy"];
+export const ADULT_KEYS = THEMES_ALL.flatMap((t) => ["A", "B", "C", "D", "S"].map((b) => `${t}.adult.${b}`));
+export const adultsSeen = (profile) => ADULT_KEYS.filter((k) => profile.seen[k]);
+const themeABCD = (profile, theme) => ["A", "B", "C", "D"].every((b) => profile.seen[`${theme}.adult.${b}`]);
+const themeAdults = (profile, theme) => ["A", "B", "C", "D", "S"].filter((b) => profile.seen[`${theme}.adult.${b}`]).length;
+
+// 보상: 어른 수로 열린다(놀이 수치는 안 건드리는 꾸미기·선택권만)
+export const REWARDS = [
+  { id: "frame", need: 1, label: "추억 액자", desc: "방 벽 액자에 가장 최근 함께한 친구 그림이 걸려요" },
+  { id: "eggColor", need: 3, label: "알 색 고르기", desc: "새 알을 받을 때 무늬 색을 골라요. 커서도 귀 끝·점 색으로 남아요" },
+  { id: "starRug", need: 5, label: "별 러그", desc: "방 러그를 밤하늘 별무늬로 바꿀 수 있어요" },
+  { id: "goldEgg", secret: true, label: "금빛 알", desc: "알 색 고르기에 금색이 생겨요 (숨은 친구를 만나면)" },
+  { id: "goldFrame", need: ADULT_KEYS.length, label: "금 액자", desc: "어른 10종을 다 만나면 추억 액자가 금색이 돼요" },
+];
+export function rewardOpen(profile, r) {
+  if (r.secret) return ADULT_KEYS.some((k) => k.endsWith(".S") && profile.seen[k]);
+  return adultsSeen(profile).length >= r.need;
+}
+export const unlockedSet = (profile) => new Set(REWARDS.filter((r) => rewardOpen(profile, r)).map((r) => r.id));
+export function nextGoal(profile) {
+  const n = adultsSeen(profile).length;
+  const r = REWARDS.filter((x) => !x.secret && x.need > n).sort((a, b) => a.need - b.need)[0];
+  return r ? { reward: r, left: r.need - n } : null;
+}
+export const hasCrown = (profile, theme) => themeABCD(profile, theme);
+
+// 한 줄 소개
+export const BLURB = {
+  "animal.baby": "동그란 솜털 공. 아직 눈만 깜빡여요",
+  "animal.child": "늘어진 귀가 귀여운 아기 강아지",
+  "animal.teen.good": "귀가 반쯤 선 꼬마 강아지. 칭찬을 먹고 자라요",
+  "animal.teen.normal": "뾰족 귀에 긴 꼬리, 제멋대로 꼬마 고양이",
+  "animal.adult.A": "의젓한 모범생. 노는 걸 제일 좋아해요",
+  "animal.adult.B": "간식을 사랑한 동글동글 코기",
+  "animal.adult.C": "자유로운 영혼, 풍성한 꼬리의 여우 고양이",
+  "animal.adult.D": "삐죽 털 장난꾸러기. 사고뭉치지만 미워할 수 없어요",
+  "animal.adult.S": "정을 듬뿍 받은 친구에게만 나타나는 별빛 사모예드",
+  "fantasy.baby": "말랑말랑 물방울 슬라임",
+  "fantasy.child": "작은 뿔이 돋은 말랑이",
+  "fantasy.teen.good": "뿔과 날개가 돋은 아기 용",
+  "fantasy.teen.normal": "몽글몽글 떠다니는 꼬마 구름",
+  "fantasy.adult.A": "무지개 배를 가진 늠름한 용",
+  "fantasy.adult.B": "날개보다 배가 큰 통통 용",
+  "fantasy.adult.C": "하늘을 헤엄치는 느긋한 구름 고래",
+  "fantasy.adult.D": "찌릿찌릿 번개를 품은 장난꾸러기 구름",
+  "fantasy.adult.S": "정을 듬뿍 받은 친구에게만 나타나는 별 유니콘",
+};
+
+// 못 만난 친구를 만나는 방법(실제 규칙 그대로)
+export function hintFor(key, profile) {
+  const [theme, stage, br] = key.split(".");
+  const teenGood = FORMS[`${theme}.teen.good`].name, teenNormal = FORMS[`${theme}.teen.normal`].name;
+  if (stage === "baby" || stage === "child") return "알을 키우면 꼭 만나요";
+  if (stage === "teen") return br === "good"
+    ? `어린이 시절에 돌봄 실수를 ${BRANCH.childGoodMaxMistakes}번 이하로 꼼꼼히 챙겨 주면`
+    : `어린이 시절에 조금 느슨하게(돌봄 실수 ${BRANCH.childGoodMaxMistakes + 1}번 이상) 키우면`;
+  if (br === "A") return `${teenGood} 시절에 간식보다 놀이를 더 많이(같아도 돼요) 해 주면`;
+  if (br === "B") return `${teenGood} 시절에 놀이보다 간식을 더 많이 주면`;
+  if (br === "C") return `${teenNormal} 시절에 돌봄 실수를 ${BRANCH.teenFreeMaxMistakes}번 이하로 지키면`;
+  if (br === "D") return `${teenNormal} 시절에 돌봄 실수가 ${BRANCH.teenFreeMaxMistakes + 1}번 이상이면(장난꾸러기!)`;
+  if (br === "S") {
+    if (themeABCD(profile, theme)) return `태어나서부터 돌봄 실수 ${SECRET.maxMistakes}번 + 쓰다듬기(펫을 톡) ${SECRET.minPats}번 이상이면, 청소년이 어느 쪽이든 나타나요`;
+    if (themeAdults(profile, theme) >= 1) return "정을 듬뿍 준 친구에게만 나타난대요. 이 테마 어른 4종을 다 만나면 정확한 조건이 열려요";
+    return "아직 비밀이에요";
+  }
+  return "";
+}
+
+// 지금 친구가 이대로면 어디로 가는지
+export function outlook(pet, profile) {
+  if (!pet || pet.ended) return null;
+  const th = pet.theme, nm = (k) => FORMS[k]?.name || "";
+  const tag = (k) => (profile.seen[k] ? "" : " · 아직 못 만난 친구예요!");
+  const m = pet.mistakes.stage, c = pet.counts || { plays: 0, snacks: 0 };
+  const secretOpen = themeABCD(profile, th);
+  const secretOk = pet.mistakes.total <= SECRET.maxMistakes;
+  const secretLine = secretOpen && secretOk ? ` (숨은 친구 조건: 실수 0 유지 중, 쓰다듬기 ${Math.min(pet.pats || 0, SECRET.minPats)}/${SECRET.minPats})` : "";
+  if (pet.stage === "egg" || pet.stage === "baby") return { text: `${nm(`${th}.child`) || "어린이"}가 되면 갈림길이 시작돼요`, target: null };
+  if (pet.stage === "child") {
+    const k = m <= BRANCH.childGoodMaxMistakes ? `${th}.teen.good` : `${th}.teen.normal`;
+    return { text: `어린이 · 이번 시기 돌봄 실수 ${m}번 → 이대로면 ${nm(k)}${tag(k)}${secretLine}`, target: k };
+  }
+  if (pet.stage === "teen") {
+    if (secretOpen && secretOk && (pet.pats || 0) >= SECRET.minPats) { const k = `${th}.adult.S`; return { text: `조건을 다 채웠어요 → 이대로면 ${nm(k)}${tag(k)}`, target: k }; }
+    const k = pet.branch === "good" ? `${th}.adult.${c.plays >= c.snacks ? "A" : "B"}` : `${th}.adult.${m <= BRANCH.teenFreeMaxMistakes ? "C" : "D"}`;
+    const why = pet.branch === "good" ? `놀이 ${c.plays} · 간식 ${c.snacks}` : `이번 시기 돌봄 실수 ${m}번`;
+    return { text: `${nm(currentKey(pet))} · ${why} → 이대로면 ${nm(k)}${tag(k)}${secretLine}`, target: k };
+  }
+  return { text: `어른이 됐어요: ${nm(currentKey(pet))}`, target: currentKey(pet) };
+}
+
+// 그 모습까지 키운 기록
+export function formStats(profile, key) {
+  const recs = profile.collection.filter((r) => r.key === key);
+  return { count: recs.length, names: recs.map((r) => r.name) };
 }
 
 export function recordPet(profile, pet) {
@@ -27,7 +127,7 @@ export function recordPet(profile, pet) {
     name: pet.name, theme: pet.theme, key, form: FORMS[key]?.name || "알",
     how: pet.ended?.type || "retired", bornAt: pet.bornAt, endedAt: pet.ended?.at || Date.now(),
     ageDays: Math.round((pet.ageMin / 1440) * 10) / 10, mistakes: pet.mistakes.total, speed: pet.speed, weight: pet.weight,
-    look: lookOf(pet),
+    look: lookOf(pet), letter: letterText(pet),
   };
   profile.collection.push(rec);
   return rec;
@@ -53,37 +153,116 @@ function el(tag, attrs = {}, ...kids) {
   return e;
 }
 
-export function renderCollection(box, profile) {
+const fmtDate = (t) => { const d = new Date(t); return `${d.getFullYear()}.${d.getMonth() + 1}.${d.getDate()}`; };
+const EGG_COLOR_KO = { p: "분홍", g: "민트", b: "하늘", y: "노랑", v: "보라", r: "빨강", Y: "금빛" };
+
+// 도감 화면. opts: { pet, settings, onRug(on) }
+export function renderCollection(box, profile, opts = {}) {
   box.innerHTML = "";
-  for (const theme of ["animal", "fantasy"]) {
+  const open = unlockedSet(profile);
+  // 카드(칸·친구를 누르면 위에 뜸)
+  const card = el("div", { class: "dexcard", hidden: "" });
+  const showCard = (key, look, lines, title) => {
+    card.innerHTML = "";
+    const inner = el("div", { class: "dexcard-in" });
+    if (key) {
+      const cv = el("canvas", { width: 56, height: 46 });
+      const seen = !!profile.seen[key] || !!look;
+      portrait(cv, key, look || { spot: "p" }, { silhouette: !seen });
+      inner.append(cv);
+    }
+    inner.append(el("b", { text: title }));
+    for (const l of lines) if (l) inner.append(el(l.cls ? "p" : "div", { class: l.cls || "small", text: l.text }));
+    const close = el("button", { class: "big ghost", text: "닫기" });
+    close.addEventListener("click", () => { card.hidden = true; });
+    inner.append(close);
+    card.append(inner); card.hidden = false;
+    card.scrollIntoView?.({ block: "nearest" });
+  };
+  card.addEventListener("click", (e) => { if (e.target === card) card.hidden = true; });
+
+  // 1) 지금 친구의 갈림길
+  const ol = outlook(opts.pet, profile);
+  if (ol) box.append(el("div", { class: "dexnote" }, el("b", { text: `지금 ${opts.pet.name}` }), el("div", { class: "small", text: ol.text })));
+
+  // 2) 모으기 보상
+  const n = adultsSeen(profile).length, goal = nextGoal(profile);
+  box.append(el("h3", { text: `어른 친구 ${n}/${ADULT_KEYS.length}` }));
+  box.append(el("p", { class: "small", text: goal ? `다음 보상 '${goal.reward.label}'까지 어른 ${goal.left}종 더` : "보상을 모두 열었어요!" }));
+  const chips = el("div", { class: "rewards" });
+  for (const r of REWARDS) {
+    const on = open.has(r.id);
+    const chip = el("button", { class: `chip${on ? " on" : ""}`, text: `${on ? "★" : "🔒"} ${r.label}` });
+    chip.addEventListener("click", () => showCard(null, null, [{ text: r.desc }, { text: on ? "열렸어요!" : r.secret ? "숨은 친구를 만나면 열려요" : `어른 ${r.need}종을 만나면 열려요 (지금 ${n}종)` }], r.label));
+    chips.append(chip);
+  }
+  box.append(chips);
+  if (open.has("starRug")) {
+    const lab = el("label", { class: "row small" });
+    const cb = el("input", { type: "checkbox" }); cb.checked = opts.settings?.rug === "star";
+    cb.addEventListener("change", () => opts.onRug?.(cb.checked));
+    lab.append(cb, document.createTextNode(" 별 러그 깔기"));
+    box.append(lab);
+  }
+
+  // 3) 테마별 계통도
+  for (const theme of THEMES_ALL) {
     const keys = formOrder(theme);
     const seenN = keys.filter((k) => profile.seen[k]).length;
-    box.append(el("h3", { text: `${THEME_KO[theme]} ${seenN}/${keys.length}` }));
-    const grid = el("div", { class: "dex" });
-    for (const k of keys) {
+    box.append(el("h3", { text: `${hasCrown(profile, theme) ? "👑 " : ""}${THEME_KO[theme]} ${seenN}/${keys.length}` }));
+    const tree = el("div", { class: "tree" });
+    const cell = (k, cls = "") => {
       const seen = !!profile.seen[k];
       const cv = el("canvas", { width: 56, height: 46 });
       portrait(cv, k, { spot: "p" }, { silhouette: !seen });
       const secret = FORMS[k]?.secret;
-      grid.append(el("figure", { class: seen ? "" : "unseen" }, cv, el("figcaption", { text: seen ? FORMS[k].name : secret ? "숨은 친구" : "?" })));
-    }
-    box.append(grid);
+      const fig = el("figure", { class: `${seen ? "" : "unseen"} ${cls}` }, cv, el("figcaption", { text: seen ? FORMS[k].name : secret ? "숨은 친구" : "?" }));
+      fig.addEventListener("click", () => {
+        if (seen) {
+          const st = formStats(profile, k);
+          showCard(k, null, [
+            { text: BLURB[k] || "" },
+            { text: typeof profile.seen[k] === "number" ? `처음 만난 날 ${fmtDate(profile.seen[k])}` : "" },
+            { text: `이 모습으로 함께한 친구 ${st.count}명${st.count ? ` · ${st.names.join(", ")}` : ""}` },
+            { text: `만나는 방법: ${hintFor(k, profile)}`, cls: "small dim" },
+          ], FORMS[k].name);
+        } else showCard(k, null, [{ text: "아직 못 만났어요" }, { text: `만나는 방법: ${hintFor(k, profile)}`, cls: "hint" }], secret ? "숨은 친구" : "???");
+      });
+      return fig;
+    };
+    const row = (...figs) => { const r = el("div", { class: `trow n${figs.length}` }); for (const f of figs) r.append(f); return r; };
+    const arrow = () => el("div", { class: "tarrow", text: "↓" });
+    tree.append(row(cell(`${theme}.baby`)), arrow(), row(cell(`${theme}.child`)), arrow(),
+      row(cell(`${theme}.teen.good`, "g1"), cell(`${theme}.teen.normal`, "g2")), arrow(),
+      row(cell(`${theme}.adult.A`, "g1"), cell(`${theme}.adult.B`, "g1"), cell(`${theme}.adult.C`, "g2"), cell(`${theme}.adult.D`, "g2")),
+      el("div", { class: "tarrow small dim", text: "✦ 숨은 길" }), row(cell(`${theme}.adult.S`, "gs")));
+    box.append(tree);
   }
+
+  // 4) 함께한 친구들(추억 앨범)
   box.append(el("h3", { text: `함께한 친구들 ${profile.collection.length}` }));
-  if (!profile.collection.length) box.append(el("p", { class: "small dim", text: "아직 없어요. 지금 친구를 끝까지 키우면 여기에 남아요." }));
+  if (!profile.collection.length) box.append(el("p", { class: "small dim", text: "아직 없어요. 지금 친구를 끝까지 키우면 여기에 남아요. 떠날 때 남긴 편지도 다시 읽을 수 있어요." }));
   const list = el("div", { class: "past" });
   for (const r of [...profile.collection].reverse()) {
     const cv = el("canvas", { width: 56, height: 46 });
     portrait(cv, r.key, r.look || {});
-    const d = new Date(r.endedAt);
-    list.append(el("div", { class: "pastrow" }, cv, el("div", {},
+    const rowEl = el("button", { class: "pastrow" }, cv, el("div", {},
       el("b", { text: `${r.name} · ${r.form}` }),
       el("div", { class: "small", text: `${HOW_KO[r.how] || r.how} · ${r.ageDays}살 · 실수 ${r.mistakes} · ${SPEED_KO[r.speed] || ""}` }),
-      el("div", { class: "small dim", text: `${d.getFullYear()}.${d.getMonth() + 1}.${d.getDate()}` }),
-    )));
+      el("div", { class: "small dim", text: `${fmtDate(r.endedAt)} · 편지 보기 ›` }),
+    ));
+    rowEl.addEventListener("click", () => showCard(r.key, r.look || { spot: "p" }, [
+      { text: `${THEME_KO[r.theme] || ""} · ${r.form} · ${HOW_KO[r.how] || r.how}` },
+      { text: `${fmtDate(r.bornAt)} ~ ${fmtDate(r.endedAt)} · ${r.ageDays}살 · 돌봄 실수 ${r.mistakes} · 몸무게 ${r.weight ?? "?"}g${r.look?.spot ? ` · ${EGG_COLOR_KO[r.look.spot] || ""} 무늬` : ""}` },
+      { text: r.letter || letterText({ name: r.name, ended: { type: r.how }, mistakes: { total: r.mistakes } }), cls: "letter" },
+    ], r.name));
+    list.append(rowEl);
   }
   box.append(list);
+  box.append(card);
 }
+
+export { EGG_COLOR_KO };
 
 // 떠날 때 남기는 편지
 export function letterText(pet) {

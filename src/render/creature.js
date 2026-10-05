@@ -2,7 +2,7 @@
 // 몸 모양(타원·물방울·구름) + 귀·뿔·날개·꼬리·발·무늬를 도트 격자(칸)에 칠하고,
 // 바깥 테두리와 그림자를 자동으로 입힌다. 자세(늘어남·찌그러짐·바라보는 방향)는 매 프레임 반영된다.
 // 얼굴(표정)은 face.js 가 이 격자 위에 따로 얹는다.
-import { PALETTE } from "./palette.js?v=87235f3-1791176029";
+import { PALETTE } from "./palette.js?v=9783e07-1791176507";
 
 const GW = 76, GH = 50; // 격자 크기(칸): 가장 큰 형태가 통통+늘어남이어도 안 잘리게
 
@@ -304,15 +304,15 @@ export function formKey(theme, stage, branch) {
 }
 
 // 펫마다 다른 겉모습(알 무늬 색, 통통함, 삐죽함)
-const SPOT_COLORS = ["p", "g", "b", "y", "v", "r"];
+export const SPOT_COLORS = ["p", "g", "b", "y", "v", "r"];
 export function lookOf(pet) {
   const seed = Math.floor((pet?.bornAt || 0) / 1000);
   const h = Math.abs(Math.sin(seed * 12.9898) * 43758.5453) % 1;
-  const spot = SPOT_COLORS[Math.floor(h * SPOT_COLORS.length)];
+  const spot = pet?.eggColor || SPOT_COLORS[Math.floor(h * SPOT_COLORS.length)]; // 알 색을 고른 경우 그 색
   const w = pet?.weight || 10;
   return {
-    spot,
-    spot2: SPOT_COLORS[(SPOT_COLORS.indexOf(spot) + 2) % SPOT_COLORS.length],
+    spot, chosen: !!pet?.eggColor,
+    spot2: spot === "Y" ? "y" : SPOT_COLORS[(SPOT_COLORS.indexOf(spot) + 2) % SPOT_COLORS.length],
     chub: 1 + Math.min(0.25, Math.max(0, (w - 20) * 0.02)),
     messy: (pet?.mistakes?.total || 0) >= 6,
   };
@@ -351,4 +351,11 @@ export function paintGrid(ctx, g, x, base, s, { alpha = 1, tint = null } = {}) {
   }
   ctx.globalAlpha = 1;
   return { x: ox + minX * s, y: oy + minY * s, w: (maxX - minX + 1) * s, h: (maxY - minY + 1) * s, ox, oy };
+}
+
+// 알 그림: 무늬 색을 펫 색으로. 상상 테마는 기본이 무지개 알이고, 알 색을 고른 경우만 그 색 무늬
+export function eggSpriteFor(SPRITES, theme, l) {
+  if (theme === "fantasy" && !(l && l.chosen)) return SPRITES.eggRainbow;
+  if (!l || !l.spot) return SPRITES.egg;
+  return SPRITES.egg.map((row) => row.replace(/p/g, "#").replace(/g/g, l.spot2 || "g").replace(/#/g, l.spot));
 }

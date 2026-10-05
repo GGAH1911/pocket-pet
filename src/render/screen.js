@@ -1,10 +1,10 @@
 // 방 화면 그리기. 게임 규칙은 모르고 받은 상태만 그린다.
 // 캔버스는 "도트 해상도"로 그리고 CSS가 정수배로 키운다.
-import { PALETTE } from "./palette.js?v=87235f3-1791176029";
-import { SPRITES, drawSprite, spriteSize } from "./sprites.js?v=87235f3-1791176029";
-import { buildCreature, paintGrid, formKey } from "./creature.js?v=87235f3-1791176029";
-import { drawFace } from "./face.js?v=87235f3-1791176029";
-import { drawSky } from "./sky.js?v=87235f3-1791176029";
+import { PALETTE } from "./palette.js?v=9783e07-1791176507";
+import { SPRITES, drawSprite, spriteSize } from "./sprites.js?v=9783e07-1791176507";
+import { buildCreature, paintGrid, formKey, eggSpriteFor } from "./creature.js?v=9783e07-1791176507";
+import { drawFace, POOLS } from "./face.js?v=9783e07-1791176507";
+import { drawSky } from "./sky.js?v=9783e07-1791176507";
 
 const FLOOR = "#f5b98c";
 const FLOOR_LINE = "#e9a274";
@@ -25,11 +25,15 @@ export function drawRoom(ctx, { w, h, now, scene, f, wall = Date.now(), loc = { 
   const win = windowRect(w, floorY);
   const skyInfo = drawWindow(ctx, win, wall, loc, now, 0, weather);
 
-  // 액자
-  const fx = Math.round(w * 0.7), fy = Math.round(floorY * 0.36);
-  ctx.fillStyle = PALETTE.o; ctx.fillRect(fx, fy, 22, 18);
-  ctx.fillStyle = PALETTE.g; ctx.fillRect(fx + 2, fy + 2, 18, 14);
-  ctx.fillStyle = PALETTE.G; ctx.fillRect(fx + 4, fy + 9, 6, 7); ctx.fillRect(fx + 11, fy + 6, 6, 10);
+  // 액자: 도감 보상 '추억 액자'가 열리면 가장 최근 함께한 친구 그림(금 액자 보상이면 금색 테두리)
+  const memo = scene && scene.memory;
+  if (memo) drawMemoryFrame(ctx, Math.round(w * 0.64), Math.round(floorY * 0.2), memo);
+  else {
+    const fx = Math.round(w * 0.7), fy = Math.round(floorY * 0.36);
+    ctx.fillStyle = PALETTE.o; ctx.fillRect(fx, fy, 22, 18);
+    ctx.fillStyle = PALETTE.g; ctx.fillRect(fx + 2, fy + 2, 18, 14);
+    ctx.fillStyle = PALETTE.G; ctx.fillRect(fx + 4, fy + 9, 6, 7); ctx.fillRect(fx + 11, fy + 6, 6, 10);
+  }
 
   // 걸레받이 + 바닥 나무결
   ctx.fillStyle = BASEBOARD; ctx.fillRect(0, floorY - 3, w, 3);
@@ -39,15 +43,21 @@ export function drawRoom(ctx, { w, h, now, scene, f, wall = Date.now(), loc = { 
 
   // 러그
   const cx = Math.round(w / 2), rugY = Math.round(floorY + (h - floorY) * 0.38);
-  ctx.fillStyle = PALETTE.P;
+  const starRug = scene && scene.rug === "star"; // 도감 보상 '별 러그'
+  ctx.fillStyle = starRug ? PALETTE.B : PALETTE.P;
   for (let i = -6; i <= 6; i++) {
     const half = Math.round(Math.sqrt(1 - (i / 7) ** 2) * Math.min(40, w * 0.3));
     ctx.fillRect(cx - half, rugY + i, half * 2, 1);
   }
-  ctx.fillStyle = PALETTE.p;
+  ctx.fillStyle = starRug ? "#3d4f9a" : PALETTE.p;
   for (let i = -4; i <= 4; i++) {
     const half = Math.round(Math.sqrt(1 - (i / 5) ** 2) * Math.min(32, w * 0.24));
     ctx.fillRect(cx - half, rugY + i, half * 2, 1);
+  }
+  if (starRug) {
+    ctx.fillStyle = PALETTE.y;
+    for (const [sx, sy] of [[-24, -2], [-12, 2], [-2, -3], [9, 1], [20, -2], [28, 2], [-30, 1], [2, 3]]) { ctx.fillRect(cx + sx, rugY + sy, 1, 1); if ((sx + sy) % 2 === 0) { ctx.fillRect(cx + sx - 1, rugY + sy, 3, 1); ctx.fillRect(cx + sx, rugY + sy - 1, 1, 3); } }
+    ctx.fillStyle = PALETTE.w; ctx.fillRect(cx + 14, rugY - 3, 2, 2); ctx.fillRect(cx + 15, rugY - 3, 1, 1); // 작은 달
   }
 
   const sc = scene || { stage: "egg" };
@@ -144,11 +154,36 @@ function drawFx(ctx, fx) {
   }
 }
 
+// 추억 액자: 최근 함께한 친구 초상화(1칸=1px), 캐시해서 매 프레임 다시 만들지 않음
+const MEMO_CACHE = { key: "", canvas: null };
+function drawMemoryFrame(ctx, fx, fy, memo) {
+  const W = 36, H = 34;
+  ctx.fillStyle = PALETTE.k; ctx.fillRect(fx - 1, fy - 1, W + 2, H + 2);
+  ctx.fillStyle = memo.gold ? PALETTE.Y : PALETTE.o; ctx.fillRect(fx, fy, W, H);
+  if (memo.gold) { ctx.fillStyle = PALETTE.y; ctx.fillRect(fx, fy, W, 1); ctx.fillRect(fx, fy, 1, H); }
+  ctx.fillStyle = "#fff4e3"; ctx.fillRect(fx + 2, fy + 2, W - 4, H - 4);
+  const ck = `${memo.key}|${JSON.stringify(memo.look)}`;
+  if (MEMO_CACHE.key !== ck && typeof document !== "undefined") {
+    const b = buildCreature(memo.key, { look: memo.look || {} });
+    if (b) {
+      drawFace(b.g, b.P, POOLS.great[1]);
+      const c = document.createElement("canvas"); c.width = 76; c.height = 50;
+      const cx2 = c.getContext("2d"); paintGrid(cx2, b.g, 38, 48, 1);
+      MEMO_CACHE.key = ck; MEMO_CACHE.canvas = c;
+    }
+  }
+  if (MEMO_CACHE.key === ck && MEMO_CACHE.canvas) {
+    // 그림을 액자 안쪽에 맞춰(정수배 축소 없이 가운데 잘라) 넣는다
+    const iw = W - 4, ih = H - 4;
+    ctx.save(); ctx.beginPath(); ctx.rect(fx + 2, fy + 2, iw, ih); ctx.clip();
+    ctx.drawImage(MEMO_CACHE.canvas, 38 - iw / 2, 49 - ih, iw, ih, fx + 2, fy + 2, iw, ih); // 1:1, 발이 액자 아래쪽
+    ctx.restore();
+  }
+  ctx.fillStyle = PALETTE.k; ctx.fillRect(fx + W / 2 - 1, fy - 5, 2, 4); // 거는 끈
+}
+
 function eggSprite(scene) {
-  if (scene.theme === "fantasy") return SPRITES.eggRainbow;
-  const l = scene.look || {};
-  if (!l.spot) return SPRITES.egg;
-  return SPRITES.egg.map((row) => row.replace(/p/g, "#").replace(/g/g, l.spot2 || "g").replace(/#/g, l.spot));
+  return eggSpriteFor(SPRITES, scene.theme, scene.look);
 }
 
 function drawEgg(ctx, cx, baseY, now, egg, scene) {

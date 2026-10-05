@@ -1,22 +1,22 @@
 // 부팅 순서는 이 파일 한 곳에서만 정해요.
 // (지난 게임에서 파일 읽는 순서 때문에 저장 기본값이 빠지는 버그가 있었어요.)
 // 순서: 저장 불러오기 → 꺼져 있던 시간 계산 → 화면 시작 → 서비스 워커·알림 확인 → 알림 일정 올리기
-import { createPet } from "./core/state.js?v=87235f3-1791176029";
-import { advance, feed, play, wash, cleanPoop, toggleLight, giveMedicine, patPet, switchEndMode, retirePet } from "./core/sim.js?v=87235f3-1791176029";
-import { predictNotifications } from "./core/notify.js?v=87235f3-1791176029";
-import { josa } from "./core/josa.js?v=87235f3-1791176029";
-import { drawRoom, drawIcon } from "./render/screen.js?v=87235f3-1791176029";
-import { createAnimator, play as playAnim, frame as animFrame, addFx } from "./render/anim.js?v=87235f3-1791176029";
-import { pickGame, createGame, GAME_NAMES } from "./app/games.js?v=87235f3-1791176029";
-import { formKey, lookOf, FORMS as FORMS_REF } from "./render/creature.js?v=87235f3-1791176029";
-import { guessLocation, sunTimes, moonIllumination, moonPosition, moonPhaseName } from "./core/astro.js?v=87235f3-1791176029";
-import { classifyWeather, weatherUrl, parseWeather } from "./core/weather.js?v=87235f3-1791176029";
-import { createFacePicker, pickFace } from "./render/face.js?v=87235f3-1791176029";
-import { SPRITES } from "./render/sprites.js?v=87235f3-1791176029";
-import { loadProfile, saveProfile, freshProfile, exportCode, importCode } from "./app/store.js?v=87235f3-1791176029";
-import { sfx, setSoundEnabled } from "./app/sound.js?v=87235f3-1791176029";
-import { markSeen, recordPet, renderCollection, letterText, portrait, currentKey, HOW_KO } from "./app/collection.js?v=87235f3-1791176029";
-import { deviceInfo, registerSW, enablePush, ensurePush, uploadSchedule, sendTest, serverStatus } from "./app/push.js?v=87235f3-1791176029";
+import { createPet } from "./core/state.js?v=9783e07-1791176507";
+import { advance, feed, play, wash, cleanPoop, toggleLight, giveMedicine, patPet, switchEndMode, retirePet } from "./core/sim.js?v=9783e07-1791176507";
+import { predictNotifications } from "./core/notify.js?v=9783e07-1791176507";
+import { josa } from "./core/josa.js?v=9783e07-1791176507";
+import { drawRoom, drawIcon } from "./render/screen.js?v=9783e07-1791176507";
+import { createAnimator, play as playAnim, frame as animFrame, addFx } from "./render/anim.js?v=9783e07-1791176507";
+import { pickGame, createGame, GAME_NAMES } from "./app/games.js?v=9783e07-1791176507";
+import { formKey, lookOf, FORMS as FORMS_REF, SPOT_COLORS, eggSpriteFor } from "./render/creature.js?v=9783e07-1791176507";
+import { guessLocation, sunTimes, moonIllumination, moonPosition, moonPhaseName } from "./core/astro.js?v=9783e07-1791176507";
+import { classifyWeather, weatherUrl, parseWeather } from "./core/weather.js?v=9783e07-1791176507";
+import { createFacePicker, pickFace } from "./render/face.js?v=9783e07-1791176507";
+import { SPRITES, drawSprite } from "./render/sprites.js?v=9783e07-1791176507";
+import { loadProfile, saveProfile, freshProfile, exportCode, importCode } from "./app/store.js?v=9783e07-1791176507";
+import { sfx, setSoundEnabled } from "./app/sound.js?v=9783e07-1791176507";
+import { markSeen, recordPet, renderCollection, letterText, portrait, currentKey, HOW_KO, unlockedSet, REWARDS, nextGoal, adultsSeen, ADULT_KEYS, formOrder, EGG_COLOR_KO } from "./app/collection.js?v=9783e07-1791176507";
+import { deviceInfo, registerSW, enablePush, ensurePush, uploadSchedule, sendTest, serverStatus } from "./app/push.js?v=9783e07-1791176507";
 
 const clock = { offset: 0, now() { return Date.now() + this.offset; } }; // offset은 개발 도구만 바꾼다
 
@@ -192,13 +192,13 @@ function handleEvents(events) {
   const t = performance.now();
   for (const e of events) {
     const th = profile.pet.theme;
-    if (e.type === "hatch") { say(`알이 깨어났어요! ${josa(profile.pet.name, "이에요", "예요")}`, 6000); playAnim(anim, "hatch", t, { eggKey: `${th}.egg` }); sfx("hatch"); markSeen(profile, profile.pet); }
+    if (e.type === "hatch") { say(`알이 깨어났어요! ${josa(profile.pet.name, "이에요", "예요")}`, 6000); playAnim(anim, "hatch", t, { eggKey: `${th}.egg` }); sfx("hatch"); see(profile.pet); }
     if (e.type === "evolve") {
       const prevBranch = e.stage === "adult" ? (e.branch === "A" || e.branch === "B" ? "good" : "normal") : null;
       say(`${I(profile.pet.name)} ${I(STAGE_KO[e.stage])} 됐어요!`, 6000);
       playAnim(anim, "evolve", t, { fromKey: formKey(th, PREV_STAGE[e.stage], prevBranch), toKey: formKey(th, e.stage, e.branch) });
       setTimeout(() => sfx("evolve"), 2100);
-      markSeen(profile, profile.pet);
+      see(profile.pet);
       if (e.branch === "S") setTimeout(() => say(`숨은 친구 ${FORMS_NAME()}! 많이 쓰다듬어 준 덕분이에요`, 8000), 3200);
       setTimeout(() => pickFace(faces, profile.pet, performance.now(), { force: true }), 3200);
     }
@@ -338,13 +338,24 @@ function endMinigame(cancel = false, st = null) {
   if (win) sfx("win");
 }
 
+// ---------- 도감: 새로 만남 + 보상 열림 알림 ----------
+function see(pet) {
+  const before = unlockedSet(profile);
+  const isNew = markSeen(profile, pet, clock.now());
+  if (!isNew) return false;
+  const opened = REWARDS.filter((r) => unlockedSet(profile).has(r.id) && !before.has(r.id));
+  if (opened.length) setTimeout(() => { say(`도감 보상이 열렸어요: ${opened.map((r) => r.label).join(", ")}! (≡ → 도감)`, 9000); sfx("win"); }, 6500);
+  persist();
+  return true;
+}
+
 // ---------- 떠남 → 편지 → 도감 → 새 알 ----------
 let farewellShown = false;
 function startFarewell() {
   const p = profile.pet; if (!p || !p.ended || farewellShown) return;
   farewellShown = true;
   closeSheet(); if (mg) endMinigame(true);
-  markSeen(profile, p); persist();
+  see(p); persist();
   uploadSchedule(profile.deviceId, []).catch(() => {});
   playAnim(anim, "farewell", performance.now(), { how: p.ended.type });
   sfx("farewell");
@@ -357,6 +368,14 @@ function showLetter() {
   $("ending-letter").textContent = letterText(p);
   $("ending-meta").textContent = `${(p.ageMin / 1440).toFixed(1)}살 · 돌봄 실수 ${p.mistakes.total} · ${HOW_KO[p.ended.type] || ""}`;
   portrait($("ending-portrait"), currentKey(p) || `${p.theme}.egg`, lookCache.look || lookOf(p));
+  // 다음 알로 이어지게: 처음 끝까지 함께한 모습인지, 다음 보상까지 얼마나 남았는지
+  const key = currentKey(p), first = key && !profile.collection.some((r) => r.key === key);
+  const goal = nextGoal(profile), left = ADULT_KEYS.length - adultsSeen(profile).length;
+  $("ending-news").textContent = [
+    first && key.includes(".adult.") ? "도감에 처음 남는 친구예요!" : "",
+    goal ? `다음 보상 '${goal.reward.label}'까지 어른 ${goal.left}종` : "보상을 모두 열었어요",
+    left ? `아직 못 만난 어른 친구 ${left}종` : "어른 친구를 모두 만났어요!",
+  ].filter(Boolean).join(" · ");
   $("ending").hidden = false;
 }
 function finishEnding() {
@@ -381,7 +400,7 @@ function retireNow() {
 
 // ---------- 도감 ----------
 function renderDex() {
-  renderCollection($("dex-body"), profile);
+  renderCollection($("dex-body"), profile, { pet: profile.pet, settings: profile.settings, onRug: (on) => { profile.settings.rug = on ? "star" : null; persist(); } });
   const p = profile.pet;
   const box = $("dex-retire");
   box.innerHTML = "";
@@ -413,7 +432,22 @@ function doImport() {
 }
 
 // ---------- 시작 화면 ----------
-const draft = { theme: null, speed: "normal" };
+const draft = { theme: null, speed: "normal", eggColor: null };
+// 알 색 고르기(도감 보상). 열려 있으면 테마 다음에 고른다
+function renderEggStep() {
+  const box = $("egg-colors"); box.innerHTML = "";
+  const open = unlockedSet(profile);
+  const colors = [...SPOT_COLORS, ...(open.has("goldEgg") ? ["Y"] : []), null];
+  for (const c of colors) {
+    const b = document.createElement("button"); b.className = "choice egg-choice";
+    const cv = document.createElement("canvas"); cv.width = 56; cv.height = 46;
+    const ctx = cv.getContext("2d"); ctx.imageSmoothingEnabled = false;
+    drawSprite(ctx, eggSpriteFor(SPRITES, draft.theme, c ? lookOf({ eggColor: c }) : null), 12, 4, 2); // 그 색 무늬 알(무작위는 기본 알)
+    b.append(cv, Object.assign(document.createElement("span"), { textContent: c ? EGG_COLOR_KO[c] : "무작위" }));
+    b.addEventListener("click", () => { draft.eggColor = c; stepTo("speed"); });
+    box.append(b);
+  }
+}
 function showStart() {
   $("start").hidden = false;
   stepTo("theme");
@@ -426,6 +460,7 @@ function startGame() {
   const name = $("name-input").value.trim().slice(0, 6) || (draft.theme === "fantasy" ? "말랑이" : "토리");
   const now = clock.now();
   profile.pet = createPet({ now, seed: (Math.random() * 2 ** 32) >>> 0, theme: draft.theme, speed: draft.speed, name });
+  if (draft.eggColor) profile.pet.eggColor = draft.eggColor; // 도감 보상: 고른 알 색
   profile.ui.poopSlots = [];
   persist(); sfx("hatch");
   $("start").hidden = true;
@@ -560,6 +595,21 @@ function renderSettings() {
   });
 }
 
+// ---------- 도감 보상으로 바뀌는 방 꾸밈 ----------
+let decoCache = { key: "", deco: {} };
+function roomDeco() {
+  const last = profile.collection[profile.collection.length - 1];
+  const k = `${profile.collection.length}|${Object.keys(profile.seen).length}|${profile.settings.rug}`;
+  if (decoCache.key !== k) {
+    const open = unlockedSet(profile);
+    decoCache = { key: k, deco: {
+      memory: open.has("frame") && last ? { key: last.key, look: last.look || {}, gold: open.has("goldFrame") } : null,
+      rug: open.has("starRug") && profile.settings.rug === "star" ? "star" : null,
+    } };
+  }
+  return decoCache.deco;
+}
+
 // ---------- 그리기 루프 ----------
 function frame() {
   const p = profile.pet;
@@ -568,8 +618,8 @@ function frame() {
   if (p) {
     const lk = `${p.bornAt}|${p.weight}|${p.mistakes.total}`;
     if (lookCache.key !== lk) lookCache = { key: lk, look: lookOf(p) };
-    scene = { stage: p.stage, branch: p.branch, theme: p.theme, poops: p.poops, poopSlots: syncPoopSlots(), asleep: p.asleep, lightOn: p.lightOn, sick: p.sick, mood: p.stats.mood, hunger: p.stats.hunger, napping: p.napLeft > 0, look: lookCache.look, face: pickFace(faces, p, t), ended: p.ended ? p.ended.type : null };
-  } else scene = { stage: "egg", theme: "animal", lightOn: true, mood: 100, hunger: 100, poopSlots: [] };
+    scene = { stage: p.stage, branch: p.branch, theme: p.theme, poops: p.poops, poopSlots: syncPoopSlots(), asleep: p.asleep, lightOn: p.lightOn, sick: p.sick, mood: p.stats.mood, hunger: p.stats.hunger, napping: p.napLeft > 0, look: lookCache.look, face: pickFace(faces, p, t), ended: p.ended ? p.ended.type : null, ...roomDeco() };
+  } else scene = { stage: "egg", theme: "animal", lightOn: true, mood: 100, hunger: 100, poopSlots: [], ...roomDeco() };
   const fr = animFrame(anim, t, scene, { roam: Math.min(26, Math.round(view.w * 0.18)) });
   if (mg) mgFrame(fr, t);
   const drawn = drawRoom(ctx, { ...view, now: t, scene, f: fr, wall: clock.now(), loc: profile.settings.location, weather: weatherNow });
@@ -596,7 +646,10 @@ function tick() {
 function boot() {
   for (const btn of document.querySelectorAll("[data-icon]")) drawIcon(btn.querySelector("canvas"), SPRITES[btn.dataset.icon]);
   for (const btn of document.querySelectorAll("[data-act]")) btn.addEventListener("click", () => ACTIONS[btn.dataset.act]());
-  for (const btn of document.querySelectorAll("[data-theme]")) btn.addEventListener("click", () => { draft.theme = btn.dataset.theme; stepTo("speed"); });
+  for (const btn of document.querySelectorAll("[data-theme]")) btn.addEventListener("click", () => {
+    draft.theme = btn.dataset.theme; draft.eggColor = null;
+    if (unlockedSet(profile).has("eggColor")) { renderEggStep(); stepTo("egg"); } else stepTo("speed");
+  });
   for (const btn of document.querySelectorAll("[data-speed]")) btn.addEventListener("click", () => { draft.speed = btn.dataset.speed; stepTo("name"); });
   setSoundEnabled(profile.settings.sound);
   if (!profile.settings.location) { profile.settings.location = guessLocation(Intl.DateTimeFormat().resolvedOptions().timeZone, new Date().getTimezoneOffset()); persist(); }
@@ -627,7 +680,7 @@ function boot() {
     const sum = summarize(events);
     if (sum) say(`자리를 비운 동안: ${sum}`, 9000);
     pickFace(faces, profile.pet, performance.now(), { force: true });
-    markSeen(profile, profile.pet);
+    see(profile.pet);
     if (profile.pet.ended) setTimeout(startFarewell, 600);
     else if (profile.pet.stage !== "egg" && !profile.pet.asleep && (fromPush || away >= 2 * 3600 * 1000)) {
       setTimeout(() => { if (!anim.cur) { playAnim(anim, fromPush ? "greetBig" : "greet", performance.now()); sfx("greet"); if (!sum) say(fromPush ? `와 줬구나! ${I(profile.pet.name)} 기다렸어요` : `${I(profile.pet.name)} 반가워해요`, 5000); } }, 700);
@@ -665,7 +718,7 @@ function boot() {
   // 개발 도구(공개 배포에는 없음): ?dev 로 열기
   if (QS.has("dev")) {
     window.__pp = { clock, getProfile: () => profile, tick, anim, playAnim: (n, d) => playAnim(anim, n, performance.now(), d), mg: () => mg, layout: () => layout, forceGame: null };
-    import("./dev/panel.js?v=87235f3-1791176029").then((m) => m.mount({ clock, getProfile: () => profile, tick, renderStats, syncNow, serverStatus })).catch(() => {});
+    import("./dev/panel.js?v=9783e07-1791176507").then((m) => m.mount({ clock, getProfile: () => profile, tick, renderStats, syncNow, serverStatus })).catch(() => {});
   }
 }
 
