@@ -1,23 +1,23 @@
 // 부팅 순서는 이 파일 한 곳에서만 정해요.
 // (지난 게임에서 파일 읽는 순서 때문에 저장 기본값이 빠지는 버그가 있었어요.)
 // 순서: 저장 불러오기 → 꺼져 있던 시간 계산 → 화면 시작 → 서비스 워커·알림 확인 → 알림 일정 올리기
-import { createPet } from "./core/state.js?v=689a340-1791180887";
-import { advance, feed, play, wash, cleanPoop, toggleLight, giveMedicine, patPet, switchEndMode, retirePet } from "./core/sim.js?v=689a340-1791180887";
-import { predictNotifications } from "./core/notify.js?v=689a340-1791180887";
-import { josa } from "./core/josa.js?v=689a340-1791180887";
-import { drawRoom, drawIcon } from "./render/screen.js?v=689a340-1791180887";
-import { createAnimator, play as playAnim, frame as animFrame, addFx } from "./render/anim.js?v=689a340-1791180887";
-import { pickGame, createGame, GAME_NAMES } from "./app/games.js?v=689a340-1791180887";
-import { EGGS, findEgg, createStreak, specialDay, SPECIAL_KO, HAT_OF, wishTime, MAKER_LETTER } from "./app/eggs.js?v=689a340-1791180887";
-import { formKey, lookOf, FORMS as FORMS_REF, SPOT_COLORS, eggSpriteFor } from "./render/creature.js?v=689a340-1791180887";
-import { guessLocation, sunTimes, moonIllumination, moonPosition, moonPhaseName } from "./core/astro.js?v=689a340-1791180887";
-import { classifyWeather, weatherUrl, parseWeather } from "./core/weather.js?v=689a340-1791180887";
-import { createFacePicker, pickFace } from "./render/face.js?v=689a340-1791180887";
-import { SPRITES, drawSprite } from "./render/sprites.js?v=689a340-1791180887";
-import { loadProfile, saveProfile, freshProfile, exportCode, importCode } from "./app/store.js?v=689a340-1791180887";
-import { sfx, setSoundEnabled } from "./app/sound.js?v=689a340-1791180887";
-import { markSeen, recordPet, renderCollection, letterText, portrait, currentKey, HOW_KO, unlockedSet, REWARDS, nextGoal, adultsSeen, ADULT_KEYS, formOrder, EGG_COLOR_KO } from "./app/collection.js?v=689a340-1791180887";
-import { deviceInfo, registerSW, enablePush, ensurePush, uploadSchedule, sendTest, serverStatus } from "./app/push.js?v=689a340-1791180887";
+import { createPet } from "./core/state.js?v=dff0127-1791181214";
+import { advance, feed, play, wash, cleanPoop, toggleLight, giveMedicine, patPet, switchEndMode, retirePet } from "./core/sim.js?v=dff0127-1791181214";
+import { predictNotifications } from "./core/notify.js?v=dff0127-1791181214";
+import { josa } from "./core/josa.js?v=dff0127-1791181214";
+import { drawRoom, drawIcon } from "./render/screen.js?v=dff0127-1791181214";
+import { createAnimator, play as playAnim, frame as animFrame, addFx } from "./render/anim.js?v=dff0127-1791181214";
+import { pickGame, createGame, GAME_NAMES } from "./app/games.js?v=dff0127-1791181214";
+import { EGGS, findEgg, createStreak, specialDay, SPECIAL_KO, HAT_OF, wishTime, MAKER_LETTER } from "./app/eggs.js?v=dff0127-1791181214";
+import { formKey, lookOf, FORMS as FORMS_REF, SPOT_COLORS, eggSpriteFor } from "./render/creature.js?v=dff0127-1791181214";
+import { guessLocation, sunTimes, moonIllumination, moonPosition, moonPhaseName } from "./core/astro.js?v=dff0127-1791181214";
+import { classifyWeather, weatherUrl, parseWeather } from "./core/weather.js?v=dff0127-1791181214";
+import { createFacePicker, pickFace } from "./render/face.js?v=dff0127-1791181214";
+import { SPRITES, drawSprite } from "./render/sprites.js?v=dff0127-1791181214";
+import { loadProfile, saveProfile, freshProfile, exportCode, importCode } from "./app/store.js?v=dff0127-1791181214";
+import { sfx, setSoundEnabled } from "./app/sound.js?v=dff0127-1791181214";
+import { markSeen, recordPet, renderCollection, letterText, portrait, currentKey, HOW_KO, unlockedSet, REWARDS, nextGoal, adultsSeen, ADULT_KEYS, formOrder, EGG_COLOR_KO } from "./app/collection.js?v=dff0127-1791181214";
+import { deviceInfo, registerSW, enablePush, ensurePush, uploadSchedule, sendTest, serverStatus } from "./app/push.js?v=dff0127-1791181214";
 
 const clock = { offset: 0, now() { return Date.now() + this.offset; } }; // offset은 개발 도구만 바꾼다
 
@@ -774,7 +774,7 @@ function boot() {
   // 개발 도구(공개 배포에는 없음): ?dev 로 열기
   if (QS.has("dev")) {
     window.__pp = { clock, getProfile: () => profile, tick, anim, playAnim: (n, d) => playAnim(anim, n, performance.now(), d), mg: () => mg, layout: () => layout, forceGame: null, boxes: () => ({ windowBox, petBox, memoBox }) };
-    import("./dev/panel.js?v=689a340-1791180887").then((m) => m.mount({ clock, getProfile: () => profile, tick, renderStats, syncNow, serverStatus })).catch(() => {});
+    import("./dev/panel.js?v=dff0127-1791181214").then((m) => m.mount({ clock, getProfile: () => profile, tick, renderStats, syncNow, serverStatus })).catch(() => {});
   }
 }
 

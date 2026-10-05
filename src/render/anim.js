@@ -148,6 +148,16 @@ export function frame(a, now, scene, { roam = 20 } = {}) {
   return f;
 }
 
+// 춤 모양: 엉덩이·꼬리가 있는 친구는 엉덩이춤, 고래는 지느러미, 슬라임·구름은 젤리
+export function danceStyle(scene) {
+  const { theme, stage, branch } = scene;
+  if (theme !== "fantasy") return "butt";
+  if (stage === "adult" && branch === "C") return "fin";
+  if ((stage === "teen" && branch === "good") || (stage === "adult" && (branch === "A" || branch === "B"))) return "dragon";
+  if (stage === "adult" && branch === "S") return "butt"; // 유니콘: 말꼬리
+  return "jelly"; // 말랑이·뿔말랑이·꼬마 구름·번개 구름
+}
+
 function applyOneShot(f, c, t, now, scene) {
   const p = f.pose;
   switch (c.type) {
@@ -214,16 +224,38 @@ function applyOneShot(f, c, t, now, scene) {
       break;
     }
     case "butt": {
-      // 엉덩이춤: 뒤로 휙 → 엉덩이·꼬리 씰룩씰룩 + 음표 → 다시 돌아서 윙크
+      // 기분 좋을 때 춤. 몸 모양에 맞게: 엉덩이가 있는 친구는 뒤돌아 엉덩이·꼬리 씰룩,
+      // 고래는 지느러미 파닥·꼬리지느러미 살랑·물 뿜기, 슬라임·구름은 말랑말랑 젤리 춤
+      const style = danceStyle(scene);
+      const ph = (t - 0.08) * Math.PI * 14, w = Math.sin(ph);
+      for (let i = 0; i < 3; i++) { const q = ((t * 2.2) + i / 3) % 1; if (t > 0.08 && t < 0.86) f.texts.push({ text: i % 2 ? "♫" : "♪", x: -24 + i * 24, y: -36 - q * 14, alpha: Math.sin(q * Math.PI), size: 9 }); }
+      if (style === "fin") {
+        if (t < 0.86) {
+          f.wag = Math.sin(t * Math.PI * 12); // 지느러미·꼬리지느러미 파닥
+          p.dy -= Math.abs(Math.sin(t * Math.PI * 6)) * 3; p.dx += Math.sin(t * Math.PI * 3) * 2;
+          p.eyes = "happy"; p.mouth = Math.floor(t * 8) % 2 ? "bigsmile" : "smile";
+          for (let i = 0; i < 6; i++) { const q = ((t * 2.5) + i / 6) % 1; f.props.push({ sprite: "drop", x: (p.facing || 1) * 6 + Math.cos(i * 1.1) * q * 14, y: -40 - Math.sin(q * Math.PI) * 18 + q * 6, scale: 1, alpha: 1 - q }); } // 물 뿜기
+          if (t > 0.3 && t < 0.6) f.texts.push({ text: "파닥파닥", x: 0, y: -52, alpha: 1, size: 8 });
+        } else { p.eyes = "happy"; p.mouth = "tongue"; f.props.push({ sprite: "heart", x: 14, y: -34 - (t - 0.86) * 60, scale: 2, alpha: 1 }); }
+        break;
+      }
+      if (style === "jelly") {
+        if (t < 0.86) {
+          p.sx *= 1 + w * 0.14; p.sy *= 1 - w * 0.14; // 말랑말랑
+          p.dy -= Math.max(0, -w) * 4; p.dx += Math.sin(ph / 2) * 3;
+          p.eyes = "happy"; p.mouth = Math.floor(t * 8) % 2 ? "cat" : "open";
+          if (t > 0.3 && t < 0.6) f.texts.push({ text: "말랑말랑", x: 0, y: -50, alpha: 1, size: 8 });
+        } else { p.eyes = "happy"; p.mouth = "tongue"; f.props.push({ sprite: "heart", x: 14, y: -34 - (t - 0.86) * 60, scale: 2, alpha: 1 }); }
+        break;
+      }
+      // 엉덩이춤(뒤돌아 씰룩씰룩)
       const turnIn = t < 0.1, turnOut = t > 0.82;
       if (turnIn || (turnOut && t < 0.9)) { p.sx *= 0.6; p.eyes = "closed"; } // 도는 순간 납작
       if (t >= 0.08 && t < 0.86) {
-        f.back = true;
-        const w = Math.sin((t - 0.08) * Math.PI * 14); // 씰룩씰룩
+        f.back = true; f.tailKind = style === "dragon" ? "own" : "fluffy"; // 용은 원래 그림의 꼬리
         p.dx += w * 3; p.sx *= 1 + Math.abs(w) * 0.06; p.sy *= 1 - Math.abs(w) * 0.05;
-        p.dy -= Math.abs(Math.cos((t - 0.08) * Math.PI * 14)) * 1.5;
+        p.dy -= Math.abs(Math.cos(ph)) * 1.5;
         f.tailWag = w;
-        for (let i = 0; i < 3; i++) { const ph = ((t * 2.2) + i / 3) % 1; f.texts.push({ text: i % 2 ? "♫" : "♪", x: -24 + i * 24, y: -34 - ph * 14, alpha: Math.sin(ph * Math.PI), size: 9 }); }
         if (t > 0.3 && t < 0.6) f.texts.push({ text: "씰룩씰룩", x: 0, y: -50, alpha: 1, size: 8 });
       }
       if (t >= 0.9) { p.eyes = "happy"; p.mouth = "tongue"; f.props.push({ sprite: "heart", x: 14, y: -34 - (t - 0.9) * 60, scale: 2, alpha: 1 }); }

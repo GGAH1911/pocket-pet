@@ -2,7 +2,7 @@
 // 몸 모양(타원·물방울·구름) + 귀·뿔·날개·꼬리·발·무늬를 도트 격자(칸)에 칠하고,
 // 바깥 테두리와 그림자를 자동으로 입힌다. 자세(늘어남·찌그러짐·바라보는 방향)는 매 프레임 반영된다.
 // 얼굴(표정)은 face.js 가 이 격자 위에 따로 얹는다.
-import { PALETTE } from "./palette.js?v=689a340-1791180887";
+import { PALETTE } from "./palette.js?v=dff0127-1791181214";
 
 const GW = 76, GH = 50; // 격자 크기(칸): 가장 큰 형태가 통통+늘어남이어도 안 잘리게
 
@@ -274,9 +274,10 @@ export const FORMS = {
     messyTufts(g, P, "g");
   } },
   "fantasy.adult.C": { name: "구름 고래", size: [15, 8.5], draw(g, P) {
-    // 꼬리지느러미
-    tri(g, [X(P, -P.rx * 0.85), P.cy], [X(P, -P.rx * 1.35), P.cy - P.ry * 0.9], [X(P, -P.rx * 1.25), P.cy + P.ry * 0.1], "b");
-    tri(g, [X(P, -P.rx * 0.85), P.cy + P.ry * 0.1], [X(P, -P.rx * 1.4), P.cy + P.ry * 0.6], [X(P, -P.rx * 1.2), P.cy - P.ry * 0.05], "B");
+    // 꼬리지느러미(P.wag: 춤출 때 위아래로 살랑, -1 ~ 1)
+    const tw = (P.wag || 0) * P.ry * 0.45;
+    tri(g, [X(P, -P.rx * 0.85), P.cy], [X(P, -P.rx * 1.35), P.cy - P.ry * 0.9 + tw], [X(P, -P.rx * 1.25), P.cy + P.ry * 0.1 + tw * 0.5], "b");
+    tri(g, [X(P, -P.rx * 0.85), P.cy + P.ry * 0.1], [X(P, -P.rx * 1.4), P.cy + P.ry * 0.6 + tw], [X(P, -P.rx * 1.2), P.cy - P.ry * 0.05 + tw * 0.5], "B");
     ellipse(g, P.cx, P.cy, P.rx, P.ry, "b", { shade: "B" });
     ellipse(g, X(P, P.rx * 0.1), P.cy + P.ry * 0.45, P.rx * 0.7, P.ry * 0.45, "w"); // 흰 배
     for (const k of [0.25, 0.45]) rect(g, X(P, -P.rx * 0.4), P.cy + P.ry * k, P.rx, 1, "W");
@@ -284,6 +285,9 @@ export const FORMS = {
     rect(g, X(P, P.rx * 0.25), P.cy - P.ry * 1.45, 1, P.ry * 0.5, "b");
     for (const d of [-2, -1, 1, 2]) put(g, X(P, P.rx * 0.25) + d, P.cy - P.ry * 1.5 - (2 - Math.abs(d)), "b");
     put(g, X(P, -P.rx * 0.35), P.cy - P.ry * 0.4, P.spot); put(g, X(P, -P.rx * 0.2), P.cy - P.ry * 0.55, P.spot);
+    // 가슴지느러미(배 옆, 춤출 때 파닥파닥)
+    { const fw = (P.wag || 0) * P.ry * 0.5;
+      tri(g, [X(P, -P.rx * 0.05), P.cy + P.ry * 0.35], [X(P, -P.rx * 0.45), P.cy + P.ry * 0.75 - fw], [X(P, -P.rx * 0.3), P.cy + P.ry * 0.95 - fw], "B"); }
     messyTufts(g, P, "b");
   } },
   "fantasy.adult.D": { name: "번개 구름", size: [13, 9.5], draw(g, P) {
@@ -319,14 +323,14 @@ export function lookOf(pet) {
 }
 
 // 격자에 캐릭터를 칠한다. 결과: { g, P } (얼굴을 얹을 기준점 포함)
-export function buildCreature(key, { sx = 1, sy = 1, facing = 1, look = {}, silhouette = null } = {}) {
+export function buildCreature(key, { sx = 1, sy = 1, facing = 1, look = {}, silhouette = null, wag = null } = {}) {
   const form = FORMS[key];
   if (!form) return null;
   const g = grid();
   const [rx0, ry0] = form.size;
   const rx = rx0 * sx * (look.chub || 1), ry = ry0 * sy;
   const base = GH - 2;
-  const P = { cx: GW / 2, cy: base - ry, rx, ry, base, f: facing >= 0 ? 1 : -1, spot: look.spot || "p", messy: !!look.messy, faceUp: 0 };
+  const P = { cx: GW / 2, cy: base - ry, rx, ry, base, f: facing >= 0 ? 1 : -1, spot: look.spot || "p", messy: !!look.messy, faceUp: 0, wag: wag || 0 };
   form.draw(g, P);
   if (silhouette) for (let i = 0; i < g.c.length; i++) if (g.c[i]) g.c[i] = silhouette;
   outline(g);

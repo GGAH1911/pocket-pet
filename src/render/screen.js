@@ -1,10 +1,10 @@
 // 방 화면 그리기. 게임 규칙은 모르고 받은 상태만 그린다.
 // 캔버스는 "도트 해상도"로 그리고 CSS가 정수배로 키운다.
-import { PALETTE } from "./palette.js?v=689a340-1791180887";
-import { SPRITES, drawSprite, spriteSize } from "./sprites.js?v=689a340-1791180887";
-import { buildCreature, paintGrid, formKey, eggSpriteFor } from "./creature.js?v=689a340-1791180887";
-import { drawFace, POOLS } from "./face.js?v=689a340-1791180887";
-import { drawSky } from "./sky.js?v=689a340-1791180887";
+import { PALETTE } from "./palette.js?v=dff0127-1791181214";
+import { SPRITES, drawSprite, spriteSize } from "./sprites.js?v=dff0127-1791181214";
+import { buildCreature, paintGrid, formKey, eggSpriteFor } from "./creature.js?v=dff0127-1791181214";
+import { drawFace, POOLS } from "./face.js?v=dff0127-1791181214";
+import { drawSky } from "./sky.js?v=dff0127-1791181214";
 
 const FLOOR = "#f5b98c";
 const FLOOR_LINE = "#e9a274";
@@ -367,10 +367,10 @@ function drawPet(ctx, scene, fr, { cx, baseY, now }) {
   // 같은 모습은 다시 계산하지 않는다(숨쉬기처럼 미세한 늘어남은 0.02 단위로 묶음)
   const q = (v) => Math.round(v * 50) / 50;
   const look = scene.look || {}, fc = scene.face || {};
-  const ck = [key, q(pose.sx), q(pose.sy), pose.facing >= 0 ? 1 : -1, look.spot, look.chub, look.messy ? 1 : 0, fr.silhouette ? 1 : 0, fr.back ? 1 : 0, pose.eyes, pose.mouth, fc.L, fc.R, fc.m, (fc.ex || []).join(","), fc.dy || 0, fc.look || 0, scene.theme].join("|");
+  const ck = [key, q(pose.sx), q(pose.sy), pose.facing >= 0 ? 1 : -1, look.spot, look.chub, look.messy ? 1 : 0, fr.silhouette ? 1 : 0, fr.back ? 1 : 0, fr.wag != null ? Math.round(fr.wag * 4) : 0, pose.eyes, pose.mouth, fc.L, fc.R, fc.m, (fc.ex || []).join(","), fc.dy || 0, fc.look || 0, scene.theme].join("|");
   let cached = CACHE.get(ck);
   if (!cached) {
-    const built = buildCreature(key, { sx: q(pose.sx), sy: q(pose.sy), facing: pose.facing, look, silhouette: fr.silhouette ? "w" : null });
+    const built = buildCreature(key, { sx: q(pose.sx), sy: q(pose.sy), facing: pose.facing, look, silhouette: fr.silhouette ? "w" : null, wag: fr.wag != null ? Math.round(fr.wag * 4) / 4 : 0 });
     if (!built) return null;
     if (fr.back && !fr.silhouette) toBackView(built.g);
     const faceInfo = fr.silhouette || fr.back ? null : drawFace(built.g, built.P, scene.face, { eyes: pose.eyes, mouth: pose.mouth });
@@ -392,7 +392,10 @@ function drawPet(ctx, scene, fr, { cx, baseY, now }) {
     ctx.fillRect(Math.round(cx + pose.dx - shw / 2), baseY - 1, shw, 3);
   }
   const box = paintGrid(ctx, built.g, x, base, CELL, { alpha: fr.petAlpha ?? 1, tint: scene.sick && !fr.silhouette ? "rgba(150,210,150,0.22)" : null });
-  if (fr.back && !fr.silhouette) drawTail(ctx, x, base, built, fr.tailWag || 0); // 엉덩이춤 꼬리
+  if (fr.back && !fr.silhouette) { // 엉덩이춤: 꼬리 없는 그림엔 복슬 꼬리, 용처럼 꼬리가 그려진 친구는 엉덩이 골만
+    if (fr.tailKind === "own") { ctx.fillStyle = PALETTE.k; ctx.fillRect(Math.round(x), base - 3, 1, 3); }
+    else drawTail(ctx, x, base, built, fr.tailWag || 0);
+  }
   if (fr.hat && !fr.silhouette && box) drawHat(ctx, box, fr.hat, built.P, pose.facing);
   const blanketK = fr.silhouette ? 0 : fr.blanket || 0; // 밤잠 이불(0 → 1): 아래에서 올라와 몸 아래쪽을 덮음
   if (blanketK > 0) drawBlanket(ctx, x, base, box, built.P, bodyW, blanketK, now, scene.theme, built);
