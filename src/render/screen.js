@@ -1,10 +1,10 @@
 // 방 화면 그리기. 게임 규칙은 모르고 받은 상태만 그린다.
 // 캔버스는 "도트 해상도"로 그리고 CSS가 정수배로 키운다.
-import { PALETTE } from "./palette.js?v=63de182-1791173812";
-import { SPRITES, drawSprite, spriteSize } from "./sprites.js?v=63de182-1791173812";
-import { buildCreature, paintGrid, formKey } from "./creature.js?v=63de182-1791173812";
-import { drawFace } from "./face.js?v=63de182-1791173812";
-import { drawSky } from "./sky.js?v=63de182-1791173812";
+import { PALETTE } from "./palette.js?v=5b3d2dd-1791174729";
+import { SPRITES, drawSprite, spriteSize } from "./sprites.js?v=5b3d2dd-1791174729";
+import { buildCreature, paintGrid, formKey } from "./creature.js?v=5b3d2dd-1791174729";
+import { drawFace } from "./face.js?v=5b3d2dd-1791174729";
+import { drawSky } from "./sky.js?v=5b3d2dd-1791174729";
 
 const FLOOR = "#f5b98c";
 const FLOOR_LINE = "#e9a274";
@@ -66,8 +66,11 @@ export function drawRoom(ctx, { w, h, now, scene, f, wall = Date.now(), loc = { 
   }
   for (const fx of fr.fx || []) drawFx(ctx, fx);
   if (fr.darkness > 0) {
-    ctx.fillStyle = `rgba(20,16,60,${fr.darkness})`; ctx.fillRect(0, 0, w, h);
-    drawWindow(ctx, win, wall, loc, now, fr.darkness * 0.3, weather); // 방이 어두워도 창밖(달빛·별)은 보이게
+    // 방을 어둡게 하되 창문 자리만 덜 어둡게(창밖 달빛·별이 보이게). 창문을 다시 그리면 펫 위에 덮여서 안 됨
+    ctx.fillStyle = `rgba(20,16,60,${fr.darkness})`;
+    ctx.fillRect(0, 0, w, win.y); ctx.fillRect(0, win.y + win.h, w, h - win.y - win.h);
+    ctx.fillRect(0, win.y, win.x, win.h); ctx.fillRect(win.x + win.w, win.y, w - win.x - win.w, win.h);
+    ctx.fillStyle = `rgba(20,16,60,${fr.darkness * 0.3})`; ctx.fillRect(win.x, win.y, win.w, win.h);
   }
   for (const t of fr.texts) {
     if (t.alpha <= 0) continue;
@@ -177,6 +180,46 @@ function drawCushion(ctx, x, baseY, bodyW, bed, theme) {
 
 const CACHE = new Map(); // 같은 모습은 다시 계산하지 않기 위한 캐시
 
+// ---------- 밤잠: 쿠션 위에 깐 이불 ----------
+// 이불은 몸을 덮지 않는다. 쿠션 위에 펼쳐 깔고 펫이 그 위에 앉아 잔다. 앞자락은 쿠션 앞으로 늘어진다.
+// 이불 색: 테마 기본색, 몸 색과 겹치면 다른 색(파란 몸에 하늘색 이불이면 안 보이므로)
+function blanketColors(theme, built) {
+  if (theme !== "fantasy") return [PALETTE.p, PALETTE.P, PALETTE.w];
+  const body = built ? built.g.c[Math.round(built.P.cy) * built.g.w + Math.round(built.P.cx - built.P.rx * 0.75)] : null;
+  return ["b", "B"].includes(body) ? [PALETTE.v, PALETTE.V, PALETTE.y] : [PALETTE.b, PALETTE.B, PALETTE.y];
+}
+
+function drawUnderBlanket(ctx, x, baseY, bodyW, k, theme, built) {
+  const [c1, c2, dot] = blanketColors(theme, built);
+  const full = bodyW + 22;
+  const W = Math.round(full * Math.min(1, 0.35 + k * 0.65)); // 펼쳐지며 넓어짐
+  const left = Math.round(x - W / 2);
+  const top = baseY - 7; // 쿠션 윗면 높이
+  const bottom = baseY + 3; // 쿠션 앞으로 늘어진 자락 끝
+  ctx.globalAlpha = Math.min(1, k * 2);
+  for (let xx = 0; xx < W; xx++) {
+    const px = left + xx;
+    const corner = xx === 0 || xx === W - 1 ? 2 : xx === 1 || xx === W - 2 ? 1 : 0;
+    const hem = bottom + (Math.floor((xx + 2) / 5) % 2); // 앞자락 끝 살짝 물결
+    const yTop = top + corner;
+    ctx.fillStyle = PALETTE.k; ctx.fillRect(px, yTop - 1, 1, 1); ctx.fillRect(px, hem, 1, 1);
+    ctx.fillStyle = c1; ctx.fillRect(px, yTop, 1, Math.max(0, 4 - corner)); // 쿠션 위에 깔린 윗면
+    ctx.fillStyle = c2; ctx.fillRect(px, top + 4, 1, Math.max(0, hem - top - 4)); // 앞으로 늘어진 면(그늘)
+    if (xx === 0 || xx === W - 1) { ctx.fillStyle = PALETTE.k; ctx.fillRect(px, yTop, 1, hem - yTop); }
+  }
+  ctx.fillStyle = PALETTE.k; ctx.fillRect(left + 1, top + 4, W - 2, 1); // 접히는 모서리 선
+  // 무늬
+  ctx.fillStyle = dot;
+  for (let xx = left + 3; xx < left + W - 3; xx += 6) { ctx.fillRect(xx, top + 1, 2, 1); ctx.fillRect(xx + 3, top + 6, 1, 1); }
+  // 오른쪽 앞 귀퉁이를 살짝 접어 올린 자락
+  if (k >= 0.9) {
+    const fx = left + W - 7;
+    ctx.fillStyle = PALETTE.k; ctx.fillRect(fx - 1, top + 5, 7, 1); ctx.fillRect(fx - 1, top + 5, 1, 4);
+    ctx.fillStyle = PALETTE.w; ctx.fillRect(fx, top + 6, 5, 2); ctx.fillRect(fx, top + 8, 3, 1);
+  }
+  ctx.globalAlpha = 1;
+}
+
 function drawPet(ctx, scene, fr, { cx, baseY, now }) {
   const pose = fr.pose;
   const key = fr.showKey || formKey(scene.theme || "animal", scene.stage, scene.branch);
@@ -184,12 +227,10 @@ function drawPet(ctx, scene, fr, { cx, baseY, now }) {
   // 같은 모습은 다시 계산하지 않는다(숨쉬기처럼 미세한 늘어남은 0.02 단위로 묶음)
   const q = (v) => Math.round(v * 50) / 50;
   const look = scene.look || {}, fc = scene.face || {};
-  const blk = fr.silhouette ? 0 : Math.round((fr.blanket || 0) * 10) / 10; // 밤잠 이불(덮인 정도)
-  const bphase = blk > 0 ? Math.floor(now / 450) % 6 : 0; // 숨결 물결
-  const ck = [key, q(pose.sx), q(pose.sy), pose.facing >= 0 ? 1 : -1, look.spot, look.chub, look.messy ? 1 : 0, fr.silhouette ? 1 : 0, pose.eyes, pose.mouth, fc.L, fc.R, fc.m, (fc.ex || []).join(","), fc.dy || 0, fc.look || 0, blk, bphase, scene.theme].join("|");
+  const ck = [key, q(pose.sx), q(pose.sy), pose.facing >= 0 ? 1 : -1, look.spot, look.chub, look.messy ? 1 : 0, fr.silhouette ? 1 : 0, pose.eyes, pose.mouth, fc.L, fc.R, fc.m, (fc.ex || []).join(","), fc.dy || 0, fc.look || 0, scene.theme].join("|");
   let cached = CACHE.get(ck);
   if (!cached) {
-    const built = buildCreature(key, { sx: q(pose.sx), sy: q(pose.sy), facing: pose.facing, look, silhouette: fr.silhouette ? "w" : null, blanket: blk > 0 ? { k: blk, phase: bphase, theme: scene.theme } : null });
+    const built = buildCreature(key, { sx: q(pose.sx), sy: q(pose.sy), facing: pose.facing, look, silhouette: fr.silhouette ? "w" : null });
     if (!built) return null;
     const faceInfo = fr.silhouette ? null : drawFace(built.g, built.P, scene.face, { eyes: pose.eyes, mouth: pose.mouth });
     cached = { built, faceInfo };
@@ -201,6 +242,8 @@ function drawPet(ctx, scene, fr, { cx, baseY, now }) {
   const bodyW = Math.round(built.P.rx * 2 * CELL);
   const x = cx + Math.round(pose.dx);
   if (bed > 0) drawCushion(ctx, x, baseY, bodyW, bed, scene.theme);
+  const blanketK = fr.silhouette ? 0 : fr.blanket || 0; // 밤잠: 쿠션 위에 이불을 펼쳐 깔고 그 위에 앉아 잠(0 → 1)
+  if (blanketK > 0) drawUnderBlanket(ctx, x, baseY, bodyW, blanketK, scene.theme, built);
   const lift = Math.round(5 * Math.min(1, bed * 1.6)); // 쿠션 위에 올라앉음
   const base = baseY + Math.round(pose.dy) - lift;
   // 그림자 (높이 뛸수록 작아짐)

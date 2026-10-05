@@ -108,7 +108,7 @@ export function frame(a, now, scene, { roam = 20 } = {}) {
   // ---- 상태 표현 ----
   if (scene.asleep || scene.napping) {
     f.bed = 1;
-    if (scene.asleep) { f.blanket = 1; p.sy *= 0.9; p.sx *= 1.05; } // 밤잠: 이불 덮고 낮게 웅크림
+    if (scene.asleep) { f.blanket = 1; p.sy *= 0.9; p.sx *= 1.05; } // 밤잠: 쿠션 위에 깐 이불 위에서 웅크림
     p.eyes = "sleep";
     for (let i = 0; i < 3; i++) {
       const ph = ((now / 1800) + i / 3) % 1;
