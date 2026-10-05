@@ -159,7 +159,7 @@ function stamp(g, art, cx, cy, mirror = false) {
     const ch = art[y][mirror ? w - 1 - x : x];
     if (ch === ".") continue;
     const gx = x0 + x, gy = y0 + y;
-    if (gx >= 0 && gy >= 0 && gx < g.w && gy < g.h) g.c[gy * g.w + gx] = ch;
+    if (gx >= 0 && gy >= 0 && gx < g.w && gy < g.h && !(g.mask && g.mask[gy * g.w + gx])) g.c[gy * g.w + gx] = ch; // 이불 덮인 곳엔 얼굴을 안 그림
   }
 }
 
@@ -181,7 +181,7 @@ export function drawFace(g, P, expr, pose = {}) {
   if (ex.includes("blush") || !pose.eyes) {
     // 볼은 늘 살짝, blush면 진하게
     const col = ex.includes("blush") ? "P" : "R";
-    for (const s of [-1, 1]) { const bx = fcx + s * (edx + 1), by = eyeY + 2; if (g.c[by * g.w + bx] && g.c[by * g.w + bx] !== "k") { g.c[by * g.w + bx] = col; if (ex.includes("blush")) g.c[by * g.w + bx + s] = g.c[by * g.w + bx + s] && g.c[by * g.w + bx + s] !== "k" ? col : g.c[by * g.w + bx + s]; } }
+    for (const s of [-1, 1]) { const bx = fcx + s * (edx + 1), by = eyeY + 2; if (g.mask && g.mask[by * g.w + bx]) continue; if (g.c[by * g.w + bx] && g.c[by * g.w + bx] !== "k") { g.c[by * g.w + bx] = col; if (ex.includes("blush")) g.c[by * g.w + bx + s] = g.c[by * g.w + bx + s] && g.c[by * g.w + bx + s] !== "k" ? col : g.c[by * g.w + bx + s]; } }
   }
   if (ex.includes("sweat")) stamp(g, [".b", "bb"], fcx + edx + 3, eyeY - 3);
   return {
