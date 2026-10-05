@@ -1,6 +1,6 @@
 // 창밖 하늘: 실제 시각과 위치의 해 고도로 하늘색을 정하고(낮·노을·박명·밤),
 // 해와 달은 실제 방향·높이에 맞춰 창 안에 그린다. 달 모양은 실제 위상.
-import { sunPosition, moonPosition, moonIllumination } from "../core/astro.js?v=dff0127-1791181214";
+import { sunPosition, moonPosition, moonIllumination } from "../core/astro.js?v=bb30c32-1791190203";
 
 // 해 고도(도) → [위쪽 하늘, 지평선 쪽 하늘]
 const KEYS = [

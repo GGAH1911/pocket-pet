@@ -4,7 +4,7 @@
 // 결과(frame)는 screen.js 가 그린다. 시간은 실제 시각(ms, performance.now) 기준.
 
 export const DUR = {
-  meal: 1800, snack: 1400, play: 2200, wash: 4400, mgHop: 450, butt: 3400, tickle: 2000, lookFrame: 2600, eggPeek: 1800, wish: 2400, lightOff: 900, lightOn: 700,
+  meal: 1800, snack: 1400, play: 2200, wash: 4400, mgHop: 450, butt: 3400, walk: 11000, tickle: 2000, lookFrame: 2600, eggPeek: 1800, wish: 2400, lightOff: 900, lightOn: 700,
   medicine: 1600, refuse: 900, sleepyRefuse: 1000, hatch: 2600, evolve: 3000, pet: 800, poop: 500,
   greet: 2200, greetBig: 3200, tidy: 700, mgLook: 1100, farewell: 3800, tuckIn: 1600, untuck: 1200,
 };
@@ -148,6 +148,15 @@ export function frame(a, now, scene, { roam = 20 } = {}) {
   return f;
 }
 
+// 산책 시간표: 0~0.06 문 나서기(하얗게), 걷다가 두 번 멈춰 무언가를 만나고, 0.94~1 집으로
+export const WALK_STOPS = [[0.22, 0.44], [0.58, 0.8]];
+const WALK_SPEED = 320; // 배경이 흐르는 양(t 1 동안 px)
+export function walkDist(t) {
+  let moving = t;
+  for (const [a, b] of WALK_STOPS) moving -= Math.max(0, Math.min(t, b) - a);
+  return moving * WALK_SPEED;
+}
+
 // 춤 모양: 엉덩이·꼬리가 있는 친구는 엉덩이춤, 고래는 지느러미, 슬라임·구름은 젤리
 export function danceStyle(scene) {
   const { theme, stage, branch } = scene;
@@ -259,6 +268,31 @@ function applyOneShot(f, c, t, now, scene) {
         if (t > 0.3 && t < 0.6) f.texts.push({ text: "씰룩씰룩", x: 0, y: -50, alpha: 1, size: 8 });
       }
       if (t >= 0.9) { p.eyes = "happy"; p.mouth = "tongue"; f.props.push({ sprite: "heart", x: 14, y: -34 - (t - 0.9) * 60, scale: 2, alpha: 1 }); }
+      break;
+    }
+    case "walk": {
+      const evs = c.data.events || [];
+      let cur = null;
+      WALK_STOPS.forEach(([a, b], i) => { if (t >= a && t < b && evs[i]) cur = { i, kind: evs[i].kind, k: (t - a) / (b - a) }; });
+      f.walk = { t, dist: walkDist(t), events: evs, cur, season: c.data.season || null, fade: t < 0.06 ? 1 - t / 0.06 : t > 0.94 ? (t - 0.94) / 0.06 : 0 };
+      p.facing = 1; p.dx = 0;
+      if (!cur) { p.dy -= Math.abs(Math.sin(now / 110)) * 2.5; p.eyes = p.eyes || null; p.mouth = "smile"; } // 통통 걷기
+      else {
+        const k = cur.k;
+        if (cur.kind === "butterfly") { // 올려다보다가 콩
+          p.eyes = k < 0.45 ? "round" : "happy"; p.mouth = k < 0.45 ? "o" : "bigsmile";
+          if (k > 0.45 && k < 0.8) p.dy -= Math.sin(((k - 0.45) / 0.35) * Math.PI) * 9;
+        } else if (cur.kind === "flower") { // 킁킁 → 하트
+          if (k < 0.6) { p.eyes = "closed"; p.mouth = "o"; p.sx *= 1 + Math.sin(now / 90) * 0.02; f.texts.push({ text: "킁킁", x: 16, y: -36, alpha: 1, size: 8 }); }
+          else { p.eyes = "happy"; p.mouth = "smile"; f.props.push({ sprite: "heart", x: 4, y: -36 - (k - 0.6) * 40, scale: 2, alpha: 1 - (k - 0.6) * 2 }); }
+        } else if (cur.kind === "puddle") { // 폴짝 → 첨벙!
+          if (k > 0.15 && k < 0.5) { p.dy -= Math.sin(((k - 0.15) / 0.35) * Math.PI) * 12; p.eyes = "happy"; p.mouth = "open"; }
+          else if (k >= 0.5) { p.eyes = k < 0.7 ? "closed" : "happy"; p.mouth = "bigsmile"; if (k < 0.62) { p.sy *= 0.86; p.sx *= 1.1; } f.texts.push({ text: "첨벙!", x: 0, y: -44, alpha: Math.min(1, (1 - k) * 4), size: 9 }); }
+        } else if (cur.kind === "friend") { // 친구와 인사: 콩콩 + 하트
+          p.eyes = "happy"; p.mouth = "bigsmile"; p.dy -= Math.abs(Math.sin(k * Math.PI * 3)) * 5;
+          if (k > 0.2) f.texts.push({ text: "안녕!", x: 6, y: -44, alpha: Math.min(1, (k - 0.2) * 5), size: 9 });
+        }
+      }
       break;
     }
     case "tickle": {

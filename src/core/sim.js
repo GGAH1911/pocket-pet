@@ -5,10 +5,10 @@
 import {
   SPEEDS, PER_HOUR_AWAKE, PER_HOUR_ASLEEP, MOOD_PER_POOP_PER_HOUR, HEALTH_PER_HOUR, BUSY_FACTOR,
   POOP, CLEAN, SICK, SNACK_BINGE, NAP_MIN, NAP_ENERGY_PER_HOUR, NAP_LIGHT_BELOW, ACTIONS, STAGE_MIN, BRANCH, MISTAKE, CALL, DEFAULT_SETTINGS, ENDING, SECRET,
-} from "./rules.js?v=dff0127-1791181214";
-import { clampStat } from "./state.js?v=dff0127-1791181214";
-import { nextRandom, randomInt } from "./rng.js?v=dff0127-1791181214";
-import { isSleepTime, isBusyTime } from "./daytime.js?v=dff0127-1791181214";
+} from "./rules.js?v=bb30c32-1791190203";
+import { clampStat } from "./state.js?v=bb30c32-1791190203";
+import { nextRandom, randomInt } from "./rng.js?v=bb30c32-1791190203";
+import { isSleepTime, isBusyTime } from "./daytime.js?v=bb30c32-1791190203";
 
 const MINUTE = 60000;
 const NEXT_STAGE = { egg: "baby", baby: "child", child: "teen", teen: "adult" };
@@ -205,12 +205,21 @@ export function advance(pet, now, settings = DEFAULT_SETTINGS, events = []) {
 // ---------- 돌봄 행동 ----------
 // 모두 먼저 now까지 계산한 뒤 적용한다. 결과: { ok, reason?, events }
 
+// 낮잠 중에 돌봄 행동을 하면 먼저 깨운다(불 켜짐). 밤잠은 깨우지 않는다(begin에서 거절).
+export function wakeFromNap(pet, now, events = []) {
+  if (pet.asleep || pet.napLeft <= 0) return false;
+  pet.napLeft = 0; pet.napManual = false; pet.lightOn = true;
+  events.push({ t: now, type: "nap-end", woke: true, by: "action" });
+  return true;
+}
+
 function begin(pet, now, settings) {
   const events = advance(pet, now, settings);
   if (pet.ended) return { ok: false, reason: "ended", events };
   if (pet.stage === "egg") return { ok: false, reason: "egg", events };
   if (pet.asleep) return { ok: false, reason: "asleep", events };
-  return { ok: true, events };
+  const woke = wakeFromNap(pet, now, events);
+  return { ok: true, events, woke };
 }
 
 export function feed(pet, kind, now, settings = DEFAULT_SETTINGS) {
@@ -253,6 +262,22 @@ export function play(pet, now, settings = DEFAULT_SETTINGS, { win = true } = {})
   pet.stats.clean -= CLEAN.playCost;
   if (a.weight) pet.weight = Math.max(5, pet.weight + a.weight);
   pet.napLeft = 0;
+  pet.counts.plays++;
+  clampAll(pet);
+  return r;
+}
+
+// 산책: 기분 +30, 기운 -10, 배부름 -5, 깨끗함 -5(비·눈 오는 날 -15), 몸무게 -1. 놀아준 횟수로 센다.
+export function walk(pet, now, settings = DEFAULT_SETTINGS, { wet = false } = {}) {
+  const r = begin(pet, now, settings);
+  if (!r.ok) return r;
+  if (pet.stats.energy < ACTIONS.walkMinEnergy) return { ok: false, reason: "tired", events: r.events };
+  const a = ACTIONS.walk;
+  pet.stats.mood += a.mood;
+  pet.stats.energy += a.energy;
+  pet.stats.hunger += a.hunger;
+  pet.stats.clean -= wet ? CLEAN.walkWetCost : CLEAN.walkCost;
+  pet.weight = Math.max(5, pet.weight + a.weight);
   pet.counts.plays++;
   clampAll(pet);
   return r;

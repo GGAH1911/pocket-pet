@@ -1,16 +1,19 @@
 // 방 화면 그리기. 게임 규칙은 모르고 받은 상태만 그린다.
 // 캔버스는 "도트 해상도"로 그리고 CSS가 정수배로 키운다.
-import { PALETTE } from "./palette.js?v=dff0127-1791181214";
-import { SPRITES, drawSprite, spriteSize } from "./sprites.js?v=dff0127-1791181214";
-import { buildCreature, paintGrid, formKey, eggSpriteFor } from "./creature.js?v=dff0127-1791181214";
-import { drawFace, POOLS } from "./face.js?v=dff0127-1791181214";
-import { drawSky } from "./sky.js?v=dff0127-1791181214";
+import { PALETTE } from "./palette.js?v=bb30c32-1791190203";
+import { SPRITES, drawSprite, spriteSize } from "./sprites.js?v=bb30c32-1791190203";
+import { buildCreature, paintGrid, formKey, eggSpriteFor } from "./creature.js?v=bb30c32-1791190203";
+import { drawFace, POOLS } from "./face.js?v=bb30c32-1791190203";
+import { drawSky } from "./sky.js?v=bb30c32-1791190203";
+import { WALK_STOPS as WALK_STOPS_REF, walkDist as walkDistRef } from "./anim.js?v=bb30c32-1791190203";
+const clamp01 = (x) => Math.max(0, Math.min(1, x));
 
 const FLOOR = "#f5b98c";
 const FLOOR_LINE = "#e9a274";
 const BASEBOARD = "#e8a37e";
 
 export function drawRoom(ctx, { w, h, now, scene, f, wall = Date.now(), loc = { lat: 37.57, lon: 126.98 }, weather = null }) {
+  if (f && f.walk) return drawWalk(ctx, { w, h, now, scene, f, wall, loc, weather }); // 산책 중엔 바깥 장면
   const floorY = Math.round(h * 0.5);
 
   // 벽 + 작은 무늬
@@ -101,6 +104,124 @@ export function drawRoom(ctx, { w, h, now, scene, f, wall = Date.now(), loc = { 
   }
   if (fr.flash > 0) { ctx.fillStyle = `rgba(255,255,255,${fr.flash})`; ctx.fillRect(0, 0, w, h); }
   return { pet: box, poops: poopRects, window: win, sky: skyInfo, memo: memo ? { x: Math.round(w * 0.64), y: Math.round(floorY * 0.2), w: 36, h: 34 } : null, layout: { w, h, cx, baseY, headY: box ? box.y + 4 : baseY - 30 } };
+}
+
+// ---------- 산책: 바깥 장면 ----------
+// 하늘은 실제 시각·날씨(창문과 같은 drawSky), 나무(먼 층)·길·풀(가까운 층)이 다른 속도로 흐른다.
+const hashN = (n) => { const x = Math.sin(n * 91.7) * 43758.5453; return x - Math.floor(x); };
+const FRIEND_CACHE = new Map();
+function drawWalk(ctx, { w, h, now, scene, f, wall, loc, weather }) {
+  const wk = f.walk, d = wk.dist;
+  const groundY = Math.round(h * 0.5);
+  const info = drawSky(ctx, { x: 0, y: 0, w, h: groundY }, wall, loc, now, weather);
+  const night = clamp01(-(info.sunAlt ?? 10) / 12) * 0.5; // 밤엔 땅도 어둡게
+  // 먼 나무(0.45배 속도)
+  const span = 44;
+  for (let i = -1; i < Math.ceil(w / span) + 2; i++) {
+    const wi = Math.floor(d * 0.45 / span) + i; // 세계 번호(같은 나무는 같은 모양)
+    const tx = Math.round(wi * span - d * 0.45 + hashN(wi) * 14);
+    const th = 14 + Math.round(hashN(wi + 7) * 8), r = 8 + Math.round(hashN(wi + 3) * 4);
+    ctx.fillStyle = PALETTE.n; ctx.fillRect(tx - 1, groundY - th + r, 3, th - r + 2);
+    for (const [cc, rr, oy] of [[PALETTE.k, r + 1, 0], [PALETTE.G, r, 0], [PALETTE.g, r - 3, -2]]) for (let yy = -rr; yy <= rr; yy++) { const hw = Math.round(Math.sqrt(rr * rr - yy * yy)); ctx.fillStyle = cc; ctx.fillRect(tx - hw, groundY - th + yy + oy + 2, hw * 2 + 1, 1); } // 동그란 나뭇잎(테두리도 동그랗게)
+  }
+  // 땅: 풀 + 길
+  const pathTop = groundY + Math.round((h - groundY) * 0.28), pathH = 24;
+  ctx.fillStyle = PALETTE.g; ctx.fillRect(0, groundY, w, h - groundY);
+  ctx.fillStyle = PALETTE.G; for (let y = groundY + 4; y < h; y += 9) for (let x = -((d * 1.2) % 16); x < w; x += 16) ctx.fillRect(Math.round(x + (y % 3) * 5), y, 2, 1);
+  ctx.fillStyle = "#f0d6a8"; ctx.fillRect(0, pathTop, w, pathH);
+  ctx.fillStyle = "#e2bf86"; ctx.fillRect(0, pathTop, w, 2); ctx.fillRect(0, pathTop + pathH - 2, w, 2);
+  for (let i = -1; i < w / 20 + 2; i++) { const wi = Math.floor(d / 20) + i; const x = Math.round(wi * 20 - d); ctx.fillStyle = "#d9b47a"; ctx.fillRect(x + Math.round(hashN(wi) * 12), pathTop + 5 + Math.round(hashN(wi + 1) * 14), 2, 1); }
+  // 가까운 풀숲·꽃(1.3배 속도)
+  for (let i = -1; i < w / 26 + 2; i++) {
+    const wi = Math.floor(d * 1.3 / 26) + i; const x = Math.round(wi * 26 - d * 1.3 + hashN(wi + 9) * 10), y = pathTop + pathH + 10 + Math.round(hashN(wi + 2) * 12);
+    ctx.fillStyle = PALETTE.G; ctx.fillRect(x, y - 3, 1, 3); ctx.fillRect(x + 2, y - 4, 1, 4); ctx.fillRect(x + 4, y - 2, 1, 2);
+    if (hashN(wi + 5) > 0.55) { ctx.fillStyle = [PALETTE.p, PALETTE.y, PALETTE.w, PALETTE.v][Math.floor(hashN(wi + 6) * 4)]; ctx.fillRect(x + 1, y - 6, 3, 2); ctx.fillStyle = PALETTE.y; ctx.fillRect(x + 2, y - 6, 1, 1); }
+  }
+  if (night > 0) { ctx.fillStyle = `rgba(20,16,60,${night})`; ctx.fillRect(0, groundY - 30, w, h - groundY + 30); }
+
+  // 만나는 것들(길 위, 세계 위치에 고정 → 걸어가면 다가옴)
+  const petX = Math.round(w * 0.38), baseY = pathTop + 17;
+  const sc = scene || {};
+  const things = wk.events.map((ev, i) => {
+    const a = WALK_STOPS_REF[i] ? WALK_STOPS_REF[i][0] : 0;
+    const ex = petX + (ev.kind === "puddle" ? 2 : 44) + (walkDistRef(a) - d); // 멈출 때: 웅덩이는 발밑(뛰어들기), 나머지는 펫 앞 44px
+    const k = wk.cur && wk.cur.i === i ? wk.cur.k : (wk.t > (WALK_STOPS_REF[i] || [0, 0])[1] ? 1 : 0);
+    return { ev, x: Math.round(ex), k };
+  }).filter((o) => o.x > -40 && o.x < w + 40);
+  for (const o of things) if (o.ev.kind !== "butterfly") drawWalkThing(ctx, o.ev, o.x, baseY, o.k, now, petX); // 땅에 있는 것은 펫 뒤
+  // 펫 그림자 + 펫
+  ctx.fillStyle = "rgba(59,44,53,0.18)"; ctx.fillRect(petX - 14, baseY - 1, 28, 3);
+  const box = drawPet(ctx, { ...sc, asleep: false, napping: false }, f, { cx: petX, baseY, now });
+  const px = petX + Math.round(f.pose.dx);
+  for (const pr of f.props) {
+    const sp = SPRITES[pr.sprite]; if (!sp || pr.alpha <= 0) continue;
+    const { w: sw, h: sh } = spriteSize(sp);
+    ctx.globalAlpha = Math.min(1, pr.alpha);
+    drawSprite(ctx, sp, Math.round(px + pr.x - (sw * pr.scale) / 2), Math.round(baseY + pr.y - sh * pr.scale), pr.scale);
+    ctx.globalAlpha = 1;
+  }
+  for (const o of things) if (o.ev.kind === "butterfly") drawWalkThing(ctx, o.ev, o.x, baseY, o.k, now, petX); // 나비는 펫 위(머리 위를 맴돎)
+  // 계절 날림: 봄 벚꽃잎, 가을 낙엽
+  if (wk.season) {
+    const cols = wk.season === "spring" ? [PALETTE.p, "#ffd1dc"] : [PALETTE.o, PALETTE.O, PALETTE.r];
+    for (let i = 0; i < 12; i++) {
+      const ph = ((now / 5200) + hashN(i)) % 1;
+      const x = Math.round(((hashN(i + 20) * w + now / 30 * (0.4 + hashN(i + 3))) % (w + 10)) - 5 + Math.sin(ph * 8 + i) * 4), y = Math.round(ph * (h * 0.85));
+      ctx.fillStyle = cols[i % cols.length]; ctx.fillRect(x, y, 2, 1); ctx.fillRect(x + (Math.floor(now / 300 + i) % 2), y + 1, 1, 1);
+    }
+  }
+  // 비·눈은 땅 위까지
+  if (weather && ["rain", "drizzle", "thunder", "sleet"].includes(weather.kind)) {
+    ctx.fillStyle = "rgba(200,220,255,0.7)";
+    for (let i = 0; i < 26; i++) { const x = Math.round((hashN(i) * w + now / 6) % w), y = Math.round((hashN(i + 40) * h + now / 3) % h); if (y > groundY) ctx.fillRect(x, y, 1, 3); }
+  } else if (weather && weather.kind === "snow") {
+    ctx.fillStyle = "#ffffff";
+    for (let i = 0; i < 20; i++) { const x = Math.round((hashN(i) * w + Math.sin(now / 700 + i) * 6) % w), y = Math.round((hashN(i + 40) * h + now / 25) % h); if (y > groundY) ctx.fillRect(x, y, 2, 2); }
+  }
+  for (const t of f.texts) {
+    if (t.alpha <= 0 || t.abs) continue;
+    ctx.globalAlpha = Math.min(1, t.alpha); ctx.fillStyle = t.color || PALETTE.k;
+    ctx.font = `bold ${Math.round(t.size)}px system-ui, sans-serif`; ctx.textAlign = "center";
+    ctx.fillText(t.text, Math.round(px + t.x), Math.round(baseY + t.y)); ctx.globalAlpha = 1;
+  }
+  if (wk.fade > 0) { ctx.fillStyle = `rgba(255,250,240,${Math.min(1, wk.fade)})`; ctx.fillRect(0, 0, w, h); }
+  return { pet: null, poops: [], window: null, sky: info, memo: null, layout: { w, h, cx: petX, baseY, headY: box ? box.y + 4 : baseY - 30 } };
+}
+
+// 산책길에서 만나는 것: 나비·꽃·웅덩이·친구
+function drawWalkThing(ctx, ev, x, baseY, k, now, petX) {
+  if (ev.kind === "flower") {
+    ctx.fillStyle = PALETTE.G; ctx.fillRect(x, baseY - 10, 1, 10); ctx.fillRect(x - 2, baseY - 5, 2, 1);
+    ctx.fillStyle = PALETTE.k; ctx.fillRect(x - 4, baseY - 16, 9, 7);
+    ctx.fillStyle = PALETTE.p; ctx.fillRect(x - 3, baseY - 15, 7, 5); ctx.fillStyle = PALETTE.P; ctx.fillRect(x - 3, baseY - 15, 1, 1); ctx.fillRect(x + 3, baseY - 11, 1, 1);
+    ctx.fillStyle = PALETTE.y; ctx.fillRect(x - 1, baseY - 13, 3, 2);
+  } else if (ev.kind === "puddle") {
+    const px = x - 10;
+    ctx.fillStyle = PALETTE.B; for (let yy = -2; yy <= 2; yy++) { const hw = Math.round(Math.sqrt(1 - (yy / 3) ** 2) * 13); ctx.fillRect(px + 10 - hw, baseY + yy, hw * 2, 1); }
+    ctx.fillStyle = PALETTE.b; ctx.fillRect(px + 2, baseY - 1, 14, 2); ctx.fillStyle = PALETTE.w; ctx.fillRect(px + 4, baseY - 1, 3, 1);
+    if (k > 0.5 && k < 0.85) { const s = (k - 0.5) / 0.35; ctx.fillStyle = PALETTE.b; for (let i = 0; i < 6; i++) { const ang = Math.PI * (0.15 + (i / 5) * 0.7); ctx.fillRect(Math.round(px + 10 + Math.cos(ang) * s * 18 * (i % 2 ? 1 : -1)), Math.round(baseY - Math.sin(ang) * s * 14 + s * s * 8), 2, 2); } }
+  } else if (ev.kind === "butterfly") {
+    // 앞에서 팔랑이다가, 만나면 펫 머리 위를 빙글, 만남이 끝나면 날아가 사라짐
+    if (k >= 1) return;
+    const t = now / 1000;
+    const bx = k > 0 && k < 1 ? petX + Math.cos(t * 3) * 12 + 4 : x + Math.sin(t * 2) * 6;
+    const by = k > 0 && k < 1 ? baseY - 40 + Math.sin(t * 5) * 4 : baseY - 26 + Math.sin(t * 3) * 5;
+    const flap = Math.floor(now / 120) % 2;
+    const X0 = Math.round(bx), Y0 = Math.round(by), R = (dx, dy, ww, hh, c) => { ctx.fillStyle = c; ctx.fillRect(X0 + dx * 2, Y0 + dy * 2, ww * 2, hh * 2); }; // 2배 도트
+    if (flap) { R(-4, -3, 4, 4, PALETTE.k); R(1, -3, 4, 4, PALETTE.k); R(-3, -2, 3, 2, PALETTE.p); R(1, -2, 3, 2, PALETTE.p); R(-2, -2, 1, 1, PALETTE.y); R(2, -2, 1, 1, PALETTE.y); }
+    else { R(-4, -1, 4, 3, PALETTE.k); R(1, -1, 4, 3, PALETTE.k); R(-3, 0, 3, 1, PALETTE.p); R(1, 0, 3, 1, PALETTE.p); R(-2, 0, 1, 1, PALETTE.y); R(2, 0, 1, 1, PALETTE.y); }
+    R(0, -2, 1, 4, PALETTE.k); // 몸통
+  } else if (ev.kind === "friend" && ev.friendKey) {
+    let c = FRIEND_CACHE.get(ev.friendKey);
+    if (!c && typeof document !== "undefined") {
+      const b = buildCreature(ev.friendKey, { facing: -1, look: { spot: ev.spot || "y" } });
+      if (b) { drawFace(b.g, b.P, POOLS.great[1]); c = document.createElement("canvas"); c.width = 76; c.height = 50; paintGrid(c.getContext("2d"), b.g, 38, 48, 1); FRIEND_CACHE.set(ev.friendKey, c); }
+    }
+    const hop = k > 0 && k < 1 ? Math.round(Math.abs(Math.sin(k * Math.PI * 3 + 1)) * 4) : 0;
+    ctx.fillStyle = "rgba(59,44,53,0.18)"; ctx.fillRect(x - 8, baseY - 1, 18, 2);
+    if (c) ctx.drawImage(c, Math.round(x - 38 + 6), Math.round(baseY - 48 - hop));
+    if (k > 0.3 && k < 1) drawSprite(ctx, SPRITES.heart, Math.round(x - 4), Math.round(baseY - 36 - (k - 0.3) * 20), 1);
+  }
 }
 
 function windowRect(w, floorY) {
