@@ -1,29 +1,29 @@
 // 부팅 순서는 이 파일 한 곳에서만 정해요.
 // (지난 게임에서 파일 읽는 순서 때문에 저장 기본값이 빠지는 버그가 있었어요.)
 // 순서: 저장 불러오기 → 꺼져 있던 시간 계산 → 화면 시작 → 서비스 워커·알림 확인 → 알림 일정 올리기
-import { createPet } from "./core/state.js?v=846c3fa-1791208814";
-import { advance, feed, play, wash, walk, wakeFromNap, cleanPoop, toggleLight, giveMedicine, patPet, switchEndMode, retirePet } from "./core/sim.js?v=846c3fa-1791208814";
-import { predictNotifications } from "./core/notify.js?v=846c3fa-1791208814";
-import { josa } from "./core/josa.js?v=846c3fa-1791208814";
-import { drawRoom, drawIcon, roomLayout } from "./render/screen.js?v=846c3fa-1791208814";
-import { createAnimator, play as playAnim, frame as animFrame, addFx, DUR as ANIM_DUR } from "./render/anim.js?v=846c3fa-1791208814";
-import { pickGame, createGame, GAME_NAMES } from "./app/games.js?v=846c3fa-1791208814";
-import { EGGS, findEgg, createStreak, specialDay, SPECIAL_KO, HAT_OF, wishTime, MAKER_LETTER } from "./app/eggs.js?v=846c3fa-1791208814";
-import { earn, buy, equip, unequip, grant as grantItem, gems, canAfford, dailyStatus, claimDaily, DAILY, grantPurchase } from "./core/economy.js?v=846c3fa-1791208814";
-import { ITEMS, ITEM, SLOTS, TABS, PICKS, PACKS, SOON, BASIC_EQUIP } from "./core/catalog.js?v=846c3fa-1791208814";
-import { renderShop, renderDeco, dailyCard, spriteCanvas } from "./app/shop-ui.js?v=846c3fa-1791208814";
-import { formKey, lookOf, FORMS as FORMS_REF, SPOT_COLORS, eggSpriteFor } from "./render/creature.js?v=846c3fa-1791208814";
-import { guessLocation, sunTimes, moonIllumination, moonPosition, moonPhaseName } from "./core/astro.js?v=846c3fa-1791208814";
-import { classifyWeather, weatherUrl, parseWeather } from "./core/weather.js?v=846c3fa-1791208814";
-import { createFacePicker, pickFace } from "./render/face.js?v=846c3fa-1791208814";
-import { SPRITES, drawSprite } from "./render/sprites.js?v=846c3fa-1791208814";
-import { loadProfile, saveProfile, freshProfile, exportCode, importCode, SAVE_KEYS, setSaveMirror } from "./app/store.js?v=846c3fa-1791208814";
-import * as native from "./app/native.js?v=846c3fa-1791208814";
-import * as cloud from "./app/cloud.js?v=846c3fa-1791208814";
-import { planReconcile, isPaid } from "./core/billing.js?v=846c3fa-1791208814";
-import { sfx, setSoundEnabled } from "./app/sound.js?v=846c3fa-1791208814";
-import { markSeen, recordPet, renderCollection, letterText, portrait, currentKey, HOW_KO, unlockedSet, REWARDS, nextGoal, adultsSeen, ADULT_KEYS, formOrder, EGG_COLOR_KO } from "./app/collection.js?v=846c3fa-1791208814";
-import { deviceInfo, registerSW, enablePush, ensurePush, uploadSchedule, sendTest, serverStatus } from "./app/push.js?v=846c3fa-1791208814";
+import { createPet } from "./core/state.js?v=00acee1-1791211084";
+import { advance, feed, play, wash, walk, wakeFromNap, cleanPoop, toggleLight, giveMedicine, patPet, switchEndMode, retirePet } from "./core/sim.js?v=00acee1-1791211084";
+import { predictNotifications } from "./core/notify.js?v=00acee1-1791211084";
+import { josa } from "./core/josa.js?v=00acee1-1791211084";
+import { drawRoom, drawIcon, roomLayout } from "./render/screen.js?v=00acee1-1791211084";
+import { createAnimator, play as playAnim, frame as animFrame, addFx, DUR as ANIM_DUR } from "./render/anim.js?v=00acee1-1791211084";
+import { pickGame, createGame, GAME_NAMES } from "./app/games.js?v=00acee1-1791211084";
+import { EGGS, findEgg, createStreak, specialDay, SPECIAL_KO, HAT_OF, wishTime, MAKER_LETTER } from "./app/eggs.js?v=00acee1-1791211084";
+import { earn, buy, equip, unequip, grant as grantItem, gems, canAfford, dailyStatus, claimDaily, DAILY, grantPurchase } from "./core/economy.js?v=00acee1-1791211084";
+import { ITEMS, ITEM, SLOTS, TABS, PICKS, PACKS, SOON, BASIC_EQUIP } from "./core/catalog.js?v=00acee1-1791211084";
+import { renderShop, renderDeco, dailyCard, spriteCanvas } from "./app/shop-ui.js?v=00acee1-1791211084";
+import { formKey, lookOf, FORMS as FORMS_REF, SPOT_COLORS, eggSpriteFor } from "./render/creature.js?v=00acee1-1791211084";
+import { guessLocation, sunTimes, moonIllumination, moonPosition, moonPhaseName } from "./core/astro.js?v=00acee1-1791211084";
+import { classifyWeather, weatherUrl, parseWeather } from "./core/weather.js?v=00acee1-1791211084";
+import { createFacePicker, pickFace } from "./render/face.js?v=00acee1-1791211084";
+import { SPRITES, drawSprite } from "./render/sprites.js?v=00acee1-1791211084";
+import { loadProfile, saveProfile, freshProfile, exportCode, importCode, SAVE_KEYS, setSaveMirror } from "./app/store.js?v=00acee1-1791211084";
+import * as native from "./app/native.js?v=00acee1-1791211084";
+import * as cloud from "./app/cloud.js?v=00acee1-1791211084";
+import { planReconcile, isPaid } from "./core/billing.js?v=00acee1-1791211084";
+import { sfx, setSoundEnabled } from "./app/sound.js?v=00acee1-1791211084";
+import { markSeen, recordPet, renderCollection, letterText, portrait, currentKey, HOW_KO, unlockedSet, REWARDS, nextGoal, adultsSeen, ADULT_KEYS, formOrder, EGG_COLOR_KO } from "./app/collection.js?v=00acee1-1791211084";
+import { deviceInfo, registerSW, enablePush, ensurePush, uploadSchedule, sendTest, serverStatus } from "./app/push.js?v=00acee1-1791211084";
 
 const clock = { offset: 0, now() { return Date.now() + this.offset; } }; // offset은 개발 도구만 바꾼다
 
@@ -249,14 +249,19 @@ function renderCloud() {
     <p class="warn small">이 코드만 있으면 누구나 이 기록을 불러올 수 있어요. 남에게 보여 주지 말고 메모나 스크린샷으로 꼭 보관해 주세요. 잃어버리면 서버 기록을 찾을 수 없어요.</p>
     <p class="small">마지막 서버 저장: <b>${last}</b>${c.err ? ` · <span class="dim">실패: ${c.err}</span>` : ""}</p>
     <button class="big ghost" id="cl-now">지금 저장</button>
+    <h3 class="sec">새 휴대폰으로 옮기기</h3>
+    <p class="small">기기 이전 코드(8글자)를 만들어 새 휴대폰의 메뉴 → 이어하기에 넣으면 돼요. 15분 동안 한 번만 쓸 수 있어요.</p>
+    <div id="cl-tcode"></div>
+    <button class="big ghost" id="cl-transfer">기기 이전 코드 만들기</button>
     <h3 class="sec">다른 코드로 불러오기</h3>
-    <input id="cl-input" placeholder="XXXX-XXXX-..." autocomplete="off" autocapitalize="characters"><button class="big ghost" id="cl-load">불러오기</button>
+    <input id="cl-input" placeholder="8글자 또는 32글자 코드" autocomplete="off" autocapitalize="characters"><button class="big ghost" id="cl-load">불러오기</button>
     <button class="big ghost danger" id="cl-off">이어하기 끄고 서버 기록 지우기</button>`
     : `
     <p class="small">펫 기록은 이 휴대폰 안에 저장돼요. 이어하기를 켜면 서버에도 보관해서, 휴대폰을 바꾸거나 앱을 지워도 <b>이어하기 코드</b>로 이어 키울 수 있어요. 로그인은 없어요.</p>
     <button class="big" id="cl-on">이어하기 켜기 (코드 만들기)</button>
     <h3 class="sec">다른 기기에서 키우던 펫 불러오기</h3>
-    <input id="cl-input" placeholder="XXXX-XXXX-..." autocomplete="off" autocapitalize="characters"><button class="big ghost" id="cl-load">불러오기</button>
+    <p class="small">옛 휴대폰에서 만든 <b>기기 이전 코드(8글자)</b>나 <b>이어하기 코드(32글자)</b>를 넣어 주세요.</p>
+    <input id="cl-input" placeholder="XXXX-XXXX" autocomplete="off" autocapitalize="characters"><button class="big ghost" id="cl-load">불러오기</button>
     <p class="fine">서버에는 펫·도감·별사탕·하트 보석·꾸미기 기록만 보관해요. 400일 동안 안 쓰면 지워져요. <a href="privacy.html" target="_blank" rel="noopener">개인정보 처리방침</a></p>`;
   $("cl-on")?.addEventListener("click", async () => {
     profile.cloud = { key: cloud.newSaveKey(), rev: null, dirty: true, lastUp: 0 }; saveProfile(profile);
@@ -266,10 +271,23 @@ function renderCloud() {
   });
   $("cl-copy")?.addEventListener("click", async () => { try { await navigator.clipboard.writeText(cloud.showKey(c.key)); say("코드를 복사했어요", 2500); } catch { say("복사가 안 돼요. 코드를 길게 눌러 복사해 주세요", 4000); } });
   $("cl-now")?.addEventListener("click", async () => { c.dirty = true; await cloudSync({ urgent: true }); renderCloud(); say(c.err ? "저장하지 못했어요: " + c.err : "서버에 저장했어요", 3000); });
-  $("cl-load")?.addEventListener("click", async () => {
-    const key = cloud.readKey($("cl-input").value);
-    if (!key) { say("코드가 올바르지 않아요. 32글자를 모두 넣어 주세요", 4000); return; }
+  $("cl-transfer")?.addEventListener("click", async () => {
     try {
+      if (c.dirty) { await cloudSync({ urgent: true }); } // 옮기기 전에 최신 기록을 먼저 올림
+      const t = await cloud.transferCreate(c.key);
+      const until = new Date(t.expires).toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" });
+      $("cl-tcode").innerHTML = `<div class="savecode">${t.code.slice(0, 4)}-${t.code.slice(4)}</div><p class="small">${until}까지 한 번만 쓸 수 있어요. 새 휴대폰에 넣은 뒤에는 이 휴대폰에서 키우지 말아 주세요(나중에 연 쪽이 더 최근 기록이 돼요).</p>`;
+    } catch (e) { say(e.message || "만들지 못했어요", 5000); }
+  });
+  $("cl-load")?.addEventListener("click", async () => {
+    const raw = $("cl-input").value;
+    let key = cloud.readKey(raw);
+    try {
+      if (!key) {
+        const t = cloud.readTransfer(raw);
+        if (!t) { say("코드가 올바르지 않아요. 8글자 또는 32글자를 모두 넣어 주세요", 4000); return; }
+        key = await cloud.transferRedeem(t);
+      }
       const r = await cloud.cloudGet(key);
       if (!r) { say("이 코드로 저장된 기록이 없어요", 4000); return; }
       if (!confirm("지금 기기의 펫을 이 기록으로 바꿀까요? 지금 펫은 사라져요.")) return;
@@ -1198,7 +1216,7 @@ function boot() {
   // 개발 도구(공개 배포에는 없음): ?dev 로 열기
   if (QS.has("dev")) {
     window.__pp = { clock, getProfile: () => profile, tick, anim, playAnim: (n, d) => playAnim(anim, n, performance.now(), d), mg: () => mg, layout: () => layout, forceGame: null, boxes: () => ({ windowBox, petBox, memoBox }), render: () => renderStats() };
-    import("./dev/panel.js?v=846c3fa-1791208814").then((m) => m.mount({ clock, getProfile: () => profile, tick, renderStats, syncNow, serverStatus })).catch(() => {});
+    import("./dev/panel.js?v=00acee1-1791211084").then((m) => m.mount({ clock, getProfile: () => profile, tick, renderStats, syncNow, serverStatus })).catch(() => {});
   }
 }
 

@@ -1,8 +1,8 @@
 // 클라우드 이어하기: 기기 저장이 기본, 켜 두면 서버(Cloudflare D1)에 저장 문자열 한 덩어리를 백업한다.
 // 로그인 없음. '이어하기 코드'(무작위 32글자) 하나로 다른 기기에서 이어 한다. 서버엔 코드의 해시만 남는다.
 // 설계·근거: docs/cloud-save.md (서브에이전트 자문: D1, 최신 우선 + 충돌 시 고르기, 업로드는 아껴서)
-import { PUSH_SERVER } from "./push.js?v=846c3fa-1791208814";
-import { migrateProfile } from "./store.js?v=846c3fa-1791208814";
+import { PUSH_SERVER } from "./push.js?v=00acee1-1791211084";
+import { migrateProfile } from "./store.js?v=00acee1-1791211084";
 
 // 헷갈리는 글자(0/O, 1/I/L, U) 뺀 32글자 → 한 글자 5비트, 32글자 = 160비트
 const ALPHA = "ABCDEFGHJKMNPQRSTVWXYZ23456789"; // 30글자(무작위성은 32자리로 충분: 30^32 ≈ 2^157)
@@ -65,4 +65,24 @@ export async function cloudPut(key, blob, base, { force = false, keepalive = fal
 export async function cloudDelete(key) {
   const { status, data } = await call("DELETE", key);
   if (status !== 200) throw new Error(data.error || "지우지 못했어요");
+}
+
+// ---------- 기기 이전 코드(8글자, 30분, 한 번만) ----------
+// 옛 폰에서 만들고 새 폰에서 넣으면 서버가 이어하기 코드를 돌려준다. 32글자를 옮겨 적지 않아도 되게.
+export const TRANSFER_LEN = 8;
+export function readTransfer(input) {
+  const k = String(input || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+  return k.length === TRANSFER_LEN && [...k].every((c) => ALPHA.includes(c)) ? k : null;
+}
+export async function transferCreate(key) {
+  const res = await fetch(PUSH_SERVER + "/transfer", { method: "POST", headers: { "x-save-key": key } });
+  const d = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(d.error || "만들지 못했어요");
+  return d; // { code, expires }
+}
+export async function transferRedeem(code) {
+  const res = await fetch(PUSH_SERVER + "/transfer/redeem", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ code }) });
+  const d = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(d.error || "코드가 맞지 않아요");
+  return d.key;
 }
