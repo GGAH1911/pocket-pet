@@ -4,11 +4,11 @@
 // - 무슨 일이 생겼는지(events)를 돌려준다 → "자리를 비운 동안" 요약과 알림 예측에 쓴다.
 import {
   SPEEDS, PER_HOUR_AWAKE, PER_HOUR_ASLEEP, MOOD_PER_POOP_PER_HOUR, HEALTH_PER_HOUR, BUSY_FACTOR,
-  POOP, CLEAN, SICK, SNACK_BINGE, NAP_MIN, NAP_ENERGY_PER_HOUR, ACTIONS, STAGE_MIN, BRANCH, MISTAKE, CALL, DEFAULT_SETTINGS, ENDING, SECRET,
-} from "./rules.js?v=f6105a2-1791123013";
-import { clampStat } from "./state.js?v=f6105a2-1791123013";
-import { nextRandom, randomInt } from "./rng.js?v=f6105a2-1791123013";
-import { isSleepTime, isBusyTime } from "./daytime.js?v=f6105a2-1791123013";
+  POOP, CLEAN, SICK, SNACK_BINGE, NAP_MIN, NAP_ENERGY_PER_HOUR, NAP_LIGHT_BELOW, ACTIONS, STAGE_MIN, BRANCH, MISTAKE, CALL, DEFAULT_SETTINGS, ENDING, SECRET,
+} from "./rules.js?v=106e0a7-1791169146";
+import { clampStat } from "./state.js?v=106e0a7-1791169146";
+import { nextRandom, randomInt } from "./rng.js?v=106e0a7-1791169146";
+import { isSleepTime, isBusyTime } from "./daytime.js?v=106e0a7-1791169146";
 
 const MINUTE = 60000;
 const NEXT_STAGE = { egg: "baby", baby: "child", child: "teen", teen: "adult" };
@@ -102,7 +102,7 @@ export function tickMinute(pet, ts, settings = DEFAULT_SETTINGS, events = []) {
   if (sleepNow && !pet.asleep) {
     pet.asleep = true;
     pet.sleptAt = ts;
-    pet.napLeft = 0;
+    pet.napLeft = 0; pet.napManual = false;
     pet.lightMistakeTonight = false;
     events.push({ t: ts, type: "sleep", lightOn: pet.lightOn });
   } else if (!sleepNow && pet.asleep) {
@@ -129,7 +129,11 @@ export function tickMinute(pet, ts, settings = DEFAULT_SETTINGS, events = []) {
     if (pet.napLeft > 0) {
       s.energy += (NAP_ENERGY_PER_HOUR / 60) * dGame;
       pet.napLeft -= dGame;
-      if (pet.napLeft <= 0) { pet.napLeft = 0; events.push({ t: ts, type: "nap-end" }); }
+      if (pet.napLeft <= 0) {
+        pet.napLeft = 0;
+        if (pet.napManual) { pet.lightOn = true; pet.napManual = false; } // 불 끄고 재운 낮잠: 깨면 불을 켬
+        events.push({ t: ts, type: "nap-end" });
+      }
     } else {
       s.mood += ((PER_HOUR_AWAKE.mood + MOOD_PER_POOP_PER_HOUR * pet.poops) / 60) * f;
       s.energy += (PER_HOUR_AWAKE.energy / 60) * f;
@@ -271,11 +275,21 @@ export function cleanPoop(pet, now, settings = DEFAULT_SETTINGS) {
 }
 
 // 불은 잘 때도 켜고 끌 수 있다(그게 목적이므로).
+// 낮(깨어 있을 때) 불을 끄면: 기운이 50 미만이면 바로 낮잠(깨면 불이 저절로 켜짐), 아니면 "아직 안 졸려요"(불만 꺼짐).
+// 낮잠 중에 불을 켜면 깨어난다.
 export function toggleLight(pet, now, settings = DEFAULT_SETTINGS) {
   const events = advance(pet, now, settings);
+  if (pet.ended) return { ok: false, reason: "ended", events };
   if (pet.stage === "egg") return { ok: false, reason: "egg", events };
   pet.lightOn = !pet.lightOn;
-  return { ok: true, events, lightOn: pet.lightOn };
+  let napped = false, woke = false, notSleepy = false;
+  if (!pet.asleep) {
+    if (!pet.lightOn && pet.napLeft <= 0) {
+      if (pet.stats.energy < NAP_LIGHT_BELOW) { pet.napLeft = NAP_MIN; pet.napManual = true; napped = true; events.push({ t: now, type: "nap", manual: true }); }
+      else notSleepy = true;
+    } else if (pet.lightOn && pet.napLeft > 0) { pet.napLeft = 0; pet.napManual = false; woke = true; events.push({ t: now, type: "nap-end", woke: true }); }
+  }
+  return { ok: true, events, lightOn: pet.lightOn, napped, woke, notSleepy };
 }
 
 export function giveMedicine(pet, now, settings = DEFAULT_SETTINGS) {

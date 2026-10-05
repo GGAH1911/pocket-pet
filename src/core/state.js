@@ -1,5 +1,5 @@
 // 펫 상태의 단일 정의. 화면·저장 코드는 이 모양만 믿어요.
-import { SPEEDS, POOP } from "./rules.js?v=f6105a2-1791123013";
+import { SPEEDS, POOP } from "./rules.js?v=106e0a7-1791169146";
 
 export const SAVE_VERSION = 3;
 
@@ -39,6 +39,7 @@ export function createPet({ now, seed = 1, theme = "animal", name = "", speed = 
     sleptAt: null,
     lightMistakeTonight: false,
     napLeft: 0, // 게임 분
+    napManual: false, // 불을 끄고 재운 낮잠인지(깨면 불을 켬)
     sick: false,
     medsNeeded: 0,
     timers: { hungerZero: 0, moodZero: 0, sick: 0 }, // 깨어 있는 게임 분

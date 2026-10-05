@@ -30,6 +30,7 @@ export const SICK = { healthBelow: 40, chancePerHour: 0.1, lowHealthNeedsTwo: 20
 export const SNACK_BINGE = { count: 4, withinMin: 60, healthCost: 15 };
 export const NAP_MIN = 60; // 게임 분
 export const NAP_ENERGY_PER_HOUR = 60; // 낮잠 1번(게임 1시간)에 기운 +60
+export const NAP_LIGHT_BELOW = 50; // 낮에 불을 끌 때 기운이 이보다 낮으면 낮잠을 잔다
 
 export const ACTIONS = {
   meal: { hunger: +30, weight: +1, refuseAt: 90 },

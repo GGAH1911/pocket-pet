@@ -1,10 +1,10 @@
 // 알림 일정 예측. "지금부터 아무도 안 돌보면 언제 무슨 일이 생기나"를 계산해 알림 목록으로 만든다.
 // 휴대폰이 이 목록을 알림 서버에 올리고, 서버는 시각이 되면 보내기만 한다.
 // 규칙은 GDD 7-1절. 공정성 원칙(알림 없이 돌봄 실수가 생기지 않음)은 test/notify.test.mjs 가 지킨다.
-import { advance } from "./sim.js?v=f6105a2-1791123013";
-import { isBusyTime } from "./daytime.js?v=f6105a2-1791123013";
-import { DEFAULT_SETTINGS } from "./rules.js?v=f6105a2-1791123013";
-import { josa } from "./josa.js?v=f6105a2-1791123013";
+import { advance } from "./sim.js?v=106e0a7-1791169146";
+import { isBusyTime } from "./daytime.js?v=106e0a7-1791169146";
+import { DEFAULT_SETTINGS } from "./rules.js?v=106e0a7-1791169146";
+import { josa } from "./josa.js?v=106e0a7-1791169146";
 
 const I = (n) => josa(n, "이", "가"); // 주격
 const EUL = (n) => josa(n, "을", "를"); // 목적격
@@ -26,6 +26,7 @@ export const KINDS = {
   poop: { urgent: false, text: (n) => `${I(n)} 똥을 쌌어요. 톡 눌러 치워 주세요` },
   dirty: { urgent: false, text: (n) => `${I(n)} 꼬질꼬질해요. 씻겨 주세요` },
   farewell: { urgent: true, text: (n, e) => (e.how === "classic" ? `${I(n)} 많이 늙었어요. 곁에 있어 주세요` : `${I(n)} 내일 여행을 떠난대요. 많이 놀아 주세요`) },
+  napEnd: { urgent: false, good: true, text: (n) => `${I(n)} 낮잠에서 깼어요. 기운이 났대요` },
   hatch: { urgent: false, good: true, text: (n) => `알이 깨어났어요! ${EUL(n)} 만나러 오세요` },
   evolve: { urgent: false, good: true, text: (n, e) => `${I(n)} ${I(STAGE_KO[e.stage] || "다음 모습")} 됐어요!` },
 };
@@ -44,6 +45,7 @@ function kindsOf(e) {
     case "sick": return ["sick"];
     case "sleep": return e.lightOn ? ["light"] : [];
     case "hatch": return ["hatch"];
+    case "nap-end": return e.woke ? [] : ["napEnd"]; // 직접 깨운 건 알림 없음
     case "ended": return ["ended"];
     case "danger": return ["danger"];
     case "farewellSoon": return ["farewell"];

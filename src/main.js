@@ -1,21 +1,21 @@
 // 부팅 순서는 이 파일 한 곳에서만 정해요.
 // (지난 게임에서 파일 읽는 순서 때문에 저장 기본값이 빠지는 버그가 있었어요.)
 // 순서: 저장 불러오기 → 꺼져 있던 시간 계산 → 화면 시작 → 서비스 워커·알림 확인 → 알림 일정 올리기
-import { createPet } from "./core/state.js?v=f6105a2-1791123013";
-import { advance, feed, play, wash, cleanPoop, toggleLight, giveMedicine, patPet, switchEndMode, retirePet } from "./core/sim.js?v=f6105a2-1791123013";
-import { predictNotifications } from "./core/notify.js?v=f6105a2-1791123013";
-import { josa } from "./core/josa.js?v=f6105a2-1791123013";
-import { drawRoom, drawIcon } from "./render/screen.js?v=f6105a2-1791123013";
-import { createAnimator, play as playAnim, frame as animFrame, addFx } from "./render/anim.js?v=f6105a2-1791123013";
-import { formKey, lookOf, FORMS as FORMS_REF } from "./render/creature.js?v=f6105a2-1791123013";
-import { guessLocation, sunTimes, moonIllumination, moonPosition, moonPhaseName } from "./core/astro.js?v=f6105a2-1791123013";
-import { classifyWeather, weatherUrl, parseWeather } from "./core/weather.js?v=f6105a2-1791123013";
-import { createFacePicker, pickFace } from "./render/face.js?v=f6105a2-1791123013";
-import { SPRITES } from "./render/sprites.js?v=f6105a2-1791123013";
-import { loadProfile, saveProfile, freshProfile, exportCode, importCode } from "./app/store.js?v=f6105a2-1791123013";
-import { sfx, setSoundEnabled } from "./app/sound.js?v=f6105a2-1791123013";
-import { markSeen, recordPet, renderCollection, letterText, portrait, currentKey, HOW_KO } from "./app/collection.js?v=f6105a2-1791123013";
-import { deviceInfo, registerSW, enablePush, ensurePush, uploadSchedule, sendTest, serverStatus } from "./app/push.js?v=f6105a2-1791123013";
+import { createPet } from "./core/state.js?v=106e0a7-1791169146";
+import { advance, feed, play, wash, cleanPoop, toggleLight, giveMedicine, patPet, switchEndMode, retirePet } from "./core/sim.js?v=106e0a7-1791169146";
+import { predictNotifications } from "./core/notify.js?v=106e0a7-1791169146";
+import { josa } from "./core/josa.js?v=106e0a7-1791169146";
+import { drawRoom, drawIcon } from "./render/screen.js?v=106e0a7-1791169146";
+import { createAnimator, play as playAnim, frame as animFrame, addFx } from "./render/anim.js?v=106e0a7-1791169146";
+import { formKey, lookOf, FORMS as FORMS_REF } from "./render/creature.js?v=106e0a7-1791169146";
+import { guessLocation, sunTimes, moonIllumination, moonPosition, moonPhaseName } from "./core/astro.js?v=106e0a7-1791169146";
+import { classifyWeather, weatherUrl, parseWeather } from "./core/weather.js?v=106e0a7-1791169146";
+import { createFacePicker, pickFace } from "./render/face.js?v=106e0a7-1791169146";
+import { SPRITES } from "./render/sprites.js?v=106e0a7-1791169146";
+import { loadProfile, saveProfile, freshProfile, exportCode, importCode } from "./app/store.js?v=106e0a7-1791169146";
+import { sfx, setSoundEnabled } from "./app/sound.js?v=106e0a7-1791169146";
+import { markSeen, recordPet, renderCollection, letterText, portrait, currentKey, HOW_KO } from "./app/collection.js?v=106e0a7-1791169146";
+import { deviceInfo, registerSW, enablePush, ensurePush, uploadSchedule, sendTest, serverStatus } from "./app/push.js?v=106e0a7-1791169146";
 
 const clock = { offset: 0, now() { return Date.now() + this.offset; } }; // offset은 개발 도구만 바꾼다
 
@@ -86,7 +86,8 @@ function statusLine() {
   if (p.stats.hunger <= 20) return `${I(n)} 배고파요`;
   if (p.poops >= 2) return "똥을 톡 눌러 치워 주세요";
   if (p.stats.mood <= 20) return `${I(n)} 놀아 달래요`;
-  if (p.napLeft > 0) return `${I(n)} 낮잠 자는 중`;
+  if (p.napLeft > 0) return `${I(n)} 낮잠 자는 중 (기운 ${Math.round(p.stats.energy)})`;
+  if (p.stats.energy < 30) return `${I(n)} 졸려 해요. 불을 끄면 낮잠을 자요`;
   if (p.poops === 1) return "똥을 톡 눌러 치워 주세요";
   if (p.stats.clean <= 30) return `${I(n)} 꼬질꼬질해요. 씻겨 주세요`;
   if (p.stats.hunger < 50 && p.stats.mood < 50) return `${I(n)} 출출하고 심심해요`;
@@ -126,7 +127,9 @@ function renderStats() {
   const age = (p.ageMin / 1440).toFixed(1);
   $("sub").textContent = `${STAGE_KO[p.stage]}${p.branch ? `(${BRANCH_KO[p.branch]})` : ""} · ${age}살 · ${p.weight}g · 실수 ${p.mistakes.total}`;
   $("petname").textContent = p.name;
-  $("btn-light").querySelector("span").textContent = p.lightOn ? "불 끄기" : "불 켜기";
+  // 기운이 낮은 낮에는 "재우기"로 보여서 낮잠을 재울 수 있다는 걸 알게
+  const napHint = p.lightOn && !p.asleep && p.napLeft <= 0 && p.stage !== "egg" && p.stats.energy < 50;
+  $("btn-light").querySelector("span").textContent = !p.lightOn ? (p.napLeft > 0 ? "깨우기" : "불 켜기") : napHint ? "재우기" : "불 끄기";
 }
 
 // ---------- 저장 + 알림 일정 ----------
@@ -148,7 +151,7 @@ async function syncNow({ keepalive = false } = {}) {
 // ---------- 돌봄 행동 ----------
 const REFUSE = {
   egg: "아직 알이에요", asleep: "자고 있어요. 깨면 해 주세요", ended: "이제 여기 없어요", full: "배불러서 안 먹는대요",
-  tired: "너무 지쳐서 못 논대요. 좀 쉬게 해 주세요", "not-sick": "안 아픈데 약을 줘서 싫어해요",
+  tired: "너무 지쳐서 못 논대요. 불을 끄면 낮잠을 자요", "not-sick": "안 아픈데 약을 줘서 싫어해요",
 };
 // 행동 → 애니메이션: anims(결과) 가 재생할 애니메이션 이름과 데이터를 돌려준다
 function act(fn, okText, anims) {
@@ -178,7 +181,7 @@ const ACTIONS = {
   snack: () => { closeSheet(); act((p, t) => feed(p, "snack", t, S()), (p) => `${I(p.name)} 간식을 좋아해요`, () => ["snack"]); },
   play: () => startMinigame(),
   wash: () => act((p, t) => wash(p, t, S()), (p) => (p.poops ? "뽀득뽀득 깨끗해졌어요. 바닥의 똥은 톡 눌러 치워요" : "뽀득뽀득 깨끗해졌어요"), () => ["wash"]),
-  light: () => act((p, t) => toggleLight(p, t, S()), (p) => (p.lightOn ? "불을 켰어요" : "불을 껐어요"), (r) => [r.lightOn ? "lightOn" : "lightOff"]),
+  light: () => act((p, t) => toggleLight(p, t, S()), (p, r) => (r.napped ? `불을 껐어요. ${I(p.name)} 낮잠을 자요 (1시간 뒤 깨요)` : r.woke ? `불을 켰어요. ${I(p.name)} 낮잠에서 깼어요` : r.notSleepy ? `불을 껐어요. ${I(p.name)} 아직 안 졸린대요` : p.lightOn ? "불을 켰어요" : "불을 껐어요"), (r) => [r.lightOn ? "lightOn" : "lightOff"]),
   medicine: () => act((p, t) => giveMedicine(p, t, S()), (p) => (p.sick ? "약을 먹었어요. 한 번 더 필요해요" : "다 나았어요"), () => ["medicine"]),
 };
 
@@ -199,6 +202,8 @@ function handleEvents(events) {
       setTimeout(() => pickFace(faces, profile.pet, performance.now(), { force: true }), 3200);
     }
     if (e.type === "poop") { if (!anim.cur) playAnim(anim, "poop", t); if (!profile.pet.asleep) { say("똥을 쌌어요. 톡 눌러 치워 주세요", 5000); sfx("poop"); } }
+    if (e.type === "nap-end" && !e.woke && !profile.pet.asleep) { say(`${I(profile.pet.name)} 낮잠에서 깼어요. 기운이 났대요`, 5000); sfx("greet"); }
+    if (e.type === "nap" && !e.manual) say(`${I(profile.pet.name)} 지쳐서 낮잠을 자요`, 5000);
     if (e.type === "farewellSoon") say(e.how === "classic" ? `${I(profile.pet.name)} 많이 늙었어요. 곁에 있어 주세요` : `${I(profile.pet.name)} 내일 여행을 떠난대요. 많이 놀아 주세요`, 9000);
     if (e.type === "ended") startFarewell();
   }
@@ -627,7 +632,7 @@ function boot() {
   // 개발 도구(공개 배포에는 없음): ?dev 로 열기
   if (QS.has("dev")) {
     window.__pp = { clock, getProfile: () => profile, tick, anim, playAnim: (n, d) => playAnim(anim, n, performance.now(), d) };
-    import("./dev/panel.js?v=f6105a2-1791123013").then((m) => m.mount({ clock, getProfile: () => profile, tick, renderStats, syncNow, serverStatus })).catch(() => {});
+    import("./dev/panel.js?v=106e0a7-1791169146").then((m) => m.mount({ clock, getProfile: () => profile, tick, renderStats, syncNow, serverStatus })).catch(() => {});
   }
 }
 
