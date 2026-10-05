@@ -1,6 +1,8 @@
 // 저장: 휴대폰 브라우저 저장소(localStorage). 직전 저장본을 백업으로 하나 더 둔다.
-import { DEFAULT_SETTINGS } from "../core/rules.js?v=ec5f954-1791192854";
-import { SAVE_VERSION, migratePet } from "../core/state.js?v=ec5f954-1791192854";
+import { DEFAULT_SETTINGS } from "../core/rules.js?v=6b3863e-1791194200";
+import { SAVE_VERSION, migratePet } from "../core/state.js?v=6b3863e-1791194200";
+import { newEcon, normalizeEcon, grant, equip } from "../core/economy.js?v=6b3863e-1791194200";
+import { ensureBasics, ITEM } from "../core/catalog.js?v=6b3863e-1791194200";
 
 const KEY = "pocket-pet:save";
 const BACKUP = "pocket-pet:save:backup";
@@ -11,8 +13,11 @@ function newDeviceId() {
 }
 
 export function freshProfile() {
-  return { version: SAVE_VERSION, deviceId: newDeviceId(), pet: null, settings: structuredClone(DEFAULT_SETTINGS), push: { subscribed: false }, seenGuide: false, collection: [], seen: {}, ui: { poopSlots: [] } };
+  const econ = newEcon(); ensureBasics(econ, Date.now());
+  return { version: SAVE_VERSION, deviceId: newDeviceId(), pet: null, settings: structuredClone(DEFAULT_SETTINGS), push: { subscribed: false }, seenGuide: false, collection: [], seen: {}, ui: { poopSlots: [] }, econ };
 }
+
+export function migrateProfile(p) { return migrate(p); }
 
 function migrate(p) {
   // 버전이 오르면 여기서 옛 저장을 새 모양으로 바꾼다
@@ -27,6 +32,10 @@ function migrate(p) {
   p.seen = p.seen && typeof p.seen === "object" ? p.seen : {};
   p.ui = p.ui || { poopSlots: [] };
   if (p.pet) p.pet = migratePet(p.pet); // 옛 펫도 버리지 않고 새 모양으로 바꾼다(알 수 없는 버전만 null)
+  // 화폐·꾸미기(2026-10-05 M7): 없으면 새로, 있으면 손상 값 정리. 기본 상품은 늘 가짐
+  p.econ = normalizeEcon(p.econ);
+  ensureBasics(p.econ, Date.now());
+  if (p.settings.rug === "star") { grant(p.econ, "rug_star", Date.now()); equip(p.econ, ITEM.rug_star); delete p.settings.rug; } // 옛 '별 러그 깔기' 설정 → 상품으로
   p.version = SAVE_VERSION;
   return p;
 }

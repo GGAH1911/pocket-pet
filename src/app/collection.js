@@ -1,9 +1,9 @@
 // 도감: 본 적 있는 모습 표시, 지금까지 키운 펫 기록, 초상화 그리기
-import { FORMS, buildCreature, paintGrid, formKey, lookOf } from "../render/creature.js?v=ec5f954-1791192854";
-import { drawFace, POOLS } from "../render/face.js?v=ec5f954-1791192854";
-import { SPRITES, drawSprite } from "../render/sprites.js?v=ec5f954-1791192854";
-import { BRANCH, SECRET } from "../core/rules.js?v=ec5f954-1791192854";
-import { EGGS, foundCount } from "./eggs.js?v=ec5f954-1791192854";
+import { FORMS, buildCreature, paintGrid, formKey, lookOf } from "../render/creature.js?v=6b3863e-1791194200";
+import { drawFace, POOLS } from "../render/face.js?v=6b3863e-1791194200";
+import { SPRITES, drawSprite } from "../render/sprites.js?v=6b3863e-1791194200";
+import { BRANCH, SECRET } from "../core/rules.js?v=6b3863e-1791194200";
+import { EGGS, foundCount } from "./eggs.js?v=6b3863e-1791194200";
 
 export const THEME_KO = { animal: "동물", fantasy: "상상 속 생물" };
 export const HOW_KO = { journey: "여행을 떠남", runaway: "삐져서 떠남", star: "별이 됨", retired: "새 알에게 자리를 물려줌" };
@@ -35,7 +35,7 @@ const themeAdults = (profile, theme) => ["A", "B", "C", "D", "S"].filter((b) => 
 export const REWARDS = [
   { id: "frame", need: 1, label: "추억 액자", desc: "방 벽 액자에 가장 최근 함께한 친구 그림이 걸려요" },
   { id: "eggColor", need: 3, label: "알 색 고르기", desc: "새 알을 받을 때 무늬 색을 골라요. 커서도 귀 끝·점 색으로 남아요" },
-  { id: "starRug", need: 5, label: "별 러그", desc: "방 러그를 밤하늘 별무늬로 바꿀 수 있어요" },
+  { id: "starRug", need: 5, label: "별 러그", desc: "밤하늘 별무늬 러그를 받아요(꾸미기에서 깔기)" },
   { id: "goldEgg", secret: true, label: "금빛 알", desc: "알 색 고르기에 금색이 생겨요 (숨은 친구를 만나면)" },
   { id: "goldFrame", need: ADULT_KEYS.length, label: "금 액자", desc: "어른 10종을 다 만나면 추억 액자가 금색이 돼요" },
 ];
@@ -157,7 +157,7 @@ function el(tag, attrs = {}, ...kids) {
 const fmtDate = (t) => { const d = new Date(t); return `${d.getFullYear()}.${d.getMonth() + 1}.${d.getDate()}`; };
 const EGG_COLOR_KO = { p: "분홍", g: "민트", b: "하늘", y: "노랑", v: "보라", r: "빨강", Y: "금빛" };
 
-// 도감 화면. opts: { pet, settings, onRug(on) }
+// 도감 화면. opts: { pet, settings }
 export function renderCollection(box, profile, opts = {}) {
   box.innerHTML = "";
   const open = unlockedSet(profile);
@@ -198,13 +198,7 @@ export function renderCollection(box, profile, opts = {}) {
     chips.append(chip);
   }
   box.append(chips);
-  if (open.has("starRug")) {
-    const lab = el("label", { class: "row small" });
-    const cb = el("input", { type: "checkbox" }); cb.checked = opts.settings?.rug === "star";
-    cb.addEventListener("change", () => opts.onRug?.(cb.checked));
-    lab.append(cb, document.createTextNode(" 별 러그 깔기"));
-    box.append(lab);
-  }
+  if (open.has("starRug")) box.append(el("p", { class: "small dim", text: "별 러그는 꾸미기 → 러그에서 깔 수 있어요" }));
 
   // 3) 테마별 계통도
   for (const theme of THEMES_ALL) {

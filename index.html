@@ -21,15 +21,78 @@
     header { display: flex; align-items: center; gap: 10px; padding: calc(env(safe-area-inset-top) + 10px) 16px 8px; }
     header .name { font-weight: 800; font-size: 18px; }
     header .sub { font-size: 12px; opacity: .7; }
-    header .clock { margin-left: auto; font-weight: 700; font-variant-numeric: tabular-nums; }
+    header .who { flex: 1; min-width: 0; } header .name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .coin { border: 0; display: flex; align-items: center; gap: 4px; background: #fff; border-radius: 999px; padding: 4px 9px 4px 5px; box-shadow: 0 2px 0 var(--line); font-weight: 800; font-size: 13px; font-variant-numeric: tabular-nums; transition: transform .15s; }
+    .coin canvas { width: 16px; height: 16px; image-rendering: pixelated; }
+    .coin .plus { background: var(--deep); color: #fff; border-radius: 50%; width: 16px; height: 16px; font-size: 13px; line-height: 16px; text-align: center; margin-left: 1px; }
+    .coin.bump { transform: scale(1.18); }
+    .gain { position: absolute; z-index: 60; font-weight: 900; font-size: 14px; color: #e8893a; pointer-events: none; animation: gain 1.1s ease-out forwards; text-shadow: 0 1px 0 #fff; }
+    .gain.gem { color: var(--deep); }
+    @keyframes gain { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-26px); opacity: 0; } }
     .iconbtn { border: 0; background: var(--cream); width: 38px; height: 38px; border-radius: 10px; box-shadow: 0 2px 0 var(--line); font-size: 18px; }
     #stage { flex: 1; min-height: 0; display: grid; place-items: center; overflow: hidden; background: #ffe3cf; }
     #room { display: block; image-rendering: pixelated; image-rendering: crisp-edges; }
     #stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; padding: 8px 12px 0; }
-    .stat { position: relative; background: var(--cream); border-radius: 10px; padding: 4px 0 7px; text-align: center; font-size: 11px; overflow: hidden; box-shadow: 0 2px 0 var(--line); }
-    .stat b { display: block; font-size: 15px; font-variant-numeric: tabular-nums; }
-    .stat i { position: absolute; left: 0; bottom: 0; height: 4px; background: #8fd694; }
-    .stat.mid i { background: #ffd866; } .stat.low i { background: #ff6b6b; } .stat.low b { color: #d64545; }
+    .stat { background: var(--cream); border-radius: 10px; padding: 5px 6px 6px; text-align: center; font-size: 11px; font-weight: 700; box-shadow: 0 2px 0 var(--line); }
+    .stat i { display: block; height: 6px; border-radius: 3px; background: #f0dfcf; margin-top: 4px; overflow: hidden; }
+    .stat u { display: block; height: 100%; background: #7cc68b; border-radius: 3px; transition: width .4s; }
+    .stat.mid u { background: #ffcf5c; } .stat.low u { background: #ff7a6b; } .stat.low { color: #d64545; }
+    nav button.sick { background: #ffe1e6; box-shadow: 0 3px 0 #f0a9b8; animation: pulse 1.2s infinite; }
+    @keyframes pulse { 50% { transform: scale(1.05); } }
+    .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 6px; }
+    .tile { position: relative; border: 0; border-radius: 16px; background: #fff; box-shadow: 0 3px 0 var(--line); padding: 14px 6px 12px; font-weight: 800; font-size: 14px; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+    .tile canvas { width: 36px; height: 30px; image-rendering: pixelated; }
+    .tile .dot { position: absolute; top: 8px; right: 10px; width: 10px; height: 10px; border-radius: 50%; background: var(--deep); }
+    h3.sec { font-size: 14px; margin: 14px 2px 6px; }
+    .set { display: flex; align-items: center; gap: 8px; background: #fff; border-radius: 14px; padding: 12px 14px; margin-bottom: 8px; box-shadow: 0 2px 0 var(--line); font-weight: 700; font-size: 14px; }
+    .set .r { margin-left: auto; display: flex; gap: 4px; }
+    .set .tg { margin-left: auto; }
+    .tg { border: 0; width: 44px; height: 24px; border-radius: 12px; background: #d9c8ba; position: relative; padding: 0; }
+    .tg::after { content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: left .15s; }
+    .tg.on { background: #7cc68b; } .tg.on::after { left: 23px; }
+    .seg { border: 0; padding: 5px 9px; border-radius: 9px; background: #f5e9dc; font-size: 12px; font-weight: 700; }
+    .seg.on { background: var(--deep); color: #fff; }
+    .goarrow { margin-left: auto; border: 0; background: none; font-weight: 700; font-size: 13px; opacity: .75; }
+    .link { display: block; width: 100%; border: 0; background: none; text-decoration: underline; opacity: .7; font-size: 13px; padding: 10px 0 2px; }
+    .sheet.shop, .sheet.deco { max-height: 50%; padding-top: 12px; }
+    .sheet.deco { max-height: 40%; }
+    .shop-top { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; } .shop-top b { font-size: 17px; } .shop-top .sp { flex: 1; }
+    .shop-top .x { border: 0; background: #fff; width: 32px; height: 32px; border-radius: 10px; box-shadow: 0 2px 0 var(--line); }
+    .shop-top .done { border: 0; background: var(--deep); color: #fff; border-radius: 12px; padding: 8px 14px; font-weight: 800; box-shadow: 0 2px 0 #b84d6b; }
+    .tabs { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 8px; scrollbar-width: none; } .tabs::-webkit-scrollbar { display: none; }
+    .tab { border: 0; flex: none; padding: 7px 12px; border-radius: 999px; background: #fff; font-size: 13px; font-weight: 800; box-shadow: 0 2px 0 var(--line); }
+    .tab.on { background: var(--deep); color: #fff; box-shadow: 0 2px 0 #b84d6b; }
+    .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .card { position: relative; border: 0; background: #fff; border-radius: 14px; padding: 6px 6px 8px; box-shadow: 0 2px 0 var(--line); font-size: 12px; text-align: center; }
+    .card.sel { outline: 3px solid var(--deep); }
+    .card canvas { width: 100%; max-width: 92px; margin: 0 auto; aspect-ratio: 56 / 46; height: auto; image-rendering: pixelated; background: #fbefe3; border-radius: 10px; display: block; }
+    .card .nm { display: block; font-weight: 800; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .price { display: inline-flex; align-items: center; gap: 3px; font-weight: 800; margin-top: 2px; font-size: 12px; }
+    .price canvas { width: 12px; height: 12px; background: none; aspect-ratio: auto; }
+    .tag { position: absolute; top: 4px; right: 4px; background: #7cc68b; color: #fff; border-radius: 999px; padding: 1px 6px; font-size: 10px; font-weight: 800; }
+    .tag.on { background: var(--deep); }
+    .buybar { position: sticky; bottom: -18px; display: flex; gap: 8px; align-items: center; background: var(--bar); padding: 10px 0 4px; margin-top: 8px; }
+    .buybar .info { flex: 1; font-size: 13px; } .buybar .info b { display: block; font-size: 15px; }
+    .buybar button { border: 0; border-radius: 14px; padding: 12px 16px; font-weight: 800; font-size: 15px; background: var(--deep); color: #fff; box-shadow: 0 3px 0 #b84d6b; }
+    .buybar button.ghost { background: #fff; color: var(--ink); box-shadow: 0 3px 0 var(--line); }
+    .buybar button:disabled { opacity: .45; }
+    .pack { display: flex; align-items: center; gap: 10px; background: #fff; border: 0; width: 100%; border-radius: 14px; padding: 10px 12px; margin-bottom: 8px; box-shadow: 0 2px 0 var(--line); text-align: left; }
+    .pack canvas { width: 32px; height: 26px; image-rendering: pixelated; }
+    .pack .g { flex: 1; font-weight: 900; font-size: 15px; } .pack .g small { display: block; font-weight: 600; font-size: 11px; opacity: .7; }
+    .krw { background: var(--deep); color: #fff; border-radius: 10px; padding: 7px 10px; font-weight: 800; font-size: 13px; }
+    .banner { background: linear-gradient(135deg, #ffe0ea, #fff1d6); border-radius: 16px; padding: 12px; margin-bottom: 10px; font-size: 13px; }
+    .banner b { display: block; font-size: 15px; margin-bottom: 2px; }
+    .fine { font-size: 11px; opacity: .7; line-height: 1.6; margin: 6px 2px; }
+    .slots { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 8px; scrollbar-width: none; } .slots::-webkit-scrollbar { display: none; }
+    .strip { display: flex; gap: 8px; overflow-x: auto; padding: 2px 2px 8px; scrollbar-width: none; } .strip::-webkit-scrollbar { display: none; }
+    .it { position: relative; flex: none; border: 0; width: 70px; background: #fff; border-radius: 12px; padding: 4px; box-shadow: 0 2px 0 var(--line); font-size: 10px; font-weight: 700; }
+    .it canvas { width: 62px; height: 51px; image-rendering: pixelated; background: #fbefe3; border-radius: 8px; display: block; }
+    .it.on { outline: 3px solid var(--deep); } .it.lock > canvas { opacity: .45; } .it .lk { position: absolute; right: 4px; top: 4px; z-index: 1; font-size: 10px; background: #fff; border-radius: 6px; padding: 0 3px; }
+    .it .lk canvas, .price canvas { width: 10px !important; height: 10px !important; background: none !important; border-radius: 0 !important; opacity: 1 !important; display: inline-block !important; }
+    .stamp { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; margin: 12px 0; }
+    .st { aspect-ratio: 1; border-radius: 10px; background: #fff; box-shadow: 0 2px 0 var(--line); display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; gap: 1px; }
+    .dexcard-in .st canvas, .st canvas { width: 14px; height: 14px; margin: 0; image-rendering: pixelated; }
+    .st.done { background: #ffe3ea; opacity: .7; } .st.today { outline: 3px solid var(--deep); } .st.gemday { background: #fff1c4; }
     #msg { height: 44px; padding: 6px 16px 0; font-size: 14px; line-height: 19px; text-align: center; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; } /* 높이 고정: 문구 길이에 따라 방이 튀지 않게 */
     nav { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; padding: 6px 12px calc(env(safe-area-inset-bottom) + 12px); }
     nav button { border: 0; border-radius: 16px; background: var(--cream); box-shadow: 0 3px 0 var(--line); padding: 8px 0 6px; display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 12px; font-weight: 700; }
@@ -114,11 +177,12 @@
 <body>
   <div id="app">
     <header>
-      <div>
+      <div class="who">
         <div class="name" id="petname">포켓 펫</div>
         <div class="sub" id="sub"></div>
       </div>
-      <div class="clock" id="clock"></div>
+      <button class="coin" id="coin-star" aria-label="별사탕 (상점 열기)"><canvas data-sprite="coinStar"></canvas><b id="n-star">0</b></button>
+      <button class="coin" id="coin-gem" aria-label="하트 보석 (보석 사기)"><canvas data-sprite="coinGem"></canvas><b id="n-gem">0</b><span class="plus">+</span></button>
       <button class="iconbtn" id="btn-menu" aria-label="메뉴">≡</button>
     </header>
     <main id="stage"><canvas id="room"></canvas></main>
@@ -129,22 +193,43 @@
       <button data-icon="iconPlay" data-act="play"><canvas></canvas><span>놀기</span></button>
       <button data-icon="iconWash" data-act="wash"><canvas></canvas><span>씻기</span></button>
       <button data-icon="iconLight" data-act="light" id="btn-light"><canvas></canvas><span>불 끄기</span></button>
-      <button data-icon="iconMedicine" data-act="medicine"><canvas></canvas><span>약</span></button>
+      <button data-icon="iconDeco" data-act="deco" id="btn-extra"><canvas></canvas><span>꾸미기</span></button>
     </nav>
 
     <div id="backdrop" hidden></div>
     <section class="sheet" data-sheet="menu" hidden>
-      <h2>메뉴</h2>
-      <button class="big ghost" data-open="dex">도감</button>
-      <button class="big ghost" data-open="notify">알림</button>
-      <button class="big ghost" data-open="settings">설정</button>
-      <button class="big ghost" data-open="save">저장 (기기 옮기기)</button>
+      <div class="tiles">
+        <button class="tile" data-open="dex"><canvas data-sprite="iconBook"></canvas>도감</button>
+        <button class="tile" data-open="shop"><canvas data-sprite="iconShop"></canvas>상점</button>
+        <button class="tile" data-act="deco"><canvas data-sprite="iconDeco"></canvas>꾸미기</button>
+        <button class="tile" id="tile-gift"><canvas data-sprite="iconGift"></canvas>선물함<i class="dot" id="gift-dot" hidden></i></button>
+      </div>
+      <h3 class="sec">설정</h3>
+      <div id="quick-settings"></div>
+      <button class="link" data-open="help">도움말 · 기기 옮기기 · 개인정보 처리방침</button>
       <button class="big ghost" data-close>닫기</button>
     </section>
     <section class="sheet" data-sheet="food" hidden>
       <h2>무엇을 줄까요?</h2>
       <button class="big" data-act="meal">밥 (배부름 +30)</button>
       <button class="big ghost" data-act="snack">간식 (기분 +15, 너무 많이 주면 배탈)</button>
+    </section>
+    <section class="sheet shop" data-sheet="shop" hidden>
+      <div class="shop-top"><b>상점</b><span class="sp"></span><button class="x" data-close aria-label="닫기">✕</button></div>
+      <div class="tabs" id="shop-tabs"></div>
+      <div id="shop-body"></div>
+    </section>
+    <section class="sheet deco" data-sheet="deco" hidden>
+      <div class="shop-top"><b>꾸미기</b><span class="small dim">바꾸면 바로 저장돼요</span><span class="sp"></span><button class="done" data-close>다 했어요</button></div>
+      <div class="slots" id="deco-slots"></div>
+      <div class="strip" id="deco-strip"></div>
+    </section>
+    <section class="sheet" data-sheet="help" hidden>
+      <h2>도움말</h2>
+      <div id="help-body"></div>
+      <button class="big ghost" data-open="save">기기 옮기기 (저장 코드)</button>
+      <button class="big ghost danger" id="btn-reset2">처음부터 다시</button>
+      <button class="big ghost" data-close>닫기</button>
     </section>
     <section class="sheet" data-sheet="play" hidden>
       <h2>어떻게 놀까요?</h2>
@@ -225,6 +310,6 @@
       </div>
     </div>
   </div>
-  <script type="module" src="src/main.js?v=ec5f954-1791192854"></script>
+  <script type="module" src="src/main.js?v=6b3863e-1791194200"></script>
 </body>
 </html>

@@ -1,5 +1,5 @@
 // 코드 속 도트 그림. 한 글자 = 한 도트, 색은 palette.js.
-import { PALETTE } from "./palette.js?v=ec5f954-1791192854";
+import { PALETTE } from "./palette.js?v=6b3863e-1791194200";
 
 export const SPRITES = {
   egg: [
@@ -121,6 +121,104 @@ export const SPRITES = {
     "knoook",
     "koonok",
     ".kkkk.",
+  ],
+  // ---- 화폐·메뉴 아이콘 ----
+  coinStar: [
+    "..kkkk..",
+    ".kyyyyk.",
+    "kyywyyYk",
+    "kywyyyYk",
+    "kyyyyyYk",
+    "kyyyyYYk",
+    ".kYYYYk.",
+    "..kkkk..",
+  ],
+  coinGem: [
+    ".kk.kk.",
+    "kpwkPPk",
+    "kppppPk",
+    ".kpppk.",
+    "..kpk..",
+    "...k...",
+  ],
+  iconDeco: [
+    "...kkkkkk...",
+    "..kppppppk..",
+    "..kpwppppk..",
+    "kkkkkkkkkkkk",
+    "kpkPPPPPPkpk",
+    "kpkPPPPPPkpk",
+    "kpkkkkkkkkpk",
+    "kkkkkkkkkkkk",
+    ".kN......Nk.",
+  ],
+  iconShop: [
+    "...kkkkkk...",
+    "..k......k..",
+    ".kkkkkkkkkk.",
+    ".kppppppppk.",
+    ".kpwppppppk.",
+    ".kppkkkkppk.",
+    ".kppkyykppk.",
+    ".kppppppppk.",
+    ".kkkkkkkkkk.",
+  ],
+  iconBook: [
+    "kkkkk.kkkkk.",
+    "kwwwwkwwwwk.",
+    "kwkkwkwkkwk.",
+    "kwwwwkwwwwk.",
+    "kwkkwkwkkwk.",
+    "kwwwwkwwwwk.",
+    "kkkkkkkkkkk.",
+  ],
+  iconGift: [
+    "..kk..kk..",
+    ".krrkkrrk.",
+    "kkkkkkkkkk",
+    "kpppkkpppk",
+    "kkkkkkkkkk",
+    ".kppkkppk.",
+    ".kppkkppk.",
+    ".kppkkppk.",
+    ".kkkkkkkk.",
+  ],
+  // ---- 머리 장식(상점) ----
+  hatRibbon: [
+    ".kk...kk.",
+    "kPpk.kpPk",
+    "kPppkppPk",
+    "kPpkkkpPk",
+    ".kk.k.kk.",
+  ],
+  hatStraw: [
+    "....kkkk....",
+    "...kyYYyk...",
+    "...kyyyyk...",
+    "..kkrrrrkk..",
+    "kkyyyyyyyykk",
+    "kYYYYYYYYYYk",
+    ".kkkkkkkkkk.",
+  ],
+  hatGlasses: [
+    ".kkk...kkk.",
+    "kbwbk.kbwbk",
+    "kbbbkkkbbbk",
+    ".kkk...kkk.",
+  ],
+  hatCrown: [
+    "k...k...k",
+    "kk.kyk.kk",
+    "kykyyykyk",
+    "kyyyryyyk",
+    "kYYYYYYYk",
+    "kkkkkkkkk",
+  ],
+  hatFlower: [
+    ".kk..kk..kk.",
+    "kpPkkyYkkvVk",
+    ".kGGGGGGGGk.",
+    "..kkkkkkkk..",
   ],
   // ---- 특별한 날 모자 ----
   santaHat: [

@@ -1,11 +1,12 @@
 // 방 화면 그리기. 게임 규칙은 모르고 받은 상태만 그린다.
 // 캔버스는 "도트 해상도"로 그리고 CSS가 정수배로 키운다.
-import { PALETTE } from "./palette.js?v=ec5f954-1791192854";
-import { SPRITES, drawSprite, spriteSize } from "./sprites.js?v=ec5f954-1791192854";
-import { buildCreature, paintGrid, formKey, eggSpriteFor } from "./creature.js?v=ec5f954-1791192854";
-import { drawFace, POOLS } from "./face.js?v=ec5f954-1791192854";
-import { drawSky } from "./sky.js?v=ec5f954-1791192854";
-import { WALK_STOPS as WALK_STOPS_REF, walkDist as walkDistRef } from "./anim.js?v=ec5f954-1791192854";
+import { PALETTE } from "./palette.js?v=6b3863e-1791194200";
+import { SPRITES, drawSprite, spriteSize } from "./sprites.js?v=6b3863e-1791194200";
+import { buildCreature, paintGrid, formKey, eggSpriteFor } from "./creature.js?v=6b3863e-1791194200";
+import { drawFace, POOLS } from "./face.js?v=6b3863e-1791194200";
+import { drawSky } from "./sky.js?v=6b3863e-1791194200";
+import { drawWall, drawFloor, drawRug, drawCurtain, drawFurniture, drawLampGlow, HAT_SPRITE } from "./deco.js?v=6b3863e-1791194200";
+import { WALK_STOPS as WALK_STOPS_REF, walkDist as walkDistRef } from "./anim.js?v=6b3863e-1791194200";
 const clamp01 = (x) => Math.max(0, Math.min(1, x));
 
 const FLOOR = "#f5b98c";
@@ -16,17 +17,14 @@ export function drawRoom(ctx, { w, h, now, scene, f, wall = Date.now(), loc = { 
   if (f && f.walk) return drawWalk(ctx, { w, h, now, scene, f, wall, loc, weather }); // 산책 중엔 바깥 장면
   const floorY = Math.round(h * 0.5);
 
-  // 벽 + 작은 무늬
-  ctx.fillStyle = PALETTE.c;
-  ctx.fillRect(0, 0, w, floorY);
-  ctx.fillStyle = "#ffd6bd";
-  for (let y = 6; y < floorY - 6; y += 12) {
-    for (let x = (y / 12) % 2 ? 10 : 4; x < w; x += 12) ctx.fillRect(x, y, 2, 2);
-  }
+  const deco = (scene && scene.deco) || {}; // 꾸미기(벽지·바닥·러그·커튼·가구·머리)
+  // 벽
+  drawWall(ctx, w, floorY, deco.wall);
 
   // 창문: 실제 시각·위치의 하늘(낮·노을·밤, 해·달·별)
   const win = windowRect(w, floorY);
   const skyInfo = drawWindow(ctx, win, wall, loc, now, 0, weather);
+  drawCurtain(ctx, win, deco.curtain);
 
   // 액자: 도감 보상 '추억 액자'가 열리면 가장 최근 함께한 친구 그림(금 액자 보상이면 금색 테두리)
   const memo = scene && scene.memory;
@@ -38,30 +36,19 @@ export function drawRoom(ctx, { w, h, now, scene, f, wall = Date.now(), loc = { 
     ctx.fillStyle = PALETTE.G; ctx.fillRect(fx + 4, fy + 9, 6, 7); ctx.fillRect(fx + 11, fy + 6, 6, 10);
   }
 
-  // 걸레받이 + 바닥 나무결
+  // 걸레받이 + 바닥
   ctx.fillStyle = BASEBOARD; ctx.fillRect(0, floorY - 3, w, 3);
-  ctx.fillStyle = FLOOR; ctx.fillRect(0, floorY, w, h - floorY);
-  ctx.fillStyle = FLOOR_LINE;
-  for (let y = floorY + 8; y < h; y += 10) ctx.fillRect(0, y, w, 1);
+  drawFloor(ctx, w, h, floorY, deco.floor);
 
   // 러그
   const cx = Math.round(w / 2), rugY = Math.round(floorY + (h - floorY) * 0.38);
-  const starRug = scene && scene.rug === "star"; // 도감 보상 '별 러그'
-  ctx.fillStyle = starRug ? PALETTE.B : PALETTE.P;
-  for (let i = -6; i <= 6; i++) {
-    const half = Math.round(Math.sqrt(1 - (i / 7) ** 2) * Math.min(40, w * 0.3));
-    ctx.fillRect(cx - half, rugY + i, half * 2, 1);
-  }
-  ctx.fillStyle = starRug ? "#3d4f9a" : PALETTE.p;
-  for (let i = -4; i <= 4; i++) {
-    const half = Math.round(Math.sqrt(1 - (i / 5) ** 2) * Math.min(32, w * 0.24));
-    ctx.fillRect(cx - half, rugY + i, half * 2, 1);
-  }
-  if (starRug) {
-    ctx.fillStyle = PALETTE.y;
-    for (const [sx, sy] of [[-24, -2], [-12, 2], [-2, -3], [9, 1], [20, -2], [28, 2], [-30, 1], [2, 3]]) { ctx.fillRect(cx + sx, rugY + sy, 1, 1); if ((sx + sy) % 2 === 0) { ctx.fillRect(cx + sx - 1, rugY + sy, 3, 1); ctx.fillRect(cx + sx, rugY + sy - 1, 1, 3); } }
-    ctx.fillStyle = PALETTE.w; ctx.fillRect(cx + 14, rugY - 3, 2, 2); ctx.fillRect(cx + 15, rugY - 3, 1, 1); // 작은 달
-  }
+  drawRug(ctx, cx, rugY, w, deco.rug || (scene && scene.rug === "star" ? "rug_star" : "rug_pink"));
+
+  // 가구(왼쪽·오른쪽, 펫 뒤)
+  const furnBase = floorY + Math.round((h - floorY) * 0.24);
+  const furnPos = { furnL: Math.max(20, Math.round(w * 0.13)), furnR: Math.min(w - 21, Math.round(w * 0.87)) }; // 가장 넓은 가구(소파·침대)도 화면 안에
+  const darkNow = (f && f.darkness) || 0;
+  for (const slot of ["furnL", "furnR"]) if (deco[slot]) drawFurniture(ctx, deco[slot], furnPos[slot], furnBase, { now, dark: darkNow });
 
   const sc = scene || { stage: "egg" };
   const fr = f || { pose: { dx: 0, dy: 0, sx: 1, sy: 1, eyes: null, mouth: null, facing: 1 }, props: [], texts: [], fx: [], darkness: sc.lightOn === false ? 0.62 : sc.asleep ? 0.18 : 0, flash: 0 };
@@ -93,6 +80,7 @@ export function drawRoom(ctx, { w, h, now, scene, f, wall = Date.now(), loc = { 
     ctx.fillRect(0, win.y, win.x, win.h); ctx.fillRect(win.x + win.w, win.y, w - win.x - win.w, win.h);
     ctx.fillStyle = `rgba(20,16,60,${fr.darkness * 0.3})`; ctx.fillRect(win.x, win.y, win.w, win.h);
   }
+  if (deco.furnL === "lamp") drawLampGlow(ctx, furnPos.furnL, furnBase, fr.darkness || 0); // 불 끈 밤에 스탠드가 은은하게
   for (const t of fr.texts) {
     if (t.alpha <= 0) continue;
     ctx.globalAlpha = Math.min(1, t.alpha);
@@ -422,6 +410,11 @@ function drawTail(ctx, x, base, built, wag) {
 function drawHat(ctx, box, hat, P, facing) {
   const sp = SPRITES[hat]; if (!sp) return;
   const { w: sw, h: sh } = spriteSize(sp);
+  if (hat === "hatGlasses") { // 안경은 눈 높이에
+    const fcx = P.cx + (P.rx >= 10 ? P.f * Math.round(P.rx * 0.12) : 0), eyeY = Math.round(P.cy - P.ry * 0.12);
+    drawSprite(ctx, sp, Math.round(box.ox + fcx * CELL - sw), Math.round(box.oy + eyeY * CELL - sh + 2), 2); return;
+  }
+  if (hat === "hatRibbon") { drawSprite(ctx, sp, Math.round(box.x + box.w * (facing >= 0 ? 0.62 : 0.12)), Math.round(box.y - 4), 2); return; } // 리본은 한쪽 귀 옆
   const sc = hat === "heartClip" ? 1 : 2;
   const hx = hat === "heartClip" ? Math.round(box.x + box.w * (facing >= 0 ? 0.72 : 0.18)) : Math.round(box.x + box.w / 2 - (sw * sc) / 2);
   const hy = Math.round(box.y - sh * sc + (hat === "heartClip" ? sh : 6));
@@ -513,7 +506,8 @@ function drawPet(ctx, scene, fr, { cx, baseY, now }) {
   }
   const box = paintGrid(ctx, built.g, x, base, CELL, { alpha: fr.petAlpha ?? 1, tint: scene.sick && !fr.silhouette ? "rgba(150,210,150,0.22)" : null });
   if (fr.back && !fr.silhouette && fr.tailKind !== "own") drawTail(ctx, x, base, built, fr.tailWag || 0); // 엉덩이춤: 꼬리 없는 그림엔 복슬 꼬리, 용처럼 꼬리가 그려진 친구는 그대로
-  if (fr.hat && !fr.silhouette && box) drawHat(ctx, box, fr.hat, built.P, pose.facing);
+  const hat = fr.hat || HAT_SPRITE[(scene.deco || {}).hat];
+  if (hat && !fr.silhouette && !fr.back && box) drawHat(ctx, box, hat, built.P, pose.facing);
   const blanketK = fr.silhouette ? 0 : fr.blanket || 0; // 밤잠 이불(0 → 1): 아래에서 올라와 몸 아래쪽을 덮음
   if (blanketK > 0) drawBlanket(ctx, x, base, box, built.P, bodyW, blanketK, now, scene.theme, built);
   if (!fr.silhouette && (fr.foam || 0) > 0) drawFoam(ctx, box, fr.foam, now); // 머리 위 거품
