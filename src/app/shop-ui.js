@@ -1,8 +1,8 @@
 // 상점·꾸미기·매일 선물 화면. 상태와 규칙은 core/economy.js·catalog.js, 여기는 DOM만.
-import { ITEMS, ITEM, SLOTS, TABS, PICKS, PACKS, SOON } from "../core/catalog.js?v=a6bb7a5-1791197400";
-import { canAfford, gems, DAILY } from "../core/economy.js?v=a6bb7a5-1791197400";
-import { drawThumb } from "../render/deco.js?v=a6bb7a5-1791197400";
-import { SPRITES, drawSprite, spriteSize } from "../render/sprites.js?v=a6bb7a5-1791197400";
+import { ITEMS, ITEM, SLOTS, TABS, PICKS, PACKS, SOON } from "../core/catalog.js?v=72f8c50-1791197939";
+import { canAfford, gems, DAILY } from "../core/economy.js?v=72f8c50-1791197939";
+import { drawThumb } from "../render/deco.js?v=72f8c50-1791197939";
+import { SPRITES, drawSprite, spriteSize } from "../render/sprites.js?v=72f8c50-1791197939";
 
 const el = (tag, attrs = {}, ...kids) => {
   const e = document.createElement(tag);
@@ -77,7 +77,7 @@ function renderGemShop(box, ctx) {
   if (!econ.bought.starter) {
     const st = PACKS.find((p) => p.once);
     box.append(el("div", { class: "banner" }, el("b", { text: "처음 한 번만! 시작 꾸러미" }), document.createTextNode(st.desc),
-      el("div", { class: "row", style: "margin-top:8px" }, el("span", { class: "small dim", style: "flex:1", text: "한 번만 살 수 있어요" }), el("button", { class: "krw", style: "border:0", text: won(st.krw), onclick: () => ctx.onPack(st) }))));
+      el("div", { class: "row", style: "margin-top:8px" }, el("span", { class: "small dim", style: "flex:1", text: "한 번만 살 수 있어요" }), el("button", { class: "krw", text: won(st.krw), onclick: () => ctx.onPack(st) }))));
   }
   for (const p of PACKS.filter((x) => !x.once)) {
     box.append(el("button", { class: "pack", onclick: () => ctx.onPack(p) }, spriteCanvas("coinGem", 32, 26), el("span", { class: "g" }, document.createTextNode(p.name), el("small", { text: p.bonus || "기본" })), el("span", { class: "krw", text: won(p.krw) })));

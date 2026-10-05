@@ -58,12 +58,12 @@
     .sheet.deco { max-height: 40%; }
     .shop-top { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; } .shop-top b { font-size: 17px; } .shop-top .sp { flex: 1; }
     /* 닫기는 어디서나 오른쪽 위 같은 ✕ 하나(시트·카드 공통) */
-    .x { flex: none; border: 0; background: #fff; width: 36px; height: 36px; border-radius: 10px; box-shadow: 0 2px 0 var(--line); font-size: 16px; font-weight: 800; color: var(--ink); padding: 0; }
+    .x { flex: none; border: 2px solid var(--ink); background: #fff; width: 36px; height: 36px; border-radius: 6px; box-shadow: 0 2px 0 var(--ink); font-size: 16px; font-weight: 800; color: var(--ink); padding: 0; }
     .sheet > .x { position: sticky; top: -6px; float: right; margin: -6px -4px 0 8px; z-index: 2; }
     .dexcard-in { position: relative; } .dexcard-in > .x { position: absolute; top: 10px; right: 10px; }
     .tabs { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 8px; scrollbar-width: none; } .tabs::-webkit-scrollbar { display: none; }
     .tab { border: 0; flex: none; padding: 7px 12px; border-radius: 999px; background: #fff; font-size: 13px; font-weight: 800; box-shadow: 0 2px 0 var(--line); }
-    .tab.on { background: var(--deep); color: #fff; box-shadow: 0 2px 0 #b84d6b; }
+    .tab.on { background: var(--deep); color: #fff; box-shadow: none; outline: 1.5px solid var(--ink); outline-offset: -1.5px; }
     .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
     .card { position: relative; border: 0; background: #fff; border-radius: 14px; padding: 6px 6px 8px; box-shadow: 0 2px 0 var(--line); font-size: 12px; text-align: center; }
     .card.sel { outline: 3px solid var(--deep); }
@@ -75,17 +75,17 @@
     .tag.on { background: var(--deep); }
     .buybar { position: sticky; bottom: -18px; display: flex; gap: 8px; align-items: center; background: var(--bar); padding: 10px 0 4px; margin-top: 8px; }
     .buybar .info { flex: 1; font-size: 13px; } .buybar .info b { display: block; font-size: 15px; }
-    .buybar button { border: 0; border-radius: 14px; padding: 12px 16px; font-weight: 800; font-size: 15px; background: var(--deep); color: #fff; box-shadow: 0 3px 0 #b84d6b; }
-    .buybar button.ghost { background: #fff; color: var(--ink); box-shadow: 0 3px 0 var(--line); }
+    .buybar button { border: 2px solid var(--ink); border-radius: 6px; padding: 10px 14px; font-weight: 800; font-size: 15px; background: var(--deep); color: #fff; box-shadow: 0 2px 0 var(--ink); }
+    .buybar button.ghost { border: 0; border-radius: 14px; padding: 12px 16px; background: #fff; color: var(--ink); box-shadow: 0 3px 0 var(--line); }
     .buybar button:disabled { opacity: .45; }
     .pack { display: flex; align-items: center; gap: 10px; background: #fff; border: 0; width: 100%; border-radius: 14px; padding: 10px 12px; margin-bottom: 8px; box-shadow: 0 2px 0 var(--line); text-align: left; }
     .pack canvas { width: 32px; height: 26px; image-rendering: pixelated; }
     .pack .g { flex: 1; font-weight: 900; font-size: 15px; } .pack .g small { display: block; font-weight: 600; font-size: 11px; opacity: .7; }
     /* 진짜 돈이 나가는 버튼만 초록: 게임 화폐 버튼(분홍)과 섞이지 않게 */
-    .krw { background: #3e9b6a; color: #fff; border-radius: 10px; padding: 7px 10px; font-weight: 800; font-size: 13px; box-shadow: 0 2px 0 #2b7350; }
+    .krw { background: #3e9b6a; color: #fff; border: 2px solid #1f4f37; border-radius: 6px; padding: 6px 9px; font-weight: 800; font-size: 13px; box-shadow: 0 2px 0 #1f4f37; }
     .paynote { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: #2b7350; background: #e6f4ea; border-radius: 10px; padding: 7px 10px; margin-bottom: 10px; }
     .paynote i { flex: none; width: 10px; height: 10px; border-radius: 3px; background: #3e9b6a; }
-    .banner { background: linear-gradient(135deg, #ffe0ea, #fff1d6); border-radius: 16px; padding: 12px; margin-bottom: 10px; font-size: 13px; }
+    .banner { background: #ffe9f0; border: 2px dashed var(--ink); border-radius: 14px; padding: 12px; margin-bottom: 10px; font-size: 13px; }
     .banner b { display: block; font-size: 15px; margin-bottom: 2px; }
     .fine { font-size: 11px; opacity: .7; line-height: 1.6; margin: 6px 2px; }
     .slots { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 8px; scrollbar-width: none; } .slots::-webkit-scrollbar { display: none; }
@@ -102,17 +102,19 @@
     nav { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; padding: 6px 12px calc(env(safe-area-inset-bottom) + 12px); }
     nav button { border: 0; border-radius: 16px; background: var(--cream); box-shadow: 0 3px 0 var(--line); padding: 8px 0 6px; display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 12px; font-weight: 700; }
     nav button:active, .big:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--line); }
+    .big:not(.ghost):active, .buybar button:not(.ghost):active, .x:active { transform: translateY(2px); box-shadow: 0 0 0 var(--ink); }
+    .krw:active { transform: translateY(2px); box-shadow: 0 0 0 #1f4f37; }
     nav canvas { width: 30px; height: 24px; image-rendering: pixelated; }
     #backdrop { position: absolute; inset: 0; background: rgba(59,44,53,.35); }
-    .sheet { position: absolute; left: 0; right: 0; bottom: 0; max-height: 85%; overflow: auto; background: var(--bar); border-radius: 20px 20px 0 0; padding: 18px 18px calc(env(safe-area-inset-bottom) + 18px); box-shadow: 0 -4px 20px rgba(0,0,0,.15); }
+    .sheet { position: absolute; left: 0; right: 0; bottom: 0; max-height: 85%; overflow: auto; background: var(--bar); border-radius: 14px 14px 0 0; padding: 18px 18px calc(env(safe-area-inset-bottom) + 18px); border-top: 3px solid var(--ink); }
     .sheet h2 { margin: 0 0 12px; font-size: 18px; }
     .sheet label { display: block; margin: 12px 0; font-size: 14px; font-weight: 600; }
     .sheet label.check { display: flex; gap: 8px; align-items: center; font-weight: 500; }
     .sheet select, .sheet input[type=time], #name-input { font: inherit; padding: 8px; border-radius: 10px; border: 1px solid var(--line); background: #fff; margin-top: 4px; }
     .sheet select { width: 100%; }
     .row { display: flex; gap: 6px; align-items: center; }
-    .big { display: block; width: 100%; border: 0; border-radius: 14px; background: var(--deep); color: #fff; padding: 14px; font-weight: 800; font-size: 16px; margin: 10px 0; box-shadow: 0 3px 0 #b84d6b; }
-    .big.ghost { background: var(--cream); color: var(--ink); box-shadow: 0 3px 0 var(--line); }
+    .big { display: block; width: 100%; border: 2px solid var(--ink); border-radius: 6px; background: var(--deep); color: #fff; padding: 12px; font-weight: 800; font-size: 16px; margin: 10px 0; box-shadow: 0 2px 0 var(--ink); }
+    .big.ghost { border: 0; border-radius: 14px; padding: 14px; background: var(--cream); color: var(--ink); box-shadow: 0 3px 0 var(--line); }
     .big.danger { color: #c0392b; }
     .small { font-size: 13px; } .dim { opacity: .6; } .warn { background: #fff3c4; padding: 10px; border-radius: 10px; } .ok { background: #dff5e1; padding: 10px; border-radius: 10px; font-weight: 700; }
     .sheet ol { padding-left: 20px; line-height: 1.6; font-size: 14px; }
@@ -311,6 +313,6 @@
       </div>
     </div>
   </div>
-  <script type="module" src="src/main.js?v=a6bb7a5-1791197400"></script>
+  <script type="module" src="src/main.js?v=72f8c50-1791197939"></script>
 </body>
 </html>
