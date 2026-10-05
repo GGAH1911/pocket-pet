@@ -1,8 +1,8 @@
 // 상점·꾸미기·매일 선물 화면. 상태와 규칙은 core/economy.js·catalog.js, 여기는 DOM만.
-import { ITEMS, ITEM, SLOTS, TABS, PICKS, PACKS, SOON } from "../core/catalog.js?v=72f8c50-1791197939";
-import { canAfford, gems, DAILY } from "../core/economy.js?v=72f8c50-1791197939";
-import { drawThumb } from "../render/deco.js?v=72f8c50-1791197939";
-import { SPRITES, drawSprite, spriteSize } from "../render/sprites.js?v=72f8c50-1791197939";
+import { ITEMS, ITEM, SLOTS, TABS, PICKS, PACKS, SOON } from "../core/catalog.js?v=aff32aa-1791198535";
+import { canAfford, gems, DAILY } from "../core/economy.js?v=aff32aa-1791198535";
+import { drawThumb } from "../render/deco.js?v=aff32aa-1791198535";
+import { SPRITES, drawSprite, spriteSize } from "../render/sprites.js?v=aff32aa-1791198535";
 
 const el = (tag, attrs = {}, ...kids) => {
   const e = document.createElement(tag);
@@ -23,6 +23,15 @@ export function spriteCanvas(name, w = 16, h = 16) {
   drawSprite(ctx, sp, Math.floor((w - sw * sc) / 2), Math.floor((h - sh * sc) / 2), sc);
   return cv;
 }
+// 상점 칸 안 정렬: 칸(벽지·바닥…) 묶음은 유지, 그 안에서 기본 → 별사탕 싼 순 → 하트 보석 싼 순 → 파는 물건 아님(보상·꾸러미 전용).
+// 가졌는지로는 다시 줄 세우지 않음(사고 나면 자리가 바뀌어 헷갈리니까. '있음/끼움' 표시로만 구분).
+export function sortForShop(items, slots) {
+  const rank = (it) => (it.basic ? 0 : it.price?.star ? 1 : it.price?.gem ? 2 : 3);
+  const cost = (it) => it.price?.star || it.price?.gem || 0;
+  return items.map((it, i) => ({ it, i })).sort((a, b) =>
+    slots.indexOf(a.it.slot) - slots.indexOf(b.it.slot) || rank(a.it) - rank(b.it) || cost(a.it) - cost(b.it) || a.i - b.i).map((x) => x.it);
+}
+
 export function priceEl(price) {
   if (!price) return el("span", { class: "price" });
   const isGem = !!price.gem;
@@ -47,7 +56,7 @@ export function renderShop(tabsEl, bodyEl, ctx) {
     return;
   }
   const tab = TABS.find((t) => t.id === state.tab);
-  const list = state.tab === "pick" ? PICKS.map((id) => ITEM[id]) : ITEMS.filter((it) => tab.slots.includes(it.slot) && (it.price || econ.owned[it.id]));
+  const list = state.tab === "pick" ? PICKS.map((id) => ITEM[id]) : sortForShop(ITEMS.filter((it) => tab.slots.includes(it.slot) && (it.price || econ.owned[it.id])), tab.slots); // 추천은 손으로 고른 순서 그대로
   const cards = el("div", { class: "cards" });
   for (const it of list) {
     const owned = !!econ.owned[it.id], on = econ.equipped[it.slot] === it.id;

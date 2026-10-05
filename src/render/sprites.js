@@ -1,5 +1,5 @@
 // 코드 속 도트 그림. 한 글자 = 한 도트, 색은 palette.js.
-import { PALETTE } from "./palette.js?v=72f8c50-1791197939";
+import { PALETTE } from "./palette.js?v=aff32aa-1791198535";
 
 export const SPRITES = {
   egg: [
@@ -163,14 +163,16 @@ export const SPRITES = {
     ".kppppppppk.",
     ".kkkkkkkkkk.",
   ],
-  iconBook: [
-    "kkkkk.kkkkk.",
-    "kwwwwkwwwwk.",
-    "kwkkwkwkkwk.",
-    "kwwwwkwwwwk.",
-    "kwkkwkwkkwk.",
-    "kwwwwkwwwwk.",
-    "kkkkkkkkkkk.",
+  iconBook: [ // 도감: 펼친 책(가운데 분홍 책등, 양쪽 책장에 글줄). 디자인 리뷰 서브에이전트 2차 사양
+    ".kkk....kkk.",
+    ".kwwk..kwwk.",
+    "kwwwwPPwwwwk",
+    "kwwwwPPwwwwk",
+    "kpppwPPwpppk",
+    "kwwwwPPwwwwk",
+    "kpppwPPwpppk",
+    "kwwwwPPwwwwk",
+    "kkkkkkkkkkkk",
   ],
   iconGift: [
     "..kk..kk..",
