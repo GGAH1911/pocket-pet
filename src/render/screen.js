@@ -1,11 +1,11 @@
 // 방 화면 그리기. 게임 규칙은 모르고 받은 상태만 그린다.
 // 캔버스는 "도트 해상도"로 그리고 CSS가 정수배로 키운다.
-import { PALETTE } from "./palette.js?v=a574189-1791195021";
-import { SPRITES, drawSprite, spriteSize } from "./sprites.js?v=a574189-1791195021";
-import { buildCreature, paintGrid, formKey, eggSpriteFor } from "./creature.js?v=a574189-1791195021";
-import { drawFace, POOLS } from "./face.js?v=a574189-1791195021";
-import { drawSky } from "./sky.js?v=a574189-1791195021";
-import { drawWall, drawFloor, drawRug, drawCurtain, drawFurniture, drawLampGlow, HAT_SPRITE, FURN_HALF } from "./deco.js?v=a574189-1791195021";
+import { PALETTE } from "./palette.js?v=25c0e65-1791195835";
+import { SPRITES, drawSprite, spriteSize } from "./sprites.js?v=25c0e65-1791195835";
+import { buildCreature, paintGrid, formKey, eggSpriteFor } from "./creature.js?v=25c0e65-1791195835";
+import { drawFace, POOLS } from "./face.js?v=25c0e65-1791195835";
+import { drawSky } from "./sky.js?v=25c0e65-1791195835";
+import { drawWall, drawFloor, drawRug, drawCurtain, drawFurniture, drawLampGlow, HAT_SPRITE, FURN_HALF } from "./deco.js?v=25c0e65-1791195835";
 
 // 방 배치(그리기와 동작이 같은 좌표를 쓰게 한 곳에서 계산)
 export function roomLayout(w, h, deco = {}) {
@@ -16,7 +16,7 @@ export function roomLayout(w, h, deco = {}) {
   const furnPos = { furnL: Math.max(half(deco.furnL) + 2, Math.round(w * 0.13)), furnR: Math.min(w - half(deco.furnR) - 2, Math.round(w * 0.87)) };
   return { floorY, cx: Math.round(w / 2), rugY, baseY: rugY + 4, furnBase, furnPos };
 }
-import { WALK_STOPS as WALK_STOPS_REF, walkDist as walkDistRef } from "./anim.js?v=a574189-1791195021";
+import { WALK_STOPS as WALK_STOPS_REF, walkDist as walkDistRef } from "./anim.js?v=25c0e65-1791195835";
 const clamp01 = (x) => Math.max(0, Math.min(1, x));
 
 const FLOOR = "#f5b98c";
@@ -425,14 +425,14 @@ function colTop(g, col) { // 그 세로줄에서 처음 칠해진 칸
   return null;
 }
 // 머리 꼭대기: 얼굴 가운데 ±2줄 중 가장 낮은 꼭대기(가는 뿔·물줄기는 건너뛰고 둥근 머리 윗선을 잡음)
-function headTop(g, P) {
-  const c0 = Math.round(faceCx(P));
+function headTop(g, P, c0 = Math.round(faceCx(P))) {
   let top = -1;
   for (let c = c0 - 2; c <= c0 + 2; c++) { const t = colTop(g, c); if (t != null && t > top) top = t; }
   return top < 0 ? Math.round(P.cy - P.ry) : top;
 }
 const HAT_SINK = { hatStraw: 3, hatCrown: 2, hatFlower: 3, santaHat: 3, pumpkinHat: 3, partyHat: 2 }; // 머리에 파묻히는 칸 수(쓴 것처럼)
-function drawHat(ctx, box, hat, built, faceInfo, facing) {
+const NO_DODGE = new Set(["fantasy.baby", "fantasy.child"]); // 말랑이·뿔말랑이: 뾰족한 물방울 머리 끝이 곧 머리라 그 위에 씌움
+function drawHat(ctx, box, hat, built, faceInfo, facing, key = "") {
   const sp = SPRITES[hat]; if (!sp) return;
   const { g, P } = built;
   const { w: sw, h: sh } = spriteSize(sp);
@@ -460,9 +460,24 @@ function drawHat(ctx, box, hat, built, faceInfo, facing) {
     drawSprite(ctx, sp, Math.round(gx(col + 0.5) - (sw * sc) / 2), Math.round(gy(top + 1) - (sh * sc) / 2), sc);
     return;
   }
-  // 모자류: 머리 꼭대기에 씌우고 몇 칸 파묻어 쓴 것처럼
-  const top = headTop(g, P), sink = HAT_SINK[hat] ?? 2;
-  drawSprite(ctx, sp, Math.round(gx(faceCx(P) + 0.5) - sw), Math.round(gy(top + sink) - sh * 2), 2);
+  // 모자류: 머리 꼭대기에 씌우고 몇 칸 파묻어 쓴 것처럼.
+  // 얼굴 가운데 근처에 머리 윗선보다 솟은 것(유니콘 뿔·고래 물줄기)이 있으면 반대쪽으로 비켜 씌운다
+  let c = Math.round(faceCx(P));
+  const dome = headTop(g, P, c);
+  const prot = [];
+  const tAt = (k) => colTop(g, k) ?? g.h;
+  for (let k = c - 3; k <= c + 3; k++) { // 옆 2칸보다 3칸 이상 갑자기 솟은 가는 것만 뿔·물줄기로 본다(뾰족한 물방울 머리는 머리)
+    const t = colTop(g, k);
+    if (t != null && t < dome - 1 && (tAt(k - 2) - t >= 3 || tAt(k + 2) - t >= 3)) prot.push(k);
+  }
+  if (prot.length && !NO_DODGE.has(key)) {
+    const mid = (Math.min(...prot) + Math.max(...prot)) / 2;
+    const side = Math.abs(mid - c) < 0.75 ? -P.f : mid > c ? -1 : 1; // 한가운데면 머리 뒤쪽으로
+    const half = sw / 2; // 모자 반폭(격자 칸)
+    c = Math.round(side < 0 ? Math.min(...prot) - half * 0.75 - 1 : Math.max(...prot) + half * 0.75 + 1); // 챙 끝만 살짝 겹치게
+  }
+  const top = headTop(g, P, c), sink = HAT_SINK[hat] ?? 2;
+  drawSprite(ctx, sp, Math.round(gx(c + 0.5) - sw), Math.round(gy(top + sink) - sh * 2), 2);
 }
 
 // ---------- 씻기: 욕조와 거품 ----------
@@ -551,7 +566,7 @@ function drawPet(ctx, scene, fr, { cx, baseY, now }) {
   const box = paintGrid(ctx, built.g, x, base, CELL, { alpha: fr.petAlpha ?? 1, tint: scene.sick && !fr.silhouette ? "rgba(150,210,150,0.22)" : null });
   if (fr.back && !fr.silhouette && fr.tailKind !== "own") drawTail(ctx, x, base, built, fr.tailWag || 0); // 엉덩이춤: 꼬리 없는 그림엔 복슬 꼬리, 용처럼 꼬리가 그려진 친구는 그대로
   const hat = fr.hat || HAT_SPRITE[(scene.deco || {}).hat];
-  if (hat && !fr.silhouette && !fr.back && box) drawHat(ctx, box, hat, built, faceInfo, pose.facing);
+  if (hat && !fr.silhouette && !fr.back && box) drawHat(ctx, box, hat, built, faceInfo, pose.facing, key);
   const blanketK = fr.silhouette ? 0 : fr.blanket || 0; // 밤잠 이불(0 → 1): 아래에서 올라와 몸 아래쪽을 덮음
   if (blanketK > 0) drawBlanket(ctx, x, base, box, built.P, bodyW, blanketK, now, scene.theme, built);
   if (!fr.silhouette && (fr.foam || 0) > 0) drawFoam(ctx, box, fr.foam, now); // 머리 위 거품
