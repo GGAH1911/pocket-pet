@@ -168,7 +168,7 @@ function stamp(g, art, cx, cy, mirror = false) {
 export function drawFace(g, P, expr, pose = {}) {
   const look = (expr?.look || 0) * P.f;
   const fcx = P.cx + (P.rx >= 10 ? P.f * Math.round(P.rx * 0.12) : 0) + look; // 작은 몸은 얼굴을 가운데에
-  const eyeY = Math.round(P.cy - P.ry * 0.12) + (expr?.dy || 0);
+  const eyeY = Math.round(P.cy - P.ry * 0.12) - (P.faceUp || 0) + (expr?.dy || 0);
   const edx = Math.max(2, Math.round(P.rx * 0.38));
   const L = pose.eyes ? ANIM_EYES[pose.eyes] || "round" : expr?.L || "round";
   const R = pose.eyes ? L : expr?.R || L;

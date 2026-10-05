@@ -2,7 +2,7 @@
 // 몸 모양(타원·물방울·구름) + 귀·뿔·날개·꼬리·발·무늬를 도트 격자(칸)에 칠하고,
 // 바깥 테두리와 그림자를 자동으로 입힌다. 자세(늘어남·찌그러짐·바라보는 방향)는 매 프레임 반영된다.
 // 얼굴(표정)은 face.js 가 이 격자 위에 따로 얹는다.
-import { PALETTE } from "./palette.js?v=543dee1-1791172481";
+import { PALETTE } from "./palette.js?v=b080db5-1791173605";
 
 const GW = 64, GH = 50; // 격자 크기(칸): 가장 큰 형태가 통통+늘어남이어도 안 잘리게
 
@@ -324,22 +324,38 @@ export function lookOf(pet) {
 const BLANKET = { animal: ["p", "P", "w"], fantasy: ["b", "B", "y"] };
 function drawBlanketCells(g, P, { k = 1, phase = 0, theme = "animal" } = {}) {
   const [c1, c2, dot] = BLANKET[theme] || BLANKET.animal;
-  const neck = P.cy - P.ry * 0.12 + Math.max(3, Math.round(P.ry * 0.32)) + 2.5; // 입 바로 아래(한 칸 띄움)
+  // 자는 동안 얼굴이 위로 올라간 만큼(P.faceUp) 이불을 가슴께까지 덮는다(입 바로 아래 한 칸 띄움)
+  const neck = P.cy - P.ry * 0.12 - (P.faceUp || 0) + Math.max(3, Math.round(P.ry * 0.32)) + 2.2;
   const top = P.base - (P.base - neck) * k;
-  const rxB = P.rx + 1.4, ryB = P.ry + 0.9;
+  const rxB = P.rx + 1.6, ryB = P.ry + 1;
+  // 앞발 색: 몸 옆쪽 색을 빌려 온다
+  const side = g.c[Math.round(P.cy) * g.w + Math.round(P.cx - P.rx * 0.75)] || "w";
   for (let y = Math.floor(top) - 1; y <= P.base; y++) {
     for (let x = Math.floor(P.cx - rxB - 1); x <= Math.ceil(P.cx + rxB + 1); x++) {
       const dx = (x + 0.5 - P.cx) / rxB, dy = (y + 0.5 - P.cy) / ryB;
-      const inBody = dx * dx + Math.min(dy, 0) ** 2 <= 1; // 아래쪽은 몸 폭 그대로 바닥까지 늘어뜨림
-      if (!inBody) continue;
-      const edge = top + Math.sin((x + phase) / 2.2) * 0.6; // 숨결에 살짝 물결
+      if (dx * dx + Math.min(dy, 0) ** 2 > 1) continue; // 아래쪽은 몸 폭 그대로 바닥까지 늘어뜨림
+      const edge = top + Math.sin((x + phase) / 2.2) * 0.5; // 숨결에 살짝 물결
       if (y + 0.5 < edge) continue;
       const row = y + 0.5 - edge;
-      let col = row < 1.4 ? "w" : c1; // 접힌 깃
+      let col = row < 1.6 ? "w" : row < 2.6 ? c2 : c1; // 접힌 깃 → 깃 아래 그림자 → 이불
       if (col === c1 && y >= P.base - 1) col = c2; // 바닥 쪽 그림자
       if (col === c1 && Math.abs(dx) > 0.86) col = c2; // 양옆으로 늘어진 부분은 진하게
       if (col === c1 && (Math.floor(y) % 3 === 0) && ((x + Math.floor(y / 3)) % 4 === 0)) col = dot; // 무늬
       g.c[y * g.w + x] = col;
+    }
+  }
+  // 이불 깃 위에 앞발 두 개(덮고 있는 게 보이게). 다 덮였을 때만
+  if (k > 0.85) {
+    const py = Math.round(top + 0.4);
+    for (const sgn of [-1, 1]) {
+      const px = P.cx + sgn * Math.max(3.4, P.rx * 0.56); // 얼굴 아래 양옆(입과 안 겹치게)
+      for (let y = py - 2; y <= py + 2; y++) for (let x = Math.floor(px - 3); x <= Math.ceil(px + 3); x++) {
+        const ddx = (x + 0.5 - px) / 2.1, ddy = (y + 0.5 - py) / 1.3;
+        const d = ddx * ddx + ddy * ddy;
+        if (d <= 1) g.c[y * g.w + x] = side;
+        else if (d <= 1.9 && y <= py + 1) g.c[y * g.w + x] = "k"; // 앞발 테두리
+      }
+      g.c[(py) * g.w + Math.round(px)] = "k"; // 발가락 사이 선
     }
   }
 }
@@ -351,9 +367,12 @@ export function buildCreature(key, { sx = 1, sy = 1, facing = 1, look = {}, silh
   const [rx0, ry0] = form.size;
   const rx = rx0 * sx * (look.chub || 1), ry = ry0 * sy;
   const base = GH - 2;
-  const P = { cx: GW / 2, cy: base - ry, rx, ry, base, f: facing >= 0 ? 1 : -1, spot: look.spot || "p", messy: !!look.messy };
+  const P = { cx: GW / 2, cy: base - ry, rx, ry, base, f: facing >= 0 ? 1 : -1, spot: look.spot || "p", messy: !!look.messy, faceUp: 0 };
   form.draw(g, P);
-  if (blanket && blanket.k > 0 && !silhouette) drawBlanketCells(g, P, blanket);
+  if (blanket && blanket.k > 0 && !silhouette) {
+    P.faceUp = Math.round(P.ry * 0.2 * blanket.k); // 이불 덮으면 얼굴이 조금 위로(베개에 머리를 댄 느낌)
+    drawBlanketCells(g, P, blanket);
+  }
   if (silhouette) for (let i = 0; i < g.c.length; i++) if (g.c[i]) g.c[i] = silhouette;
   outline(g); // 이불까지 한 덩어리로 테두리
   return { g, P, form };
