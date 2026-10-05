@@ -6,7 +6,7 @@
 export const DUR = {
   meal: 1800, snack: 1400, play: 2200, wash: 1800, lightOff: 900, lightOn: 700,
   medicine: 1600, refuse: 900, sleepyRefuse: 1000, hatch: 2600, evolve: 3000, pet: 800, poop: 500,
-  greet: 2200, greetBig: 3200, tidy: 700, mgLook: 1100, farewell: 3800,
+  greet: 2200, greetBig: 3200, tidy: 700, mgLook: 1100, farewell: 3800, tuckIn: 1600, untuck: 1200,
 };
 
 const clamp01 = (x) => Math.max(0, Math.min(1, x));
@@ -50,6 +50,7 @@ export function frame(a, now, scene, { roam = 20 } = {}) {
     flash: 0,
     egg: null, // { shake, cracks }
     showKey: null, // 진화·부화 중 다른 모습을 보여줄 때
+    bed: 0, // 쿠션·이불(0 없음 → 1 다 덮음)
     silhouette: false,
     fx: [],
   };
@@ -79,6 +80,8 @@ export function frame(a, now, scene, { roam = 20 } = {}) {
   const w = a.wander;
   if (calm && !crying && !scene.sick && !busy(a, now)) {
     if (now > w.nextAt) { w.target = (hash(now * 0.7) * 2 - 1) * roam; w.nextAt = now + 3000 + hash(now * 1.3) * 5000; }
+  } else if (scene.asleep || scene.napping) {
+    w.target = 0; // 잘 때는 가운데 쿠션으로
   } else if (!busy(a, now)) {
     w.target = w.x; // 멈춤
   }
@@ -103,6 +106,7 @@ export function frame(a, now, scene, { roam = 20 } = {}) {
 
   // ---- 상태 표현 ----
   if (scene.asleep || scene.napping) {
+    f.bed = 1;
     p.eyes = "sleep";
     for (let i = 0; i < 3; i++) {
       const ph = ((now / 1800) + i / 3) % 1;
@@ -313,6 +317,19 @@ function applyOneShot(f, c, t, now, scene) {
         else { p.facing = 1; p.dx += walk * 140; p.dy -= Math.abs(Math.sin(now / 90)) * 2; p.eyes = how === "runaway" ? "closed" : null; }
         if (t > 0.3) f.props.push({ sprite: "letter", x: -p.dx, y: -2, scale: 2, alpha: clamp01((t - 0.3) / 0.2) });
       }
+      break;
+    }
+    case "tuckIn": {
+      // 잠들 때: 쿠션이 톡 → 이불이 아래에서 스르륵 올라와 덮음
+      f.bed = Math.max(0.001, ease(t));
+      if (t < 0.35) { p.eyes = "closed"; p.mouth = "yawn"; } // 하품
+      break;
+    }
+    case "untuck": {
+      // 깰 때: 기지개 켜며 이불이 내려가고 쿠션이 사라짐
+      f.bed = 1 - ease(t);
+      p.sy *= 1 + Math.sin(clamp01(t / 0.6) * Math.PI) * 0.12; p.sx *= 1 - Math.sin(clamp01(t / 0.6) * Math.PI) * 0.06;
+      p.eyes = t < 0.5 ? "closed" : null; p.mouth = t < 0.5 ? "yawn" : null;
       break;
     }
     case "tidy": {
