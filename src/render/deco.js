@@ -1,7 +1,7 @@
 // 방 꾸미기 그림: 벽지·바닥·러그·커튼·가구. 상점 미리보기(작은 그림)도 같은 함수로 그린다.
 // 좌표는 캔버스 논리 픽셀. 가구는 x(가운데)·base(바닥에 닿는 y) 기준.
-import { PALETTE } from "./palette.js?v=25c0e65-1791195835";
-import { SPRITES, drawSprite, spriteSize } from "./sprites.js?v=25c0e65-1791195835";
+import { PALETTE } from "./palette.js?v=5c1a1ee-1791196182";
+import { SPRITES, drawSprite, spriteSize } from "./sprites.js?v=5c1a1ee-1791196182";
 
 export const HAT_SPRITE = { hat_ribbon: "hatRibbon", hat_straw: "hatStraw", hat_glasses: "hatGlasses", hat_crown: "hatCrown", hat_flower: "hatFlower" };
 
@@ -69,17 +69,25 @@ export function drawRug(ctx, cx, rugY, w, id = "rug_pink") {
 export function drawCurtain(ctx, r, id) {
   if (!id) return;
   const [c1, c2] = id === "curtain_lace" ? [P.w, "#efe2d4"] : id === "curtain_star" ? [P.B, "#3d4f9a"] : [P.p, P.P];
-  const pw = Math.max(6, Math.round(r.w * 0.16));
+  const pw = Math.max(7, Math.round(r.w * 0.18)); // 펼쳤을 때 폭
+  const y0 = r.y - 3, y1 = r.y + r.h + 6, tie = 0.58; // 끈으로 묶는 높이(위에서 58%)
   for (const side of [-1, 1]) {
-    const x0 = side < 0 ? r.x - 4 : r.x + r.w + 4 - pw;
-    for (let y = r.y - 3; y < r.y + r.h + 6; y++) {
-      const t = (y - r.y) / (r.h + 6);
-      const pull = Math.round(Math.sin(Math.min(1, t * 1.6) * Math.PI) * 2) * (side < 0 ? 1 : -1); // 가운데가 묶인 듯 오므라짐
-      rect(ctx, x0 + (side < 0 ? 0 : pull), y, pw - Math.abs(pull), 1, c1);
-      for (let fx = 2; fx < pw - Math.abs(pull) - 1; fx += 3) rect(ctx, x0 + (side < 0 ? 0 : pull) + fx, y, 1, 1, c2); // 주름
+    // 바깥 끝은 고정, 안쪽 끝만 끈 쪽으로 오므라졌다가 아래로 다시 퍼짐(좌우 대칭)
+    const outer = side < 0 ? r.x - 4 : r.x + r.w + 4; // 왼쪽은 이 x부터 오른쪽으로, 오른쪽은 이 x까지
+    for (let y = y0; y < y1; y++) {
+      const t = (y - y0) / (y1 - y0);
+      const pinch = t < tie ? Math.sin((t / tie) * Math.PI / 2) : 1 - ((t - tie) / (1 - tie)) * 0.55; // 0 → 1(묶은 곳) → 0.45
+      const wdt = Math.max(3, Math.round(pw * (1 - 0.55 * pinch)));
+      const x = side < 0 ? outer : outer - wdt;
+      rect(ctx, x, y, wdt, 1, c1);
+      for (let fx = 2; fx < wdt - 1; fx += 3) rect(ctx, side < 0 ? x + fx : x + wdt - 1 - fx, y, 1, 1, c2); // 주름(바깥에서 안쪽으로)
+      rect(ctx, side < 0 ? x + wdt - 1 : x, y, 1, 1, c2); // 안쪽 가장자리 그늘
     }
-    if (id === "curtain_star") for (let y = r.y; y < r.y + r.h; y += 5) rect(ctx, x0 + 2, y + (side > 0 ? 2 : 0), 1, 1, P.y);
-    if (id === "curtain_lace") for (let y = r.y + r.h + 2; y < r.y + r.h + 6; y += 2) for (let fx = 0; fx < pw; fx += 2) rect(ctx, x0 + fx, y, 1, 1, P.s);
+    // 묶은 끈
+    const ty = Math.round(y0 + (y1 - y0) * tie), tw = Math.max(3, Math.round(pw * 0.45)) + 1;
+    rect(ctx, side < 0 ? outer - 1 : outer - tw, ty - 1, tw + 1, 3, P.k); rect(ctx, side < 0 ? outer : outer - tw + 1, ty, tw - 1, 1, P.y);
+    if (id === "curtain_star") for (let y = r.y + 1; y < r.y + r.h; y += 5) rect(ctx, side < 0 ? outer + 1 : outer - 2, y + (side > 0 ? 2 : 0), 1, 1, P.y);
+    if (id === "curtain_lace") for (let fx = 0; fx < pw - 2; fx += 2) rect(ctx, side < 0 ? outer + fx : outer - 1 - fx, y1, 1, 1, P.s); // 레이스 끝단
   }
   rect(ctx, r.x - 6, r.y - 6, r.w + 12, 4, c2); // 위 장식(봉)
   for (let x = r.x - 6; x < r.x + r.w + 6; x += 4) rect(ctx, x, r.y - 2, 2, 2, c1);
