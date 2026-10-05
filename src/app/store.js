@@ -1,8 +1,8 @@
 // 저장: 휴대폰 브라우저 저장소(localStorage). 직전 저장본을 백업으로 하나 더 둔다.
-import { DEFAULT_SETTINGS } from "../core/rules.js?v=aff32aa-1791198535";
-import { SAVE_VERSION, migratePet } from "../core/state.js?v=aff32aa-1791198535";
-import { newEcon, normalizeEcon, grant, equip } from "../core/economy.js?v=aff32aa-1791198535";
-import { ensureBasics, ITEM } from "../core/catalog.js?v=aff32aa-1791198535";
+import { DEFAULT_SETTINGS } from "../core/rules.js?v=4532693-1791199752";
+import { SAVE_VERSION, migratePet } from "../core/state.js?v=4532693-1791199752";
+import { newEcon, normalizeEcon, grant, equip } from "../core/economy.js?v=4532693-1791199752";
+import { ensureBasics, ITEM } from "../core/catalog.js?v=4532693-1791199752";
 
 const KEY = "pocket-pet:save";
 const BACKUP = "pocket-pet:save:backup";
@@ -64,13 +64,13 @@ export function exportCode(p) {
 
 export function importCode(code, current) {
   const raw = String(code || "").trim().replace(/\s+/g, "");
-  if (!raw.startsWith("PP1.")) throw new Error("포켓 펫 저장 코드가 아니에요");
+  if (!raw.startsWith("PP1.")) throw new Error("알모찌 저장 코드가 아니에요");
   let data;
   try {
     const bin = atob(raw.slice(4));
     data = JSON.parse(new TextDecoder().decode(Uint8Array.from(bin, (c) => c.charCodeAt(0))));
   } catch { throw new Error("코드가 깨졌어요. 전부 복사했는지 확인해 주세요"); }
-  if (data.app !== "pocket-pet" || !data.profile) throw new Error("포켓 펫 저장 코드가 아니에요");
+  if (data.app !== "pocket-pet" || !data.profile) throw new Error("알모찌 저장 코드가 아니에요");
   const p = migrate(data.profile);
   if (!p) throw new Error("읽을 수 없는 저장이에요");
   // 이 기기의 알림 연결은 그대로 둔다

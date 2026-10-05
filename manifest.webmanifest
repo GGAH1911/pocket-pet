@@ -1,6 +1,6 @@
 {
-  "name": "포켓 펫",
-  "short_name": "포켓 펫",
+  "name": "알모찌: 도트 펫 키우기",
+  "short_name": "알모찌",
   "description": "실제 시간과 함께 자라는 컬러 도트 펫",
   "lang": "ko",
   "start_url": "./",

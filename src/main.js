@@ -1,26 +1,26 @@
 // 부팅 순서는 이 파일 한 곳에서만 정해요.
 // (지난 게임에서 파일 읽는 순서 때문에 저장 기본값이 빠지는 버그가 있었어요.)
 // 순서: 저장 불러오기 → 꺼져 있던 시간 계산 → 화면 시작 → 서비스 워커·알림 확인 → 알림 일정 올리기
-import { createPet } from "./core/state.js?v=aff32aa-1791198535";
-import { advance, feed, play, wash, walk, wakeFromNap, cleanPoop, toggleLight, giveMedicine, patPet, switchEndMode, retirePet } from "./core/sim.js?v=aff32aa-1791198535";
-import { predictNotifications } from "./core/notify.js?v=aff32aa-1791198535";
-import { josa } from "./core/josa.js?v=aff32aa-1791198535";
-import { drawRoom, drawIcon, roomLayout } from "./render/screen.js?v=aff32aa-1791198535";
-import { createAnimator, play as playAnim, frame as animFrame, addFx, DUR as ANIM_DUR } from "./render/anim.js?v=aff32aa-1791198535";
-import { pickGame, createGame, GAME_NAMES } from "./app/games.js?v=aff32aa-1791198535";
-import { EGGS, findEgg, createStreak, specialDay, SPECIAL_KO, HAT_OF, wishTime, MAKER_LETTER } from "./app/eggs.js?v=aff32aa-1791198535";
-import { earn, buy, equip, unequip, grant as grantItem, gems, canAfford, dailyStatus, claimDaily, DAILY } from "./core/economy.js?v=aff32aa-1791198535";
-import { ITEMS, ITEM, SLOTS, TABS, PICKS, PACKS, SOON, BASIC_EQUIP } from "./core/catalog.js?v=aff32aa-1791198535";
-import { renderShop, renderDeco, dailyCard, spriteCanvas } from "./app/shop-ui.js?v=aff32aa-1791198535";
-import { formKey, lookOf, FORMS as FORMS_REF, SPOT_COLORS, eggSpriteFor } from "./render/creature.js?v=aff32aa-1791198535";
-import { guessLocation, sunTimes, moonIllumination, moonPosition, moonPhaseName } from "./core/astro.js?v=aff32aa-1791198535";
-import { classifyWeather, weatherUrl, parseWeather } from "./core/weather.js?v=aff32aa-1791198535";
-import { createFacePicker, pickFace } from "./render/face.js?v=aff32aa-1791198535";
-import { SPRITES, drawSprite } from "./render/sprites.js?v=aff32aa-1791198535";
-import { loadProfile, saveProfile, freshProfile, exportCode, importCode } from "./app/store.js?v=aff32aa-1791198535";
-import { sfx, setSoundEnabled } from "./app/sound.js?v=aff32aa-1791198535";
-import { markSeen, recordPet, renderCollection, letterText, portrait, currentKey, HOW_KO, unlockedSet, REWARDS, nextGoal, adultsSeen, ADULT_KEYS, formOrder, EGG_COLOR_KO } from "./app/collection.js?v=aff32aa-1791198535";
-import { deviceInfo, registerSW, enablePush, ensurePush, uploadSchedule, sendTest, serverStatus } from "./app/push.js?v=aff32aa-1791198535";
+import { createPet } from "./core/state.js?v=4532693-1791199752";
+import { advance, feed, play, wash, walk, wakeFromNap, cleanPoop, toggleLight, giveMedicine, patPet, switchEndMode, retirePet } from "./core/sim.js?v=4532693-1791199752";
+import { predictNotifications } from "./core/notify.js?v=4532693-1791199752";
+import { josa } from "./core/josa.js?v=4532693-1791199752";
+import { drawRoom, drawIcon, roomLayout } from "./render/screen.js?v=4532693-1791199752";
+import { createAnimator, play as playAnim, frame as animFrame, addFx, DUR as ANIM_DUR } from "./render/anim.js?v=4532693-1791199752";
+import { pickGame, createGame, GAME_NAMES } from "./app/games.js?v=4532693-1791199752";
+import { EGGS, findEgg, createStreak, specialDay, SPECIAL_KO, HAT_OF, wishTime, MAKER_LETTER } from "./app/eggs.js?v=4532693-1791199752";
+import { earn, buy, equip, unequip, grant as grantItem, gems, canAfford, dailyStatus, claimDaily, DAILY } from "./core/economy.js?v=4532693-1791199752";
+import { ITEMS, ITEM, SLOTS, TABS, PICKS, PACKS, SOON, BASIC_EQUIP } from "./core/catalog.js?v=4532693-1791199752";
+import { renderShop, renderDeco, dailyCard, spriteCanvas } from "./app/shop-ui.js?v=4532693-1791199752";
+import { formKey, lookOf, FORMS as FORMS_REF, SPOT_COLORS, eggSpriteFor } from "./render/creature.js?v=4532693-1791199752";
+import { guessLocation, sunTimes, moonIllumination, moonPosition, moonPhaseName } from "./core/astro.js?v=4532693-1791199752";
+import { classifyWeather, weatherUrl, parseWeather } from "./core/weather.js?v=4532693-1791199752";
+import { createFacePicker, pickFace } from "./render/face.js?v=4532693-1791199752";
+import { SPRITES, drawSprite } from "./render/sprites.js?v=4532693-1791199752";
+import { loadProfile, saveProfile, freshProfile, exportCode, importCode } from "./app/store.js?v=4532693-1791199752";
+import { sfx, setSoundEnabled } from "./app/sound.js?v=4532693-1791199752";
+import { markSeen, recordPet, renderCollection, letterText, portrait, currentKey, HOW_KO, unlockedSet, REWARDS, nextGoal, adultsSeen, ADULT_KEYS, formOrder, EGG_COLOR_KO } from "./app/collection.js?v=4532693-1791199752";
+import { deviceInfo, registerSW, enablePush, ensurePush, uploadSchedule, sendTest, serverStatus } from "./app/push.js?v=4532693-1791199752";
 
 const clock = { offset: 0, now() { return Date.now() + this.offset; } }; // offset은 개발 도구만 바꾼다
 
@@ -123,7 +123,7 @@ function renderStats() {
   const p = profile.pet;
   const box = $("stats");
   renderWallet();
-  if (!p) { box.innerHTML = ""; $("petname").textContent = "포켓 펫"; $("sub").textContent = ""; return; }
+  if (!p) { box.innerHTML = ""; $("petname").textContent = "알모찌"; $("sub").textContent = ""; return; }
   const rows = [["배부름", "hunger"], ["기분", "mood"], ["깨끗함", "clean"], ["기운", "energy"], ["건강", "health"]];
   box.innerHTML = rows.map(([label, k]) => {
     const v = Math.round(p.stats[k]);
@@ -701,7 +701,7 @@ function renderHelp() {
     <p class="small"><b>돌보기</b> 밥·놀기·씻기·불 버튼으로 돌봐요. 배고프거나 더러울 때 챙겨 주면 별사탕을 받아요.</p>
     <p class="small"><b>별사탕·하트 보석</b> 별사탕은 돌봄·놀이·산책·매일 선물로 모으고, 보석은 매일 선물 7일째·비밀 찾기로 받거나 살 수 있어요. 둘 다 꾸미기에만 쓰여요. 펫의 상태는 돈으로 바뀌지 않아요.</p>
     <p class="small"><b>꾸미기</b> 아래 꾸미기 버튼 → 칸을 골라 가진 것으로 바꿔요. 상점에서는 사기 전에 방에 미리 놓아 볼 수 있어요.</p>
-    <p class="small"><b>개인정보</b> 이 게임은 이름·연락처 같은 개인정보를 모으지 않아요. 펫과 꾸미기 기록은 이 기기 안에만 저장돼요.</p>`;
+    <p class="small"><b>개인정보</b> 이 게임은 이름·연락처 같은 개인정보를 모으지 않아요. 펫과 꾸미기 기록은 이 기기 안에만 저장돼요. <a href="https://ggah1911.github.io/pocket-pet/privacy.html" target="_blank" rel="noopener">개인정보 처리방침 전문</a></p>`;
 }
 
 // ---------- 매일 선물 ----------
@@ -727,7 +727,7 @@ function renderNotify() {
   let html = "";
   if (d.ios && !d.standalone) {
     html += `<p class="warn">iPhone은 <b>홈 화면에 추가</b>해야 알림이 와요.</p>
-      <ol><li>사파리 아래쪽 <b>공유 버튼</b>(네모에 위쪽 화살표)을 눌러요</li><li><b>홈 화면에 추가</b>를 눌러요</li><li>홈 화면에 생긴 <b>포켓 펫</b> 아이콘으로 다시 열어요</li><li>거기서 ≡ 메뉴 → <b>알림</b> → <b>알림 받기</b>를 눌러요</li></ol>
+      <ol><li>사파리 아래쪽 <b>공유 버튼</b>(네모에 위쪽 화살표)을 눌러요</li><li><b>홈 화면에 추가</b>를 눌러요</li><li>홈 화면에 생긴 <b>알모찌</b> 아이콘으로 다시 열어요</li><li>거기서 ≡ 메뉴 → <b>알림</b> → <b>알림 받기</b>를 눌러요</li></ol>
       <p class="small">사파리에서 키우던 펫은 홈 화면 앱과 저장소가 따로예요. 옮기려면 여기(사파리)에서 ≡ → 저장 → <b>내보내기</b>로 코드를 복사하고, 홈 화면 앱에서 ≡ → 저장 → <b>불러오기</b>에 붙여 넣으세요.</p>`;
     if (d.iosVer[0] && (d.iosVer[0] < 16 || (d.iosVer[0] === 16 && d.iosVer[1] < 4))) html += `<p class="warn">iOS 16.4 이상이 필요해요. 지금 iOS ${d.iosVer.join(".")}</p>`;
   } else if (!d.supported) {
@@ -991,7 +991,7 @@ function boot() {
   // 개발 도구(공개 배포에는 없음): ?dev 로 열기
   if (QS.has("dev")) {
     window.__pp = { clock, getProfile: () => profile, tick, anim, playAnim: (n, d) => playAnim(anim, n, performance.now(), d), mg: () => mg, layout: () => layout, forceGame: null, boxes: () => ({ windowBox, petBox, memoBox }), render: () => renderStats() };
-    import("./dev/panel.js?v=aff32aa-1791198535").then((m) => m.mount({ clock, getProfile: () => profile, tick, renderStats, syncNow, serverStatus })).catch(() => {});
+    import("./dev/panel.js?v=4532693-1791199752").then((m) => m.mount({ clock, getProfile: () => profile, tick, renderStats, syncNow, serverStatus })).catch(() => {});
   }
 }
 

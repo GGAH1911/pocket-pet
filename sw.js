@@ -40,7 +40,7 @@ self.addEventListener("push", (event) => {
   try { data = event.data ? event.data.json() : {}; } catch { data = { notification: { body: event.data ? event.data.text() : "" } }; }
   const n = data.notification || {};
   event.waitUntil((async () => {
-    await self.registration.showNotification(n.title || "포켓 펫", {
+    await self.registration.showNotification(n.title || "알모찌", {
       body: n.body || "펫이 부르고 있어요",
       tag: n.tag || "pocket-pet",
       renotify: true,
