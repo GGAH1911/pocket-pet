@@ -1,11 +1,11 @@
 // 방 화면 그리기. 게임 규칙은 모르고 받은 상태만 그린다.
 // 캔버스는 "도트 해상도"로 그리고 CSS가 정수배로 키운다.
-import { PALETTE } from "./palette.js?v=c043b5f-1791194688";
-import { SPRITES, drawSprite, spriteSize } from "./sprites.js?v=c043b5f-1791194688";
-import { buildCreature, paintGrid, formKey, eggSpriteFor } from "./creature.js?v=c043b5f-1791194688";
-import { drawFace, POOLS } from "./face.js?v=c043b5f-1791194688";
-import { drawSky } from "./sky.js?v=c043b5f-1791194688";
-import { drawWall, drawFloor, drawRug, drawCurtain, drawFurniture, drawLampGlow, HAT_SPRITE, FURN_HALF } from "./deco.js?v=c043b5f-1791194688";
+import { PALETTE } from "./palette.js?v=a574189-1791195021";
+import { SPRITES, drawSprite, spriteSize } from "./sprites.js?v=a574189-1791195021";
+import { buildCreature, paintGrid, formKey, eggSpriteFor } from "./creature.js?v=a574189-1791195021";
+import { drawFace, POOLS } from "./face.js?v=a574189-1791195021";
+import { drawSky } from "./sky.js?v=a574189-1791195021";
+import { drawWall, drawFloor, drawRug, drawCurtain, drawFurniture, drawLampGlow, HAT_SPRITE, FURN_HALF } from "./deco.js?v=a574189-1791195021";
 
 // 방 배치(그리기와 동작이 같은 좌표를 쓰게 한 곳에서 계산)
 export function roomLayout(w, h, deco = {}) {
@@ -16,7 +16,7 @@ export function roomLayout(w, h, deco = {}) {
   const furnPos = { furnL: Math.max(half(deco.furnL) + 2, Math.round(w * 0.13)), furnR: Math.min(w - half(deco.furnR) - 2, Math.round(w * 0.87)) };
   return { floorY, cx: Math.round(w / 2), rugY, baseY: rugY + 4, furnBase, furnPos };
 }
-import { WALK_STOPS as WALK_STOPS_REF, walkDist as walkDistRef } from "./anim.js?v=c043b5f-1791194688";
+import { WALK_STOPS as WALK_STOPS_REF, walkDist as walkDistRef } from "./anim.js?v=a574189-1791195021";
 const clamp01 = (x) => Math.max(0, Math.min(1, x));
 
 const FLOOR = "#f5b98c";
@@ -417,18 +417,52 @@ function drawTail(ctx, x, base, built, wag) {
   ctx.fillStyle = sh; ctx.fillRect(tx - 3, ty + 2, 7, 1); ctx.fillRect(tx + 3, ty - 1, 2, 3); // 아래·오른쪽 그늘
   ctx.fillStyle = PALETTE.w; ctx.fillRect(tx - 3, ty - 2, 3, 2); ctx.fillRect(tx - 2, ty, 1, 1); // 복슬한 흰 끝
 }
-function drawHat(ctx, box, hat, P, facing) {
+// 머리 장식: 캐릭터마다 실제 그림에서 자리를 찾는다(귀·뿔·물줄기 끝이 아니라 머리 꼭대기, 실제 눈 위치)
+const faceCx = (P) => P.cx + (P.rx >= 10 ? P.f * Math.round(P.rx * 0.12) : 0);
+function colTop(g, col) { // 그 세로줄에서 처음 칠해진 칸
+  if (col < 0 || col >= g.w) return null;
+  for (let r = 0; r < g.h; r++) if (g.c[r * g.w + col]) return r;
+  return null;
+}
+// 머리 꼭대기: 얼굴 가운데 ±2줄 중 가장 낮은 꼭대기(가는 뿔·물줄기는 건너뛰고 둥근 머리 윗선을 잡음)
+function headTop(g, P) {
+  const c0 = Math.round(faceCx(P));
+  let top = -1;
+  for (let c = c0 - 2; c <= c0 + 2; c++) { const t = colTop(g, c); if (t != null && t > top) top = t; }
+  return top < 0 ? Math.round(P.cy - P.ry) : top;
+}
+const HAT_SINK = { hatStraw: 3, hatCrown: 2, hatFlower: 3, santaHat: 3, pumpkinHat: 3, partyHat: 2 }; // 머리에 파묻히는 칸 수(쓴 것처럼)
+function drawHat(ctx, box, hat, built, faceInfo, facing) {
   const sp = SPRITES[hat]; if (!sp) return;
+  const { g, P } = built;
   const { w: sw, h: sh } = spriteSize(sp);
-  if (hat === "hatGlasses") { // 안경은 눈 높이에
-    const fcx = P.cx + (P.rx >= 10 ? P.f * Math.round(P.rx * 0.12) : 0), eyeY = Math.round(P.cy - P.ry * 0.12);
-    drawSprite(ctx, sp, Math.round(box.ox + fcx * CELL - sw), Math.round(box.oy + eyeY * CELL - sh + 2), 2); return;
+  const gx = (col) => box.ox + col * CELL, gy = (row) => box.oy + row * CELL;
+  if (hat === "hatGlasses") { // 안경: 실제 두 눈에 렌즈를 맞춰 그린다(눈 간격이 캐릭터마다 달라서 그림 하나로는 안 맞음)
+    if (!faceInfo) return;
+    const eyes = faceInfo.eyes.map(([ex, ey]) => [gx(ex + 0.5), gy(ey + 0.5)]);
+    const rx = 5, ry = 4;
+    for (const [cx, cy] of eyes) {
+      ctx.fillStyle = "rgba(142,203,255,0.35)"; ctx.fillRect(Math.round(cx - rx + 1), Math.round(cy - ry + 1), rx * 2 - 2, ry * 2 - 2);
+      ctx.fillStyle = PALETTE.k;
+      ctx.fillRect(Math.round(cx - rx + 1), Math.round(cy - ry), rx * 2 - 2, 1); ctx.fillRect(Math.round(cx - rx + 1), Math.round(cy + ry - 1), rx * 2 - 2, 1);
+      ctx.fillRect(Math.round(cx - rx), Math.round(cy - ry + 1), 1, ry * 2 - 2); ctx.fillRect(Math.round(cx + rx - 1), Math.round(cy - ry + 1), 1, ry * 2 - 2);
+      ctx.fillStyle = PALETTE.w; ctx.fillRect(Math.round(cx - rx + 2), Math.round(cy - ry + 1), 2, 1);
+    }
+    const [[lx, ly], [rx2]] = eyes;
+    ctx.fillStyle = PALETTE.k; ctx.fillRect(Math.round(lx + rx - 1), Math.round(ly - 2), Math.max(0, Math.round(rx2 - rx + 1 - (lx + rx - 1))), 1); // 코받침 다리
+    return;
   }
-  if (hat === "hatRibbon") { drawSprite(ctx, sp, Math.round(box.x + box.w * (facing >= 0 ? 0.62 : 0.12)), Math.round(box.y - 4), 2); return; } // 리본은 한쪽 귀 옆
-  const sc = hat === "heartClip" ? 1 : 2;
-  const hx = hat === "heartClip" ? Math.round(box.x + box.w * (facing >= 0 ? 0.72 : 0.18)) : Math.round(box.x + box.w / 2 - (sw * sc) / 2);
-  const hy = Math.round(box.y - sh * sc + (hat === "heartClip" ? sh : 6));
-  drawSprite(ctx, sp, hx, hy, sc);
+  if (hat === "hatRibbon" || hat === "heartClip") { // 리본·하트 핀: 머리 윗선 한쪽(귀 안쪽)
+    const col = Math.round(faceCx(P) + (facing >= 0 ? 1 : -1) * Math.max(2, P.rx * 0.4));
+    const ht = headTop(g, P), ct = colTop(g, col);
+    const top = ct == null ? ht : Math.max(ct, ht); // 그 줄에 귀·뿔이 걸려 있으면(더 높으면) 귀 끝 말고 머리 윗선에
+    const sc = hat === "heartClip" ? 1 : 2;
+    drawSprite(ctx, sp, Math.round(gx(col + 0.5) - (sw * sc) / 2), Math.round(gy(top + 1) - (sh * sc) / 2), sc);
+    return;
+  }
+  // 모자류: 머리 꼭대기에 씌우고 몇 칸 파묻어 쓴 것처럼
+  const top = headTop(g, P), sink = HAT_SINK[hat] ?? 2;
+  drawSprite(ctx, sp, Math.round(gx(faceCx(P) + 0.5) - sw), Math.round(gy(top + sink) - sh * 2), 2);
 }
 
 // ---------- 씻기: 욕조와 거품 ----------
@@ -517,7 +551,7 @@ function drawPet(ctx, scene, fr, { cx, baseY, now }) {
   const box = paintGrid(ctx, built.g, x, base, CELL, { alpha: fr.petAlpha ?? 1, tint: scene.sick && !fr.silhouette ? "rgba(150,210,150,0.22)" : null });
   if (fr.back && !fr.silhouette && fr.tailKind !== "own") drawTail(ctx, x, base, built, fr.tailWag || 0); // 엉덩이춤: 꼬리 없는 그림엔 복슬 꼬리, 용처럼 꼬리가 그려진 친구는 그대로
   const hat = fr.hat || HAT_SPRITE[(scene.deco || {}).hat];
-  if (hat && !fr.silhouette && !fr.back && box) drawHat(ctx, box, hat, built.P, pose.facing);
+  if (hat && !fr.silhouette && !fr.back && box) drawHat(ctx, box, hat, built, faceInfo, pose.facing);
   const blanketK = fr.silhouette ? 0 : fr.blanket || 0; // 밤잠 이불(0 → 1): 아래에서 올라와 몸 아래쪽을 덮음
   if (blanketK > 0) drawBlanket(ctx, x, base, box, built.P, bodyW, blanketK, now, scene.theme, built);
   if (!fr.silhouette && (fr.foam || 0) > 0) drawFoam(ctx, box, fr.foam, now); // 머리 위 거품
