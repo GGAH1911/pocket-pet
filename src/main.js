@@ -1,22 +1,23 @@
 // 부팅 순서는 이 파일 한 곳에서만 정해요.
 // (지난 게임에서 파일 읽는 순서 때문에 저장 기본값이 빠지는 버그가 있었어요.)
 // 순서: 저장 불러오기 → 꺼져 있던 시간 계산 → 화면 시작 → 서비스 워커·알림 확인 → 알림 일정 올리기
-import { createPet } from "./core/state.js?v=9783e07-1791176507";
-import { advance, feed, play, wash, cleanPoop, toggleLight, giveMedicine, patPet, switchEndMode, retirePet } from "./core/sim.js?v=9783e07-1791176507";
-import { predictNotifications } from "./core/notify.js?v=9783e07-1791176507";
-import { josa } from "./core/josa.js?v=9783e07-1791176507";
-import { drawRoom, drawIcon } from "./render/screen.js?v=9783e07-1791176507";
-import { createAnimator, play as playAnim, frame as animFrame, addFx } from "./render/anim.js?v=9783e07-1791176507";
-import { pickGame, createGame, GAME_NAMES } from "./app/games.js?v=9783e07-1791176507";
-import { formKey, lookOf, FORMS as FORMS_REF, SPOT_COLORS, eggSpriteFor } from "./render/creature.js?v=9783e07-1791176507";
-import { guessLocation, sunTimes, moonIllumination, moonPosition, moonPhaseName } from "./core/astro.js?v=9783e07-1791176507";
-import { classifyWeather, weatherUrl, parseWeather } from "./core/weather.js?v=9783e07-1791176507";
-import { createFacePicker, pickFace } from "./render/face.js?v=9783e07-1791176507";
-import { SPRITES, drawSprite } from "./render/sprites.js?v=9783e07-1791176507";
-import { loadProfile, saveProfile, freshProfile, exportCode, importCode } from "./app/store.js?v=9783e07-1791176507";
-import { sfx, setSoundEnabled } from "./app/sound.js?v=9783e07-1791176507";
-import { markSeen, recordPet, renderCollection, letterText, portrait, currentKey, HOW_KO, unlockedSet, REWARDS, nextGoal, adultsSeen, ADULT_KEYS, formOrder, EGG_COLOR_KO } from "./app/collection.js?v=9783e07-1791176507";
-import { deviceInfo, registerSW, enablePush, ensurePush, uploadSchedule, sendTest, serverStatus } from "./app/push.js?v=9783e07-1791176507";
+import { createPet } from "./core/state.js?v=689a340-1791180887";
+import { advance, feed, play, wash, cleanPoop, toggleLight, giveMedicine, patPet, switchEndMode, retirePet } from "./core/sim.js?v=689a340-1791180887";
+import { predictNotifications } from "./core/notify.js?v=689a340-1791180887";
+import { josa } from "./core/josa.js?v=689a340-1791180887";
+import { drawRoom, drawIcon } from "./render/screen.js?v=689a340-1791180887";
+import { createAnimator, play as playAnim, frame as animFrame, addFx } from "./render/anim.js?v=689a340-1791180887";
+import { pickGame, createGame, GAME_NAMES } from "./app/games.js?v=689a340-1791180887";
+import { EGGS, findEgg, createStreak, specialDay, SPECIAL_KO, HAT_OF, wishTime, MAKER_LETTER } from "./app/eggs.js?v=689a340-1791180887";
+import { formKey, lookOf, FORMS as FORMS_REF, SPOT_COLORS, eggSpriteFor } from "./render/creature.js?v=689a340-1791180887";
+import { guessLocation, sunTimes, moonIllumination, moonPosition, moonPhaseName } from "./core/astro.js?v=689a340-1791180887";
+import { classifyWeather, weatherUrl, parseWeather } from "./core/weather.js?v=689a340-1791180887";
+import { createFacePicker, pickFace } from "./render/face.js?v=689a340-1791180887";
+import { SPRITES, drawSprite } from "./render/sprites.js?v=689a340-1791180887";
+import { loadProfile, saveProfile, freshProfile, exportCode, importCode } from "./app/store.js?v=689a340-1791180887";
+import { sfx, setSoundEnabled } from "./app/sound.js?v=689a340-1791180887";
+import { markSeen, recordPet, renderCollection, letterText, portrait, currentKey, HOW_KO, unlockedSet, REWARDS, nextGoal, adultsSeen, ADULT_KEYS, formOrder, EGG_COLOR_KO } from "./app/collection.js?v=689a340-1791180887";
+import { deviceInfo, registerSW, enablePush, ensurePush, uploadSchedule, sendTest, serverStatus } from "./app/push.js?v=689a340-1791180887";
 
 const clock = { offset: 0, now() { return Date.now() + this.offset; } }; // offset은 개발 도구만 바꾼다
 
@@ -233,6 +234,26 @@ function skyText() {
   return `${loc.label}${wx} · ${sun} · 달: ${moonPhaseName(ill.phase)} ${Math.round(ill.fraction * 100)}%${mp.altitude > 0 ? "" : " (실제로는 지평선 아래)"}`;
 }
 
+// ---------- 숨은 재미(이스터 에그) ----------
+const streaks = { pet: createStreak(8, 3000), win: createStreak(5, 4000), egg: createStreak(8, 3000), dex: createStreak(5, 3000) };
+let memoBox = null, lastWish = null;
+function discover(id) {
+  if (!findEgg(profile, id, clock.now())) return;
+  const e = EGGS.find((x) => x.id === id);
+  setTimeout(() => { say(`비밀 발견! '${e.name}' (≡ → 도감에서 모아 봐요)`, 6000); sfx("win"); }, 1800);
+  persist();
+}
+function showNote(title, text) {
+  const card = document.createElement("div"); card.className = "dexcard";
+  const inner = document.createElement("div"); inner.className = "dexcard-in";
+  const b = document.createElement("b"); b.textContent = title;
+  const p = document.createElement("p"); p.className = "letter"; p.textContent = text;
+  const close = document.createElement("button"); close.className = "big ghost"; close.textContent = "닫기";
+  close.addEventListener("click", () => card.remove());
+  card.addEventListener("click", (e) => { if (e.target === card) card.remove(); });
+  inner.append(b, p, close); card.append(inner); document.body.append(card);
+}
+
 function onTap(ev) {
   const p = profile.pet; if (!p) return;
   const r = canvas.getBoundingClientRect();
@@ -240,7 +261,22 @@ function onTap(ev) {
   if (mg) { if (mg.tap && layout) { const res = mg.tap(x, y, performance.now(), layout); if (res) mgEffect(res); } return; } // 놀이 중엔 화면 터치는 놀이에만
   // 똥을 먼저 본다(누르기 쉽게 여유 6px)
   const hit = poopRects.find((pr) => x >= pr.x - 6 && x <= pr.x + pr.w + 6 && y >= pr.y - 6 && y <= pr.y + pr.h + 6);
-  if (windowBox && x >= windowBox.x - 3 && x <= windowBox.x + windowBox.w + 3 && y >= windowBox.y - 3 && y <= windowBox.y + windowBox.h + 3) { say(skyText(), 7000); sfx("tap"); return; }
+  if (windowBox && x >= windowBox.x - 3 && x <= windowBox.x + windowBox.w + 3 && y >= windowBox.y - 3 && y <= windowBox.y + windowBox.h + 3) {
+    if (streaks.win.tap(performance.now())) { // 비밀: 창문 5번 → 별똥별
+      addFx(anim, "shootingStar", 0, 0, performance.now(), 1400, { rect: { ...windowBox } });
+      say("반짝! 별똥별이 지나갔어요. 소원을 빌었어요", 6000); sfx("win"); discover("star");
+      return;
+    }
+    say(skyText(), 7000); sfx("tap"); return;
+  }
+  if (memoBox && x >= memoBox.x - 2 && x <= memoBox.x + memoBox.w + 2 && y >= memoBox.y - 4 && y <= memoBox.y + memoBox.h + 2) { // 비밀: 추억 액자
+    const last = profile.collection[profile.collection.length - 1];
+    if (last) {
+      if (p.stage !== "egg" && !p.asleep && !p.ended && !anim.cur) playAnim(anim, "lookFrame", performance.now(), { name: last.name });
+      say(`추억 액자: ${last.name} (${last.form})`, 4000); sfx("tap"); discover("frame");
+      return;
+    }
+  }
   if (hit) {
     const res = cleanPoop(p, clock.now(), S());
     if (res.ok) {
@@ -258,12 +294,16 @@ function onTap(ev) {
   const m = 8;
   if (x < petBox.x - m || x > petBox.x + petBox.w + m || y < petBox.y - m || y > petBox.y + petBox.h + m) return;
   if (p.ended) return;
-  if (p.stage === "egg") { playAnim(anim, "refuse", performance.now()); sfx("tap"); say("알이 꿈틀했어요. 곧 깨어나요", 2500); return; }
+  if (p.stage === "egg") {
+    if (streaks.egg.tap(performance.now())) { playAnim(anim, "eggPeek", performance.now()); sfx("pet"); say("알 속에서 누가 인사했어요!", 4000); discover("eggPeek"); return; } // 비밀: 알의 인사
+    playAnim(anim, "refuse", performance.now()); sfx("tap"); say("알이 꿈틀했어요. 곧 깨어나요", 2500); return;
+  }
   if (p.asleep) { playAnim(anim, "sleepyRefuse", performance.now()); say(`${I(p.name)} 자고 있어요. 쉿!`); return; }
   if (p.ended || mg) return;
   patPet(p, clock.now(), S());
-  playAnim(anim, "pet", performance.now()); sfx("pet");
-  say(`${josa(p.name, "을", "를")} 쓰다듬었어요`, 2500);
+  if (streaks.pet.tap(performance.now())) { // 비밀: 아주 빠르게 쓰다듬으면 간지럼
+    playAnim(anim, "tickle", performance.now()); sfx("happy"); say(`${I(p.name)} 꺄르르 웃어요!`, 3000); discover("tickle");
+  } else if (!anim.cur || anim.cur.type === "pet") { playAnim(anim, "pet", performance.now()); sfx("pet"); say(`${josa(p.name, "을", "를")} 쓰다듬었어요`, 2500); }
   persist();
 }
 
@@ -622,8 +662,11 @@ function frame() {
   } else scene = { stage: "egg", theme: "animal", lightOn: true, mood: 100, hunger: 100, poopSlots: [], ...roomDeco() };
   const fr = animFrame(anim, t, scene, { roam: Math.min(26, Math.round(view.w * 0.18)) });
   if (mg) mgFrame(fr, t);
+  anim.inGame = !!mg;
+  if (p && p.stage !== "egg" && !p.ended) { const sd = specialDay(new Date(clock.now())); if (sd) fr.hat = HAT_OF[sd]; } // 특별한 날 모자
+  if (anim.cur && anim.cur.type === "butt" && p && !(profile.eggs && profile.eggs.butt)) discover("butt");
   const drawn = drawRoom(ctx, { ...view, now: t, scene, f: fr, wall: clock.now(), loc: profile.settings.location, weather: weatherNow });
-  petBox = drawn.pet; poopRects = drawn.poops; windowBox = drawn.window; layout = drawn.layout;
+  petBox = drawn.pet; poopRects = drawn.poops; windowBox = drawn.window; layout = drawn.layout; memoBox = drawn.memo;
   const d = new Date(clock.now());
   $("clock").textContent = `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
   requestAnimationFrame(frame);
@@ -640,6 +683,16 @@ function tick() {
     if (events.length) scheduleSync(5000);
   }
   if (Date.now() > msgUntil) $("msg").textContent = statusLine();
+  // 비밀: 11:11 / 22:22, 특별한 날
+  const d = new Date(clock.now());
+  const wk = wishTime(d);
+  if (wk && wk !== lastWish && document.visibilityState === "visible" && p.stage !== "egg" && !p.asleep && !p.ended && !mg) {
+    lastWish = wk;
+    playAnim(anim, "wish", performance.now(), { text: `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")} 소원 시간!` });
+    say("숫자가 나란히! 소원을 빌어 봐요", 6000); sfx("win"); discover("wish1111");
+  }
+  const sd = specialDay(d);
+  if (sd && p.stage !== "egg" && !p.ended && !(profile.eggs && profile.eggs.special)) { say(SPECIAL_KO[sd], 6000); discover("special"); }
 }
 
 // ---------- 시작 ----------
@@ -662,6 +715,9 @@ function boot() {
   $("btn-import").addEventListener("click", doImport);
   $("name-input").addEventListener("keydown", (e) => { if (e.key === "Enter") startGame(); });
   $("btn-menu").addEventListener("click", () => openSheet("menu"));
+  document.querySelector('[data-sheet="dex"] h2').addEventListener("click", () => { // 비밀: 도감 제목 5번
+    if (streaks.dex.tap(performance.now())) { showNote("만든 사람의 편지", MAKER_LETTER); discover("maker"); setTimeout(renderDex, 50); }
+  });
   $("backdrop").addEventListener("click", closeSheet);
   for (const btn of document.querySelectorAll("[data-open]")) btn.addEventListener("click", () => openSheet(btn.dataset.open));
   for (const btn of document.querySelectorAll("[data-close]")) btn.addEventListener("click", closeSheet);
@@ -717,8 +773,8 @@ function boot() {
 
   // 개발 도구(공개 배포에는 없음): ?dev 로 열기
   if (QS.has("dev")) {
-    window.__pp = { clock, getProfile: () => profile, tick, anim, playAnim: (n, d) => playAnim(anim, n, performance.now(), d), mg: () => mg, layout: () => layout, forceGame: null };
-    import("./dev/panel.js?v=9783e07-1791176507").then((m) => m.mount({ clock, getProfile: () => profile, tick, renderStats, syncNow, serverStatus })).catch(() => {});
+    window.__pp = { clock, getProfile: () => profile, tick, anim, playAnim: (n, d) => playAnim(anim, n, performance.now(), d), mg: () => mg, layout: () => layout, forceGame: null, boxes: () => ({ windowBox, petBox, memoBox }) };
+    import("./dev/panel.js?v=689a340-1791180887").then((m) => m.mount({ clock, getProfile: () => profile, tick, renderStats, syncNow, serverStatus })).catch(() => {});
   }
 }
 

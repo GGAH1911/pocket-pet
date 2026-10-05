@@ -1,8 +1,9 @@
 // 도감: 본 적 있는 모습 표시, 지금까지 키운 펫 기록, 초상화 그리기
-import { FORMS, buildCreature, paintGrid, formKey, lookOf } from "../render/creature.js?v=9783e07-1791176507";
-import { drawFace, POOLS } from "../render/face.js?v=9783e07-1791176507";
-import { SPRITES, drawSprite } from "../render/sprites.js?v=9783e07-1791176507";
-import { BRANCH, SECRET } from "../core/rules.js?v=9783e07-1791176507";
+import { FORMS, buildCreature, paintGrid, formKey, lookOf } from "../render/creature.js?v=689a340-1791180887";
+import { drawFace, POOLS } from "../render/face.js?v=689a340-1791180887";
+import { SPRITES, drawSprite } from "../render/sprites.js?v=689a340-1791180887";
+import { BRANCH, SECRET } from "../core/rules.js?v=689a340-1791180887";
+import { EGGS, foundCount } from "./eggs.js?v=689a340-1791180887";
 
 export const THEME_KO = { animal: "동물", fantasy: "상상 속 생물" };
 export const HOW_KO = { journey: "여행을 떠남", runaway: "삐져서 떠남", star: "별이 됨", retired: "새 알에게 자리를 물려줌" };
@@ -259,6 +260,15 @@ export function renderCollection(box, profile, opts = {}) {
     list.append(rowEl);
   }
   box.append(list);
+
+  // 5) 찾은 비밀(이스터 에그)
+  box.append(el("h3", { text: `찾은 비밀 ${foundCount(profile)}/${EGGS.length}` }));
+  const eggsBox = el("div", { class: "secrets" });
+  for (const e of EGGS) {
+    const got = profile.eggs && profile.eggs[e.id];
+    eggsBox.append(el("div", { class: `secret${got ? " on" : ""}` }, el("b", { text: got ? `✦ ${e.name}` : "???" }), el("div", { class: "small" + (got ? "" : " dim"), text: got ? e.desc : `힌트: ${e.hint}` })));
+  }
+  box.append(eggsBox);
   box.append(card);
 }
 

@@ -4,7 +4,7 @@
 // 결과(frame)는 screen.js 가 그린다. 시간은 실제 시각(ms, performance.now) 기준.
 
 export const DUR = {
-  meal: 1800, snack: 1400, play: 2200, wash: 4400, mgHop: 450, lightOff: 900, lightOn: 700,
+  meal: 1800, snack: 1400, play: 2200, wash: 4400, mgHop: 450, butt: 3400, tickle: 2000, lookFrame: 2600, eggPeek: 1800, wish: 2400, lightOff: 900, lightOn: 700,
   medicine: 1600, refuse: 900, sleepyRefuse: 1000, hatch: 2600, evolve: 3000, pet: 800, poop: 500,
   greet: 2200, greetBig: 3200, tidy: 700, mgLook: 1100, farewell: 3800, tuckIn: 1600, untuck: 1200,
 };
@@ -19,14 +19,15 @@ export function createAnimator() {
     wander: { x: 0, target: 0, nextAt: 2000, facing: 1 },
     blink: { nextAt: 1500, until: 0 },
     hop: { at: -1e9, nextAt: 6000 },
+    butt: { nextAt: 25000 + Math.random() * 20000 }, // 엉덩이춤(기분 좋을 때 가끔)
     lastT: 0,
     fx: [], // 화면 위치에 붙는 짧은 효과(똥 치우기 연기 등)
     minigame: false, // 미니게임 중이면 가운데에서 고민하는 자세
   };
 }
 
-export function addFx(a, type, x, y, now, dur = 600) {
-  a.fx.push({ type, x, y, start: now, dur });
+export function addFx(a, type, x, y, now, dur = 600, extra = {}) {
+  a.fx.push({ type, x, y, start: now, dur, ...extra });
 }
 
 export function play(a, type, now, data = {}) {
@@ -52,6 +53,8 @@ export function frame(a, now, scene, { roam = 20 } = {}) {
     showKey: null, // 진화·부화 중 다른 모습을 보여줄 때
     bed: 0, // 쿠션(0 없음 → 1), 낮잠·밤잠 모두
     blanket: 0, // 몸 위에 덮는 이불(0 → 1), 밤잠에만
+    back: false, // 뒷모습(엉덩이춤)
+    hat: null, // 특별한 날 모자
     tub: 0, // 씻기 욕조(0 없음 → 1)
     foam: 0, // 머리 위 거품(0 → 1)
     silhouette: false,
@@ -97,6 +100,11 @@ export function frame(a, now, scene, { roam = 20 } = {}) {
   p.dx = w.x; p.facing = w.facing;
   // 기분이 아주 좋으면 가끔 콩 뛰기
   if (calm && scene.mood > 80 && !busy(a, now) && now > a.hop.nextAt) { a.hop.at = now; a.hop.nextAt = now + 7000 + hash(now) * 6000; }
+  // 기분이 아주 좋고 배도 부르면 가끔 엉덩이춤(놀이·행동 중엔 안 함)
+  if (calm && !crying && !scene.sick && scene.mood >= 80 && scene.hunger >= 30 && !a.minigame && !a.inGame && !busy(a, now) && now > a.butt.nextAt) {
+    a.butt.nextAt = now + 60000 + hash(now * 0.3) * 60000;
+    play(a, "butt", now);
+  }
   const ht = (now - a.hop.at) / 450;
   if (ht >= 0 && ht < 1) { p.dy -= Math.sin(ht * Math.PI) * 6; p.eyes = "happy"; }
 
@@ -203,6 +211,55 @@ function applyOneShot(f, c, t, now, scene) {
         }
         else f.props.push({ sprite: "drop", x: 12, y: -28 + (t - 0.8) * 20, scale: 1, alpha: 1 });
       }
+      break;
+    }
+    case "butt": {
+      // 엉덩이춤: 뒤로 휙 → 엉덩이·꼬리 씰룩씰룩 + 음표 → 다시 돌아서 윙크
+      const turnIn = t < 0.1, turnOut = t > 0.82;
+      if (turnIn || (turnOut && t < 0.9)) { p.sx *= 0.6; p.eyes = "closed"; } // 도는 순간 납작
+      if (t >= 0.08 && t < 0.86) {
+        f.back = true;
+        const w = Math.sin((t - 0.08) * Math.PI * 14); // 씰룩씰룩
+        p.dx += w * 3; p.sx *= 1 + Math.abs(w) * 0.06; p.sy *= 1 - Math.abs(w) * 0.05;
+        p.dy -= Math.abs(Math.cos((t - 0.08) * Math.PI * 14)) * 1.5;
+        f.tailWag = w;
+        for (let i = 0; i < 3; i++) { const ph = ((t * 2.2) + i / 3) % 1; f.texts.push({ text: i % 2 ? "♫" : "♪", x: -24 + i * 24, y: -34 - ph * 14, alpha: Math.sin(ph * Math.PI), size: 9 }); }
+        if (t > 0.3 && t < 0.6) f.texts.push({ text: "씰룩씰룩", x: 0, y: -50, alpha: 1, size: 8 });
+      }
+      if (t >= 0.9) { p.eyes = "happy"; p.mouth = "tongue"; f.props.push({ sprite: "heart", x: 14, y: -34 - (t - 0.9) * 60, scale: 2, alpha: 1 }); }
+      break;
+    }
+    case "tickle": {
+      // 간지럼: 꺄르르 데굴데굴(좌우로 크게 기울며 굴러감)
+      const k = Math.sin(t * Math.PI * 5);
+      p.dx += k * 7; p.facing = k >= 0 ? 1 : -1;
+      p.sx *= 1 + Math.abs(k) * 0.12; p.sy *= 1 - Math.abs(k) * 0.12;
+      p.dy -= Math.abs(Math.sin(t * Math.PI * 10)) * 3;
+      p.eyes = "happy"; p.mouth = Math.floor(t * 12) % 2 ? "bigsmile" : "open";
+      for (let i = 0; i < 2; i++) { const ph = ((t * 3) + i / 2) % 1; f.texts.push({ text: "ㅋ", x: (i ? 16 : -16) + Math.sin(ph * 8) * 2, y: -30 - ph * 12, alpha: 1 - ph, size: 9 }); }
+      if (t > 0.5) f.texts.push({ text: "간지러워요!", x: 0, y: -50, alpha: Math.min(1, (t - 0.5) * 4), size: 8 });
+      break;
+    }
+    case "lookFrame": {
+      // 그리운 친구: 액자(오른쪽 위) 쪽을 올려다보며 "○○ 보고 싶다…"
+      p.facing = 1; p.dx += ease(t / 0.3) * 10;
+      p.eyes = t < 0.6 ? "round" : "teary"; p.mouth = t < 0.6 ? "o" : "smile";
+      if (t > 0.25) f.texts.push({ text: `${c.data.name || "친구"} 보고 싶다…`, x: 0, y: -48, alpha: Math.min(1, (t - 0.25) * 4), size: 8 });
+      if (t > 0.6) f.props.push({ sprite: "heart", x: 18, y: -38 - (t - 0.6) * 40, scale: 2, alpha: 1 - (t - 0.6) * 2 });
+      break;
+    }
+    case "eggPeek": {
+      // 알의 인사: 콩콩 흔들리다가 "…안녕?" 하트
+      f.egg = { shake: Math.sin(t * Math.PI * 8) * 2.5 * (t < 0.6 ? 1 : 0.3), cracks: 0 };
+      if (t > 0.35) f.texts.push({ text: "…안녕?", x: 0, y: -44, alpha: Math.min(1, (t - 0.35) * 5), size: 9 });
+      if (t > 0.6) f.props.push({ sprite: "heart", x: 0, y: -48 - (t - 0.6) * 40, scale: 2, alpha: 1 - (t - 0.6) * 2 });
+      break;
+    }
+    case "wish": {
+      // 11:11 소원 시간: 반짝반짝
+      p.eyes = "sparkle"; p.mouth = "smile";
+      for (let i = 0; i < 5; i++) { const ang = (i / 5) * Math.PI * 2 + t * 5; f.props.push({ sprite: "sparkle", x: Math.cos(ang) * 22, y: -20 + Math.sin(ang) * 14, scale: 2, alpha: 1 - Math.max(0, t - 0.7) * 3 }); }
+      f.texts.push({ text: c.data.text || "소원 시간!", x: 0, y: -52, alpha: 1, size: 8 });
       break;
     }
     case "mgHop": {

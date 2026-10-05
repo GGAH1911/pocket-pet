@@ -1,5 +1,5 @@
 // 코드 속 도트 그림. 한 글자 = 한 도트, 색은 palette.js.
-import { PALETTE } from "./palette.js?v=9783e07-1791176507";
+import { PALETTE } from "./palette.js?v=689a340-1791180887";
 
 export const SPRITES = {
   egg: [
@@ -121,6 +121,46 @@ export const SPRITES = {
     "knoook",
     "koonok",
     ".kkkk.",
+  ],
+  // ---- 특별한 날 모자 ----
+  santaHat: [
+    "......kkk...",
+    "....kkrrkww.",
+    "...krrrrkwwk",
+    "..krrrrrrk..",
+    ".krrrrrrrrk.",
+    "kwwwwwwwwwwk",
+    "kwwwwwwwwwwk",
+    ".kkkkkkkkkk.",
+  ],
+  pumpkinHat: [
+    ".....kGk....",
+    "....kGk.....",
+    "..kkkkkkkk..",
+    ".kooOooOook.",
+    "kooOookooOok",
+    "koOkoooookOk",
+    "kooOoooOooOk",
+    ".kkkkkkkkkk.",
+  ],
+  partyHat: [
+    ".....y.....",
+    "....kyk....",
+    "....kbk....",
+    "...kbybk...",
+    "...kpppk...",
+    "..kybbbyk..",
+    "..kppyppk..",
+    ".kbbbybbbk.",
+    "kkkkkkkkkkk",
+  ],
+  heartClip: [
+    ".kk.kk.",
+    "krrkrrk",
+    "krrrrrk",
+    ".krrrk.",
+    "..krk..",
+    "...k...",
   ],
   // ---- 놀이 소품 ----
   bigBubble: [

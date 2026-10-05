@@ -1,10 +1,10 @@
 // 방 화면 그리기. 게임 규칙은 모르고 받은 상태만 그린다.
 // 캔버스는 "도트 해상도"로 그리고 CSS가 정수배로 키운다.
-import { PALETTE } from "./palette.js?v=9783e07-1791176507";
-import { SPRITES, drawSprite, spriteSize } from "./sprites.js?v=9783e07-1791176507";
-import { buildCreature, paintGrid, formKey, eggSpriteFor } from "./creature.js?v=9783e07-1791176507";
-import { drawFace, POOLS } from "./face.js?v=9783e07-1791176507";
-import { drawSky } from "./sky.js?v=9783e07-1791176507";
+import { PALETTE } from "./palette.js?v=689a340-1791180887";
+import { SPRITES, drawSprite, spriteSize } from "./sprites.js?v=689a340-1791180887";
+import { buildCreature, paintGrid, formKey, eggSpriteFor } from "./creature.js?v=689a340-1791180887";
+import { drawFace, POOLS } from "./face.js?v=689a340-1791180887";
+import { drawSky } from "./sky.js?v=689a340-1791180887";
 
 const FLOOR = "#f5b98c";
 const FLOOR_LINE = "#e9a274";
@@ -100,7 +100,7 @@ export function drawRoom(ctx, { w, h, now, scene, f, wall = Date.now(), loc = { 
     ctx.globalAlpha = 1;
   }
   if (fr.flash > 0) { ctx.fillStyle = `rgba(255,255,255,${fr.flash})`; ctx.fillRect(0, 0, w, h); }
-  return { pet: box, poops: poopRects, window: win, sky: skyInfo, layout: { w, h, cx, baseY, headY: box ? box.y + 4 : baseY - 30 } };
+  return { pet: box, poops: poopRects, window: win, sky: skyInfo, memo: memo ? { x: Math.round(w * 0.64), y: Math.round(floorY * 0.2), w: 36, h: 34 } : null, layout: { w, h, cx, baseY, headY: box ? box.y + 4 : baseY - 30 } };
 }
 
 function windowRect(w, floorY) {
@@ -143,6 +143,15 @@ function drawPoops(ctx, slots, { cx, rugY, w, pop = 0 }) {
 }
 
 function drawFx(ctx, fx) {
+  if (fx.type === "shootingStar") { // 창문 안을 가로지르는 별똥별(fx.x,y = 창문 왼쪽 위, w,h = 크기)
+    const r = fx.rect; if (!r) return;
+    const k = fx.t;
+    const sx = r.x + r.w * (0.95 - k * 0.9), sy = r.y + r.h * (0.12 + k * 0.5);
+    ctx.save(); ctx.beginPath(); ctx.rect(r.x + 2, r.y + 2, r.w - 4, r.h - 4); ctx.clip();
+    for (let i = 0; i < 10; i++) { ctx.globalAlpha = (1 - i / 10) * (1 - Math.max(0, k - 0.8) * 5); ctx.fillStyle = i < 2 ? PALETTE.w : PALETTE.y; ctx.fillRect(Math.round(sx + i * 2), Math.round(sy - i * 1.1), 2, 1); }
+    ctx.restore(); ctx.globalAlpha = 1;
+    return;
+  }
   if (fx.type === "poof") {
     const k = fx.t, r = 3 + k * 9;
     ctx.globalAlpha = 1 - k;
@@ -259,6 +268,46 @@ function drawBlanket(ctx, x, base, box, P, bodyW, k, now, theme, built) {
   }
 }
 
+// ---------- 엉덩이춤: 앞모습으로 뒷모습 만들기 ----------
+// 얼굴은 안 그리고, 몸 안쪽의 흰 무늬(볼·배)와 분홍 볼을 몸 색으로 덮는다
+function toBackView(g) {
+  const cnt = {};
+  for (const c of g.c) if (c && c !== "k" && c !== "w") cnt[c] = (cnt[c] || 0) + 1;
+  const main = Object.entries(cnt).sort((a, b) => b[1] - a[1])[0]?.[0] || "w";
+  const W = g.w, src = g.c.slice();
+  for (let i = 0; i < src.length; i++) {
+    const c = src[i];
+    if (!c || c === "k" || c === main) continue;
+    // 테두리에 붙은 칸(귀 안쪽·뿔·날개 끝 등 바깥 무늬)은 두고, 몸 안쪽 무늬(볼·배·점)만 덮는다
+    const x = i % W;
+    const nb = [i - 1, i + 1, i - W, i + W].filter((j) => j >= 0 && j < src.length && Math.abs((j % W) - x) <= 1);
+    if (nb.length === 4 && nb.every((j) => src[j] && src[j] !== "k")) g.c[i] = main;
+  }
+  g.backColor = main;
+}
+// 동그랗고 복슬한 꼬리(몸 색 + 흰 끝) + 엉덩이 골
+const SHADE = { o: "O", p: "P", b: "B", g: "G", v: "V", y: "Y", w: "s", n: "k", c: "S" };
+function drawTail(ctx, x, base, built, wag) {
+  const bc = built.g.backColor || "o";
+  const col = PALETTE[bc] || PALETTE.o, sh = PALETTE[SHADE[bc] || "k"] || PALETTE.k;
+  const tx = Math.round(x + wag * 5), ty = base - 9;
+  const rows = [3, 5, 6, 6, 6, 5, 3]; // 반지름 모양(가로 반폭)
+  rows.forEach((hw, r) => { ctx.fillStyle = PALETTE.k; ctx.fillRect(tx - hw - 1, ty - 3 + r, hw * 2 + 2, 1); });
+  ctx.fillStyle = PALETTE.k; ctx.fillRect(tx - 3, ty - 4, 6, 1); ctx.fillRect(tx - 3, ty + 4, 6, 1);
+  rows.forEach((hw, r) => { ctx.fillStyle = col; ctx.fillRect(tx - hw, ty - 3 + r, hw * 2, 1); });
+  ctx.fillStyle = sh; ctx.fillRect(tx - 3, ty + 2, 7, 1); ctx.fillRect(tx + 3, ty - 1, 2, 3); // 아래·오른쪽 그늘
+  ctx.fillStyle = PALETTE.w; ctx.fillRect(tx - 3, ty - 2, 3, 2); ctx.fillRect(tx - 2, ty, 1, 1); // 복슬한 흰 끝
+  ctx.fillStyle = PALETTE.k; ctx.fillRect(Math.round(x), base - 3, 1, 3); // 엉덩이 골
+}
+function drawHat(ctx, box, hat, P, facing) {
+  const sp = SPRITES[hat]; if (!sp) return;
+  const { w: sw, h: sh } = spriteSize(sp);
+  const sc = hat === "heartClip" ? 1 : 2;
+  const hx = hat === "heartClip" ? Math.round(box.x + box.w * (facing >= 0 ? 0.72 : 0.18)) : Math.round(box.x + box.w / 2 - (sw * sc) / 2);
+  const hy = Math.round(box.y - sh * sc + (hat === "heartClip" ? sh : 6));
+  drawSprite(ctx, sp, hx, hy, sc);
+}
+
 // ---------- 씻기: 욕조와 거품 ----------
 function drawTub(ctx, x, base, box, P, bodyW, k, now) {
   const W = bodyW + 16, left = Math.round(x - W / 2);
@@ -318,12 +367,13 @@ function drawPet(ctx, scene, fr, { cx, baseY, now }) {
   // 같은 모습은 다시 계산하지 않는다(숨쉬기처럼 미세한 늘어남은 0.02 단위로 묶음)
   const q = (v) => Math.round(v * 50) / 50;
   const look = scene.look || {}, fc = scene.face || {};
-  const ck = [key, q(pose.sx), q(pose.sy), pose.facing >= 0 ? 1 : -1, look.spot, look.chub, look.messy ? 1 : 0, fr.silhouette ? 1 : 0, pose.eyes, pose.mouth, fc.L, fc.R, fc.m, (fc.ex || []).join(","), fc.dy || 0, fc.look || 0, scene.theme].join("|");
+  const ck = [key, q(pose.sx), q(pose.sy), pose.facing >= 0 ? 1 : -1, look.spot, look.chub, look.messy ? 1 : 0, fr.silhouette ? 1 : 0, fr.back ? 1 : 0, pose.eyes, pose.mouth, fc.L, fc.R, fc.m, (fc.ex || []).join(","), fc.dy || 0, fc.look || 0, scene.theme].join("|");
   let cached = CACHE.get(ck);
   if (!cached) {
     const built = buildCreature(key, { sx: q(pose.sx), sy: q(pose.sy), facing: pose.facing, look, silhouette: fr.silhouette ? "w" : null });
     if (!built) return null;
-    const faceInfo = fr.silhouette ? null : drawFace(built.g, built.P, scene.face, { eyes: pose.eyes, mouth: pose.mouth });
+    if (fr.back && !fr.silhouette) toBackView(built.g);
+    const faceInfo = fr.silhouette || fr.back ? null : drawFace(built.g, built.P, scene.face, { eyes: pose.eyes, mouth: pose.mouth });
     cached = { built, faceInfo };
     CACHE.set(ck, cached);
     if (CACHE.size > 80) CACHE.delete(CACHE.keys().next().value);
@@ -342,6 +392,8 @@ function drawPet(ctx, scene, fr, { cx, baseY, now }) {
     ctx.fillRect(Math.round(cx + pose.dx - shw / 2), baseY - 1, shw, 3);
   }
   const box = paintGrid(ctx, built.g, x, base, CELL, { alpha: fr.petAlpha ?? 1, tint: scene.sick && !fr.silhouette ? "rgba(150,210,150,0.22)" : null });
+  if (fr.back && !fr.silhouette) drawTail(ctx, x, base, built, fr.tailWag || 0); // 엉덩이춤 꼬리
+  if (fr.hat && !fr.silhouette && box) drawHat(ctx, box, fr.hat, built.P, pose.facing);
   const blanketK = fr.silhouette ? 0 : fr.blanket || 0; // 밤잠 이불(0 → 1): 아래에서 올라와 몸 아래쪽을 덮음
   if (blanketK > 0) drawBlanket(ctx, x, base, box, built.P, bodyW, blanketK, now, scene.theme, built);
   if (!fr.silhouette && (fr.foam || 0) > 0) drawFoam(ctx, box, fr.foam, now); // 머리 위 거품

@@ -96,6 +96,9 @@
     .egg-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
     .egg-choice { display: flex; flex-direction: column; align-items: center; padding: 8px 4px !important; }
     .egg-choice canvas { width: 56px; height: 46px; image-rendering: pixelated; }
+    .secrets { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 8px; }
+    .secret { background: var(--cream); border-radius: 12px; padding: 6px 10px; box-shadow: 0 2px 0 var(--line); }
+    .secret.on { background: #fff4d6; }
     .dexcard { position: fixed; inset: 0; background: rgba(59,44,53,.35); display: flex; align-items: center; justify-content: center; padding: 20px; z-index: 50; }
     .dexcard[hidden] { display: none; }
     .dexcard-in { background: #fffaf2; border-radius: 18px; padding: 16px; max-width: 340px; width: 100%; text-align: center; box-shadow: 0 6px 0 var(--line); }
@@ -217,6 +220,6 @@
       </div>
     </div>
   </div>
-  <script type="module" src="src/main.js?v=9783e07-1791176507"></script>
+  <script type="module" src="src/main.js?v=689a340-1791180887"></script>
 </body>
 </html>
