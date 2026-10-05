@@ -4,7 +4,7 @@
 // 결과(frame)는 screen.js 가 그린다. 시간은 실제 시각(ms, performance.now) 기준.
 
 export const DUR = {
-  meal: 1800, snack: 1400, play: 2200, wash: 1800, lightOff: 900, lightOn: 700,
+  meal: 1800, snack: 1400, play: 2200, wash: 4400, mgHop: 450, lightOff: 900, lightOn: 700,
   medicine: 1600, refuse: 900, sleepyRefuse: 1000, hatch: 2600, evolve: 3000, pet: 800, poop: 500,
   greet: 2200, greetBig: 3200, tidy: 700, mgLook: 1100, farewell: 3800, tuckIn: 1600, untuck: 1200,
 };
@@ -52,6 +52,8 @@ export function frame(a, now, scene, { roam = 20 } = {}) {
     showKey: null, // 진화·부화 중 다른 모습을 보여줄 때
     bed: 0, // 쿠션(0 없음 → 1), 낮잠·밤잠 모두
     blanket: 0, // 몸 위에 덮는 이불(0 → 1), 밤잠에만
+    tub: 0, // 씻기 욕조(0 없음 → 1)
+    foam: 0, // 머리 위 거품(0 → 1)
     silhouette: false,
     fx: [],
   };
@@ -168,16 +170,32 @@ function applyOneShot(f, c, t, now, scene) {
       break;
     }
     case "play": {
-      // 공이 통통 튀고 펫이 따라 점프 → 이기면 반짝, 지면 땀방울
-      const k = t * 3; // 점프 3번
-      const ph = k % 1;
-      const ballX = Math.sin(t * Math.PI * 3) * 22;
-      const ballY = -Math.abs(Math.sin(t * Math.PI * 6)) * 26;
-      if (t < 0.85) f.props.push({ sprite: "ball", edge: Math.sign(ballX) || 1, x: Math.abs(ballX) * Math.sign(ballX || 1) * 0.6 + 6 * (Math.sign(ballX) || 1), y: ballY, scale: 2, alpha: 1 });
-      p.dy -= Math.sin(ph * Math.PI) * 10;
-      p.sy *= ph < 0.1 || ph > 0.9 ? 0.86 : 1.06; p.sx *= ph < 0.1 || ph > 0.9 ? 1.12 : 0.96;
-      p.facing = Math.cos(t * Math.PI * 3) >= 0 ? 1 : -1;
+      // 놀이 끝 신나는 동작: 매번 3종 중 하나(c.data.v) → 이기면 반짝, 지면 땀방울
+      const v = c.data.v || "ball";
       p.eyes = "happy"; p.mouth = "open";
+      if (v === "ball") { // 공이 통통 튀고 따라 점프
+        const ph = (t * 3) % 1;
+        const ballX = Math.sin(t * Math.PI * 3) * 22;
+        const ballY = -Math.abs(Math.sin(t * Math.PI * 6)) * 26;
+        if (t < 0.85) f.props.push({ sprite: "ball", edge: Math.sign(ballX) || 1, x: Math.abs(ballX) * Math.sign(ballX || 1) * 0.6 + 6 * (Math.sign(ballX) || 1), y: ballY, scale: 2, alpha: 1 });
+        p.dy -= Math.sin(ph * Math.PI) * 10;
+        p.sy *= ph < 0.1 || ph > 0.9 ? 0.86 : 1.06; p.sx *= ph < 0.1 || ph > 0.9 ? 1.12 : 0.96;
+        p.facing = Math.cos(t * Math.PI * 3) >= 0 ? 1 : -1;
+      } else if (v === "spin") { // 빙글빙글 돌기: 좌우가 빠르게 바뀌며 납작해졌다 돌아옴, 음표
+        const k = clamp01(t / 0.8);
+        const turn = Math.cos(k * Math.PI * 6);
+        p.facing = turn >= 0 ? 1 : -1; p.sx *= 0.55 + Math.abs(turn) * 0.45;
+        p.dy -= Math.sin(k * Math.PI) * 6;
+        if (t > 0.8) { p.sx *= 1; p.mouth = "bigsmile"; }
+        for (let i = 0; i < 2; i++) { const ph = ((t * 2) + i / 2) % 1; f.texts.push({ text: "♪", x: (i ? 18 : -18) + Math.sin(ph * 6) * 2, y: -30 - ph * 14, alpha: Math.sin(ph * Math.PI), size: 9 }); }
+      } else { // dance: 좌우로 흔들흔들 + 콩콩, 음표
+        const sway = Math.sin(t * Math.PI * 6);
+        p.dx += sway * 6; p.facing = sway >= 0 ? 1 : -1;
+        p.sx *= 1 + Math.abs(sway) * 0.05; p.sy *= 1 - Math.abs(sway) * 0.05;
+        p.dy -= Math.abs(Math.cos(t * Math.PI * 6)) * 3;
+        p.mouth = Math.floor(t * 6) % 2 ? "cat" : "open";
+        for (let i = 0; i < 3; i++) { const ph = ((t * 1.6) + i / 3) % 1; f.texts.push({ text: i % 2 ? "♫" : "♪", x: -22 + i * 22, y: -34 - ph * 12, alpha: Math.sin(ph * Math.PI), size: 9 }); }
+      }
       if (t > 0.8) {
         if (c.data.win !== false) for (let i = 0; i < 4; i++) {
           const ang = (i / 4) * Math.PI * 2 + t * 4; const r = 14 + (t - 0.8) * 60;
@@ -187,19 +205,40 @@ function applyOneShot(f, c, t, now, scene) {
       }
       break;
     }
+    case "mgHop": {
+      // 놀이 중 맞혔을 때 콩
+      p.dy -= Math.sin(t * Math.PI) * 8; p.eyes = "happy"; p.mouth = "bigsmile";
+      if (t < 0.15 || t > 0.85) { p.sy *= 0.9; p.sx *= 1.08; }
+      break;
+    }
     case "wash": {
-      // 물방울이 쏟아지고 거품이 올라옴 → 똥이 사라짐 → 반짝
-      for (let i = 0; i < 7; i++) {
-        const ph = (t * 2.2 + hash(i) ) % 1;
-        if (t < 0.7) f.props.push({ sprite: "drop", x: (hash(i + 3) * 2 - 1) * 24, y: -60 + ph * 56, scale: 1, alpha: 0.9 });
+      // 욕조 등장 → 거품 몽글몽글·오리 동동·음표 → 샤워로 헹굼 → 욕조 사라짐 → 부르르 털기 → 반짝 "뽀득!"
+      const tubIn = ease(t / 0.1), tubOut = 1 - ease((t - 0.66) / 0.08);
+      f.tub = Math.min(tubIn, tubOut);
+      f.foam = t < 0.12 ? 0 : t < 0.5 ? ease((t - 0.12) / 0.16) : 1 - ease((t - 0.5) / 0.14);
+      if (t < 0.66) { // 욕조 안
+        p.eyes = t < 0.5 ? (Math.floor(now / 900) % 3 ? "happy" : "closed") : "closed";
+        p.mouth = t < 0.5 ? (Math.floor(now / 500) % 2 ? "smile" : "cat") : "o";
+        p.dx += Math.sin(now / 320) * 1.5; // 흔들흔들
+        p.sx *= 1 + Math.sin(now / 320) * 0.02;
+        if (t > 0.14 && t < 0.5) { // 비눗방울 둥실, 음표
+          for (let i = 0; i < 5; i++) { const ph = (t * 2.4 + hash(i + 10)) % 1; f.props.push({ sprite: "bubble", x: (hash(i + 20) * 2 - 1) * 22 + Math.sin(now / 200 + i) * 2, y: -24 - ph * 30, scale: 1, alpha: Math.sin(ph * Math.PI) }); }
+          const ph = (t * 3) % 1; f.texts.push({ text: "♪", x: -20, y: -36 - ph * 10, alpha: Math.sin(ph * Math.PI), size: 9 });
+        }
+        if (t > 0.48 && t < 0.66) { // 샤워
+          for (let i = 0; i < 9; i++) { const ph = (t * 6 + hash(i)) % 1; f.props.push({ sprite: "drop", x: (hash(i + 3) * 2 - 1) * 20, y: -70 + ph * 50, scale: 1, alpha: 0.9 }); }
+        }
+      } else if (t < 0.88) { // 부르르 털기 + 물방울 양옆으로
+        const k = (t - 0.66) / 0.22;
+        p.dx += Math.sin(now / 28) * 2.4 * (1 - k * 0.5);
+        p.sx *= 1 + Math.sin(now / 28) * 0.06; p.eyes = "closed"; p.mouth = "wavy";
+        for (let i = 0; i < 8; i++) { const ph = (k * 2.2 + hash(i + 40)) % 1, sg = i % 2 ? 1 : -1; f.props.push({ sprite: "drop", x: sg * (14 + ph * 26), y: -14 - hash(i + 50) * 18 - Math.sin(ph * Math.PI) * 8 + ph * 10, scale: 1, alpha: 1 - ph }); }
+      } else { // 반짝 뽀득
+        const k = (t - 0.88) / 0.12;
+        p.eyes = "sparkle"; p.mouth = "bigsmile"; p.dy -= Math.sin(k * Math.PI) * 4;
+        for (let i = 0; i < 3; i++) f.props.push({ sprite: "sparkle", x: -16 + i * 16, y: -30 - Math.sin(k * 6 + i) * 4, scale: 2, alpha: 1 - k * 0.5 });
+        f.texts.push({ text: "뽀득!", x: 0, y: -46 - k * 4, alpha: 1, size: 9 });
       }
-      for (let i = 0; i < 6; i++) {
-        const ph = (t * 1.6 + hash(i + 10)) % 1;
-        f.props.push({ sprite: "bubble", x: (hash(i + 20) * 2 - 1) * 20 + Math.sin(now / 200 + i) * 2, y: -4 - ph * 34, scale: 1, alpha: Math.sin(ph * Math.PI) * (t < 0.85 ? 1 : (1 - t) / 0.15) });
-      }
-      p.eyes = t < 0.7 ? "closed" : "happy"; p.mouth = "smile";
-      p.dx += Math.sin(now / 50) * (t < 0.6 ? 0.8 : 0); // 부르르
-      if (t > 0.7) for (let i = 0; i < 3; i++) f.props.push({ sprite: "sparkle", x: -14 + i * 14, y: -30 - Math.sin((t - 0.7) * 10 + i) * 4, scale: 2, alpha: 1 - (t - 0.7) * 3 });
       break;
     }
     case "lightOff":

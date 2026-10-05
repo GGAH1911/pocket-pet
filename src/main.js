@@ -1,21 +1,22 @@
 // 부팅 순서는 이 파일 한 곳에서만 정해요.
 // (지난 게임에서 파일 읽는 순서 때문에 저장 기본값이 빠지는 버그가 있었어요.)
 // 순서: 저장 불러오기 → 꺼져 있던 시간 계산 → 화면 시작 → 서비스 워커·알림 확인 → 알림 일정 올리기
-import { createPet } from "./core/state.js?v=6356ff8-1791174878";
-import { advance, feed, play, wash, cleanPoop, toggleLight, giveMedicine, patPet, switchEndMode, retirePet } from "./core/sim.js?v=6356ff8-1791174878";
-import { predictNotifications } from "./core/notify.js?v=6356ff8-1791174878";
-import { josa } from "./core/josa.js?v=6356ff8-1791174878";
-import { drawRoom, drawIcon } from "./render/screen.js?v=6356ff8-1791174878";
-import { createAnimator, play as playAnim, frame as animFrame, addFx } from "./render/anim.js?v=6356ff8-1791174878";
-import { formKey, lookOf, FORMS as FORMS_REF } from "./render/creature.js?v=6356ff8-1791174878";
-import { guessLocation, sunTimes, moonIllumination, moonPosition, moonPhaseName } from "./core/astro.js?v=6356ff8-1791174878";
-import { classifyWeather, weatherUrl, parseWeather } from "./core/weather.js?v=6356ff8-1791174878";
-import { createFacePicker, pickFace } from "./render/face.js?v=6356ff8-1791174878";
-import { SPRITES } from "./render/sprites.js?v=6356ff8-1791174878";
-import { loadProfile, saveProfile, freshProfile, exportCode, importCode } from "./app/store.js?v=6356ff8-1791174878";
-import { sfx, setSoundEnabled } from "./app/sound.js?v=6356ff8-1791174878";
-import { markSeen, recordPet, renderCollection, letterText, portrait, currentKey, HOW_KO } from "./app/collection.js?v=6356ff8-1791174878";
-import { deviceInfo, registerSW, enablePush, ensurePush, uploadSchedule, sendTest, serverStatus } from "./app/push.js?v=6356ff8-1791174878";
+import { createPet } from "./core/state.js?v=87235f3-1791176029";
+import { advance, feed, play, wash, cleanPoop, toggleLight, giveMedicine, patPet, switchEndMode, retirePet } from "./core/sim.js?v=87235f3-1791176029";
+import { predictNotifications } from "./core/notify.js?v=87235f3-1791176029";
+import { josa } from "./core/josa.js?v=87235f3-1791176029";
+import { drawRoom, drawIcon } from "./render/screen.js?v=87235f3-1791176029";
+import { createAnimator, play as playAnim, frame as animFrame, addFx } from "./render/anim.js?v=87235f3-1791176029";
+import { pickGame, createGame, GAME_NAMES } from "./app/games.js?v=87235f3-1791176029";
+import { formKey, lookOf, FORMS as FORMS_REF } from "./render/creature.js?v=87235f3-1791176029";
+import { guessLocation, sunTimes, moonIllumination, moonPosition, moonPhaseName } from "./core/astro.js?v=87235f3-1791176029";
+import { classifyWeather, weatherUrl, parseWeather } from "./core/weather.js?v=87235f3-1791176029";
+import { createFacePicker, pickFace } from "./render/face.js?v=87235f3-1791176029";
+import { SPRITES } from "./render/sprites.js?v=87235f3-1791176029";
+import { loadProfile, saveProfile, freshProfile, exportCode, importCode } from "./app/store.js?v=87235f3-1791176029";
+import { sfx, setSoundEnabled } from "./app/sound.js?v=87235f3-1791176029";
+import { markSeen, recordPet, renderCollection, letterText, portrait, currentKey, HOW_KO } from "./app/collection.js?v=87235f3-1791176029";
+import { deviceInfo, registerSW, enablePush, ensurePush, uploadSchedule, sendTest, serverStatus } from "./app/push.js?v=87235f3-1791176029";
 
 const clock = { offset: 0, now() { return Date.now() + this.offset; } }; // offset은 개발 도구만 바꾼다
 
@@ -236,6 +237,7 @@ function onTap(ev) {
   const p = profile.pet; if (!p) return;
   const r = canvas.getBoundingClientRect();
   const x = ((ev.clientX - r.left) / r.width) * canvas.width, y = ((ev.clientY - r.top) / r.height) * canvas.height;
+  if (mg) { if (mg.tap && layout) { const res = mg.tap(x, y, performance.now(), layout); if (res) mgEffect(res); } return; } // 놀이 중엔 화면 터치는 놀이에만
   // 똥을 먼저 본다(누르기 쉽게 여유 6px)
   const hit = poopRects.find((pr) => x >= pr.x - 6 && x <= pr.x + pr.w + 6 && y >= pr.y - 6 && y <= pr.y + pr.h + 6);
   if (windowBox && x >= windowBox.x - 3 && x <= windowBox.x + windowBox.w + 3 && y >= windowBox.y - 3 && y <= windowBox.y + windowBox.h + 3) { say(skyText(), 7000); sfx("tap"); return; }
@@ -265,44 +267,74 @@ function onTap(ev) {
   persist();
 }
 
-// ---------- 미니게임 "어느 쪽?" ----------
-// 펫이 왼쪽·오른쪽 중 어디를 볼지 맞힌다. 5판 중 3번 맞히면 승리.
-let mg = null;
+// ---------- 놀이(미니게임) 4종, 매번 랜덤 ----------
+// 진행 로직은 app/games.js. 여기서는 버튼·문구·캔버스 터치·펫 자세만 이어 붙인다.
+let mg = null; // 지금 하는 놀이(games.js 객체)
+let lastGame = null;
+let layout = null; // 마지막으로 그린 방 배치(놀이 물체 좌표용)
+let mgUiKey = "";
 function startMinigame() {
   const p = profile.pet; if (!p) return;
   // 놀 수 없는 상태면 놀기와 같은 거절 반응
   const reason = p.ended ? "ended" : p.stage === "egg" ? "egg" : p.asleep ? "asleep" : p.stats.energy < 10 ? "tired" : null;
   if (reason) { advance(p, clock.now(), S()); say(REFUSE[reason]); sfx("refuse"); playAnim(anim, reason === "asleep" ? "sleepyRefuse" : "refuse", performance.now()); return; }
-  mg = { round: 0, correct: 0, busy: false };
-  anim.minigame = true;
-  $("mg").hidden = false;
-  renderMg("어느 쪽을 볼까요? 맞혀 보세요!");
+  const kind = window.__pp?.forceGame || pickGame(lastGame);
+  lastGame = kind;
+  mg = createGame(kind, performance.now());
+  anim.minigame = kind === "side";
+  anim.cur = null;
+  const row = $("mg-row");
+  row.innerHTML = "";
+  row.style.gridTemplateColumns = `repeat(${Math.max(1, mg.buttons.length)}, 1fr)`;
+  row.hidden = mg.buttons.length === 0;
+  mg.buttons.forEach((label, i) => { const b = document.createElement("button"); b.textContent = label; b.addEventListener("click", () => mgPress(i)); row.append(b); });
+  $("mg-title").textContent = GAME_NAMES[kind];
+  $("mg").hidden = false; $("mg").dataset.kind = kind;
+  mgUiKey = "";
   sfx("tap");
 }
-function renderMg(text) {
-  $("mg-text").textContent = text;
-  $("mg-dots").innerHTML = Array.from({ length: 5 }, (_, i) => `<i class="${i < mg.round ? (mg.results[i] ? "hit" : "miss") : ""}"></i>`).join("");
+function mgPress(i) {
+  if (!mg || !mg.press) return;
+  const r = mg.press(i, performance.now(), layout);
+  if (r) mgEffect(r);
 }
-function mgGuess(side) {
-  if (!mg || mg.busy) return;
-  mg.busy = true; mg.results = mg.results || [];
-  const petSide = Math.random() < 0.5 ? -1 : 1;
-  const ok = petSide === side;
-  mg.results.push(ok); mg.round++; if (ok) mg.correct++;
-  playAnim(anim, "mgLook", performance.now(), { side: petSide, correct: ok });
-  sfx(ok ? "right" : "wrong");
-  renderMg(ok ? "맞혔어요!" : `아쉬워요, ${petSide < 0 ? "왼쪽" : "오른쪽"}을 봤어요`);
-  setTimeout(() => {
-    mg.busy = false;
-    if (mg.round >= 5) return endMinigame();
-    renderMg(`${mg.round + 1}번째 · 어느 쪽을 볼까요?`);
-  }, 1200);
+function mgEffect(r) {
+  if (r.sfx) sfx(r.sfx);
+  if (r.anim) playAnim(anim, r.anim[0], performance.now(), r.anim[1]);
 }
-function endMinigame(cancel = false) {
-  const res = mg; mg = null; anim.minigame = false; $("mg").hidden = true;
-  if (cancel || !res || res.round < 5) { say("놀이를 그만뒀어요"); return; }
-  const win = res.correct >= 3;
-  act((p, t) => play(p, t, S(), { win }), (p) => (win ? `${res.correct}번 맞혔어요! ${josa(p.name, "이", "가")} 아주 신났어요` : `${res.correct}번 맞혔어요. 그래도 ${I(p.name)} 즐거워해요`), () => ["play", { win }]);
+// 매 프레임: 펫 자세·물체를 덧입히고 문구 갱신, 끝났으면 결과 처리
+function mgFrame(fr, t) {
+  if (!mg || !layout) return;
+  const L = layout;
+  fr.gameObjs = mg.objects(t, L);
+  const pv = mg.pet(t, L) || {};
+  const pose = fr.pose;
+  if (pv.hidden) fr.hidePet = true;
+  if (pv.dx != null) { anim.wander.x = pv.dx; anim.wander.target = pv.dx; pose.dx = pv.dx; }
+  if (pv.chaseX != null) { anim.wander.target = pv.chaseX; anim.wander.nextAt = t + 3000; }
+  if (pv.center) { anim.wander.target = 0; anim.wander.nextAt = t + 3000; }
+  if (pv.dy) pose.dy += pv.dy;
+  if (pv.facing) pose.facing = pv.facing;
+  if (pv.eyes && !anim.cur) pose.eyes = pv.eyes;
+  if (pv.mouth && !anim.cur) pose.mouth = pv.mouth;
+  if (pv.squish) { pose.sy *= 0.85; pose.sx *= 1.1; }
+  if (mg.bonkNew) { mg.bonkNew = false; sfx("wrong"); }
+  const st = mg.status(t, L);
+  const key = `${st.text}|${st.dots.join(",")}|${st.enabled}`;
+  if (key !== mgUiKey) {
+    mgUiKey = key;
+    $("mg-text").textContent = st.text;
+    $("mg-dots").innerHTML = st.dots.map((d) => `<i class="${d}"></i>`).join("");
+    for (const b of $("mg-row").children) b.disabled = !st.enabled;
+  }
+  if (st.done) endMinigame(false, st);
+}
+function endMinigame(cancel = false, st = null) {
+  const g = mg; mg = null; anim.minigame = false; $("mg").hidden = true;
+  if (cancel || !g || !st) { say("놀이를 그만뒀어요"); return; }
+  const win = st.win;
+  const v = ["ball", "spin", "dance"][Math.floor(Math.random() * 3)]; // 끝 동작도 랜덤
+  act((p, t) => play(p, t, S(), { win }), (p) => (win ? `${st.score}! ${josa(p.name, "이", "가")} 아주 신났어요` : `${st.score}. 그래도 ${I(p.name)} 즐거워해요`), () => ["play", { win, v }]);
   if (win) sfx("win");
 }
 
@@ -539,8 +571,9 @@ function frame() {
     scene = { stage: p.stage, branch: p.branch, theme: p.theme, poops: p.poops, poopSlots: syncPoopSlots(), asleep: p.asleep, lightOn: p.lightOn, sick: p.sick, mood: p.stats.mood, hunger: p.stats.hunger, napping: p.napLeft > 0, look: lookCache.look, face: pickFace(faces, p, t), ended: p.ended ? p.ended.type : null };
   } else scene = { stage: "egg", theme: "animal", lightOn: true, mood: 100, hunger: 100, poopSlots: [] };
   const fr = animFrame(anim, t, scene, { roam: Math.min(26, Math.round(view.w * 0.18)) });
+  if (mg) mgFrame(fr, t);
   const drawn = drawRoom(ctx, { ...view, now: t, scene, f: fr, wall: clock.now(), loc: profile.settings.location, weather: weatherNow });
-  petBox = drawn.pet; poopRects = drawn.poops; windowBox = drawn.window;
+  petBox = drawn.pet; poopRects = drawn.poops; windowBox = drawn.window; layout = drawn.layout;
   const d = new Date(clock.now());
   $("clock").textContent = `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
   requestAnimationFrame(frame);
@@ -570,8 +603,6 @@ function boot() {
   updateWeather();
   setInterval(() => { if (document.visibilityState === "visible") updateWeather(); }, 5 * 60 * 1000);
   $("btn-start").addEventListener("click", startGame);
-  $("mg-left").addEventListener("click", () => mgGuess(-1));
-  $("mg-right").addEventListener("click", () => mgGuess(1));
   $("mg-quit").addEventListener("click", () => endMinigame(true));
   $("btn-ending").addEventListener("click", finishEnding);
   $("btn-export").addEventListener("click", doExport);
@@ -633,8 +664,8 @@ function boot() {
 
   // 개발 도구(공개 배포에는 없음): ?dev 로 열기
   if (QS.has("dev")) {
-    window.__pp = { clock, getProfile: () => profile, tick, anim, playAnim: (n, d) => playAnim(anim, n, performance.now(), d) };
-    import("./dev/panel.js?v=6356ff8-1791174878").then((m) => m.mount({ clock, getProfile: () => profile, tick, renderStats, syncNow, serverStatus })).catch(() => {});
+    window.__pp = { clock, getProfile: () => profile, tick, anim, playAnim: (n, d) => playAnim(anim, n, performance.now(), d), mg: () => mg, layout: () => layout, forceGame: null };
+    import("./dev/panel.js?v=87235f3-1791176029").then((m) => m.mount({ clock, getProfile: () => profile, tick, renderStats, syncNow, serverStatus })).catch(() => {});
   }
 }
 

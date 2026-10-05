@@ -1,10 +1,10 @@
 // 방 화면 그리기. 게임 규칙은 모르고 받은 상태만 그린다.
 // 캔버스는 "도트 해상도"로 그리고 CSS가 정수배로 키운다.
-import { PALETTE } from "./palette.js?v=6356ff8-1791174878";
-import { SPRITES, drawSprite, spriteSize } from "./sprites.js?v=6356ff8-1791174878";
-import { buildCreature, paintGrid, formKey } from "./creature.js?v=6356ff8-1791174878";
-import { drawFace } from "./face.js?v=6356ff8-1791174878";
-import { drawSky } from "./sky.js?v=6356ff8-1791174878";
+import { PALETTE } from "./palette.js?v=87235f3-1791176029";
+import { SPRITES, drawSprite, spriteSize } from "./sprites.js?v=87235f3-1791176029";
+import { buildCreature, paintGrid, formKey } from "./creature.js?v=87235f3-1791176029";
+import { drawFace } from "./face.js?v=87235f3-1791176029";
+import { drawSky } from "./sky.js?v=87235f3-1791176029";
 
 const FLOOR = "#f5b98c";
 const FLOOR_LINE = "#e9a274";
@@ -64,6 +64,14 @@ export function drawRoom(ctx, { w, h, now, scene, f, wall = Date.now(), loc = { 
     drawSprite(ctx, sp, Math.round(px + ex + pr.x - (sw * pr.scale) / 2), Math.round(baseY + pr.y - sh * pr.scale), pr.scale);
     ctx.globalAlpha = 1;
   }
+  for (const o of fr.gameObjs || []) { // 놀이 물체(절대 좌표, x 가운데·y 바닥)
+    if (o.text) { ctx.fillStyle = PALETTE.k; ctx.font = `bold ${o.size || 9}px system-ui, sans-serif`; ctx.textAlign = "center"; ctx.fillText(o.text, Math.round(o.x), Math.round(o.y)); continue; }
+    const sp = SPRITES[o.sprite]; if (!sp || o.alpha <= 0) continue;
+    const { w: sw, h: sh } = spriteSize(sp);
+    ctx.globalAlpha = Math.min(1, o.alpha ?? 1);
+    drawSprite(ctx, sp, Math.round(o.x - (sw * o.scale) / 2), Math.round(o.y - sh * o.scale), o.scale);
+    ctx.globalAlpha = 1;
+  }
   for (const fx of fr.fx || []) drawFx(ctx, fx);
   if (fr.darkness > 0) {
     // 방을 어둡게 하되 창문 자리만 덜 어둡게(창밖 달빛·별이 보이게). 창문을 다시 그리면 펫 위에 덮여서 안 됨
@@ -82,7 +90,7 @@ export function drawRoom(ctx, { w, h, now, scene, f, wall = Date.now(), loc = { 
     ctx.globalAlpha = 1;
   }
   if (fr.flash > 0) { ctx.fillStyle = `rgba(255,255,255,${fr.flash})`; ctx.fillRect(0, 0, w, h); }
-  return { pet: box, poops: poopRects, window: win, sky: skyInfo };
+  return { pet: box, poops: poopRects, window: win, sky: skyInfo, layout: { w, h, cx, baseY, headY: box ? box.y + 4 : baseY - 30 } };
 }
 
 function windowRect(w, floorY) {
@@ -216,6 +224,58 @@ function drawBlanket(ctx, x, base, box, P, bodyW, k, now, theme, built) {
   }
 }
 
+// ---------- 씻기: 욕조와 거품 ----------
+function drawTub(ctx, x, base, box, P, bodyW, k, now) {
+  const W = bodyW + 16, left = Math.round(x - W / 2);
+  const bottom = base + 4;
+  const mouthBottom = P.cy - P.ry * 0.12 + Math.max(3, Math.round(P.ry * 0.32)) + 2.5; // 얼굴(입)은 보이게
+  const rim = box.oy + Math.round(Math.max(mouthBottom, P.cy + P.ry * 0.35) * CELL) + 3;
+  const top = Math.round(bottom - (bottom - rim) * k); // 아래에서 쏙 올라옴
+  if (bottom - top < 3) return;
+  // 물 + 거품 줄(테두리 위)
+  for (let xx = 2; xx < W - 2; xx += 3) {
+    const by = top - 2 - Math.round(Math.abs(Math.sin(xx * 1.7 + now / 260)) * 2);
+    ctx.fillStyle = PALETTE.k; ctx.fillRect(left + xx - 1, by - 1, 4, 4);
+    ctx.fillStyle = PALETTE.w; ctx.fillRect(left + xx, by, 3, 3);
+  }
+  // 욕조 몸통
+  ctx.fillStyle = PALETTE.k;
+  ctx.fillRect(left, top, W, bottom - top + 1); ctx.fillRect(left + 2, bottom, W - 4, 2);
+  ctx.fillStyle = PALETTE.w; ctx.fillRect(left + 1, top + 1, W - 2, bottom - top - 1);
+  ctx.fillStyle = PALETTE.b; ctx.fillRect(left + 1, top + 1, W - 2, 2); // 물빛 테두리
+  ctx.fillStyle = PALETTE.s; ctx.fillRect(left + 1, bottom - 3, W - 2, 3); // 아래 그늘
+  ctx.fillStyle = PALETTE.k; ctx.fillRect(left + 1, top + 3, W - 2, 1);
+  // 하트 무늬, 다리
+  ctx.fillStyle = PALETTE.p;
+  for (let xx = left + 6; xx < left + W - 6; xx += 10) { const y = top + Math.max(5, Math.round((bottom - top) / 2)); ctx.fillRect(xx, y, 1, 1); ctx.fillRect(xx + 2, y, 1, 1); ctx.fillRect(xx, y + 1, 3, 1); ctx.fillRect(xx + 1, y + 2, 1, 1); }
+  ctx.fillStyle = PALETTE.k; for (const fx of [left + 3, left + W - 6]) ctx.fillRect(fx, bottom + 1, 3, 3);
+  ctx.fillStyle = PALETTE.Y; for (const fx of [left + 4, left + W - 5]) ctx.fillRect(fx, bottom + 1, 1, 2);
+  // 고무 오리(오른쪽 가장자리에서 동동)
+  if (k > 0.8) drawSprite(ctx, SPRITES.duck, left + W - 18, top - 15 + Math.round(Math.sin(now / 300) * 1.5), 2);
+}
+
+function drawFoam(ctx, box, k, now) {
+  // 동그란 거품 덩어리 여러 개를 머리 위에 몽글몽글
+  const n = Math.max(3, Math.round(box.w / 8));
+  const blob = (cx, cy, r) => {
+    for (const [col, rr] of [[PALETTE.k, r + 1], [PALETTE.w, r]]) {
+      ctx.fillStyle = col;
+      for (let dy = -rr; dy <= rr; dy++) { const half = Math.round(Math.sqrt(Math.max(0, rr * rr - dy * dy + rr * 0.6))); ctx.fillRect(cx - half, cy + dy, half * 2 + 1, 1); }
+    }
+    ctx.fillStyle = PALETTE.b; ctx.fillRect(cx - Math.round(r / 2), cy - Math.round(r / 2), 1, 1); // 반짝
+  };
+  const pts = [];
+  for (let i = 0; i < n; i++) {
+    const r = Math.round((2.5 + ((i * 5) % 3) * 0.8) * k);
+    if (r < 2) continue;
+    pts.push([Math.round(box.x + 5 + (i + 0.5) * ((box.w - 10) / n)), Math.round(box.y + 4 - Math.abs(Math.sin(i * 2.1)) * 3 * k + Math.sin(now / 300 + i) * 0.6), r]);
+  }
+  for (const [x, y, r] of pts) { ctx.fillStyle = PALETTE.k; for (let dy = -r - 1; dy <= r + 1; dy++) { const h = Math.round(Math.sqrt(Math.max(0, (r + 1) ** 2 - dy * dy + r * 0.6))); ctx.fillRect(x - h, y + dy, h * 2 + 1, 1); } }
+  for (const [x, y, r] of pts) { ctx.fillStyle = PALETTE.w; for (let dy = -r; dy <= r; dy++) { const h = Math.round(Math.sqrt(Math.max(0, r * r - dy * dy + r * 0.6))); ctx.fillRect(x - h, y + dy, h * 2 + 1, 1); } ctx.fillStyle = PALETTE.b; ctx.fillRect(x - Math.round(r / 2), y - Math.round(r / 2), 1, 1); }
+  // 꼭대기 작은 방울 하나
+  if (k > 0.6 && pts.length) { const [x, y, r] = pts[Math.floor(pts.length / 2)]; blob(x + 2, y - r - 3, 2); }
+}
+
 function drawPet(ctx, scene, fr, { cx, baseY, now }) {
   const pose = fr.pose;
   const key = fr.showKey || formKey(scene.theme || "animal", scene.stage, scene.branch);
@@ -249,6 +309,8 @@ function drawPet(ctx, scene, fr, { cx, baseY, now }) {
   const box = paintGrid(ctx, built.g, x, base, CELL, { alpha: fr.petAlpha ?? 1, tint: scene.sick && !fr.silhouette ? "rgba(150,210,150,0.22)" : null });
   const blanketK = fr.silhouette ? 0 : fr.blanket || 0; // 밤잠 이불(0 → 1): 아래에서 올라와 몸 아래쪽을 덮음
   if (blanketK > 0) drawBlanket(ctx, x, base, box, built.P, bodyW, blanketK, now, scene.theme, built);
+  if (!fr.silhouette && (fr.foam || 0) > 0) drawFoam(ctx, box, fr.foam, now); // 머리 위 거품
+  if (!fr.silhouette && (fr.tub || 0) > 0) drawTub(ctx, x, base, box, built.P, bodyW, fr.tub, now); // 욕조(몸 아래쪽 앞)
 
   if (faceInfo) {
     // 눈물

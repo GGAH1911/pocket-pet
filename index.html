@@ -56,7 +56,10 @@
     .choice b { display: block; font-size: 17px; margin-bottom: 2px; } .choice span { font-size: 13px; opacity: .75; }
     #name-input { width: 100%; font-size: 18px; text-align: center; margin-bottom: 8px; }
     #mg { position: absolute; left: 0; right: 0; bottom: 0; background: linear-gradient(transparent, rgba(255,241,228,.96) 30%); padding: 40px 16px calc(env(safe-area-inset-bottom) + 16px); text-align: center; }
-    #mg-text { font-weight: 800; font-size: 17px; margin-bottom: 8px; }
+    #mg-title { font-size: 13px; font-weight: 800; opacity: .6; margin-bottom: 2px; }
+    #mg-text { font-weight: 800; font-size: 17px; margin-bottom: 8px; min-height: 1.3em; }
+    #mg[data-kind=bubbles] { pointer-events: none; } #mg[data-kind=bubbles] #mg-quit { pointer-events: auto; }
+    .mg-row button:disabled { opacity: .45; }
     #mg-dots { display: flex; gap: 8px; justify-content: center; margin-bottom: 12px; }
     #mg-dots i { width: 14px; height: 14px; border-radius: 50%; background: var(--line); display: block; }
     #mg-dots i.hit { background: #4fae7a; } #mg-dots i.miss { background: #ff6b6b; }
@@ -141,9 +144,10 @@
       <button class="big ghost" data-close>닫기</button>
     </section>
     <div id="mg" hidden>
+      <div id="mg-title"></div>
       <div id="mg-text"></div>
       <div id="mg-dots"></div>
-      <div class="mg-row"><button id="mg-left" aria-label="왼쪽">◀ 왼쪽</button><button id="mg-right" aria-label="오른쪽">오른쪽 ▶</button></div>
+      <div class="mg-row" id="mg-row"></div>
       <button id="mg-quit">그만하기</button>
     </div>
     <div id="ending" hidden>
@@ -181,6 +185,6 @@
       </div>
     </div>
   </div>
-  <script type="module" src="src/main.js?v=6356ff8-1791174878"></script>
+  <script type="module" src="src/main.js?v=87235f3-1791176029"></script>
 </body>
 </html>

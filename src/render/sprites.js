@@ -1,5 +1,5 @@
 // 코드 속 도트 그림. 한 글자 = 한 도트, 색은 palette.js.
-import { PALETTE } from "./palette.js?v=6356ff8-1791174878";
+import { PALETTE } from "./palette.js?v=87235f3-1791176029";
 
 export const SPRITES = {
   egg: [
@@ -121,6 +121,80 @@ export const SPRITES = {
     "knoook",
     "koonok",
     ".kkkk.",
+  ],
+  // ---- 놀이 소품 ----
+  bigBubble: [
+    "..bbbbb..",
+    ".b.....b.",
+    "b.ww....b",
+    "b.w.....b",
+    "b.......b",
+    "b.......b",
+    "b......wb",
+    ".b....w..",
+    "..bbbbb..",
+  ],
+  box: [
+    "kkkkkkkkkkkk",
+    "kOooooooooOk",
+    "kkkkkkkkkkkk",
+    "kooooOOoooOk",
+    "kooooOOooook",
+    "kooooOOooook",
+    "kooooOOooook",
+    "kooooooooOOk",
+    "kOOOOOOOOOOk",
+    "kkkkkkkkkkkk",
+  ],
+  basket: [
+    "...kkkkkk...",
+    "..k......k..",
+    ".k........k.",
+    "kkkkkkkkkkkk",
+    "kyYyYyYyYyYk",
+    "kYyYyYyYyYyk",
+    ".kyYyYyYyYk.",
+    ".kYyYyYyYyk.",
+    "..kyYyYyYk..",
+    "..kkkkkkkk..",
+  ],
+  plant: [
+    "...k..k.....",
+    "..kGk.kGk...",
+    ".kGgGkGgGk..",
+    ".kGgGGGgGk..",
+    "..kGgGgGkGk.",
+    "kGkkGGGkkgGk",
+    "kgGGkGkGGGk.",
+    ".kkkkkkkkkk.",
+    ".koooooooOk.",
+    ".kOOOOOOOOk.",
+    "..koooooOk..",
+    "..kkkkkkkk..",
+  ],
+  ring: [
+    "...wwwww...",
+    ".ww.....ww.",
+    "w.........w",
+    ".ww.....ww.",
+    "...wwwww...",
+  ],
+  ringOn: [
+    "..yYYYYYy..",
+    ".YyyyyyyyY.",
+    "Yy.......yY",
+    ".YyyyyyyyY.",
+    "..yYYYYYy..",
+  ],
+  duck: [
+    "..kkk...",
+    ".kyyyk..",
+    ".kykyko.",
+    ".kyyykoo",
+    "kkyyyyk.",
+    "kyyyyyyk",
+    ".kyyyyk.",
+    "..kkkk..",
   ],
   ball: [
     "..kkkk..",
