@@ -1,12 +1,22 @@
 // 방 화면 그리기. 게임 규칙은 모르고 받은 상태만 그린다.
 // 캔버스는 "도트 해상도"로 그리고 CSS가 정수배로 키운다.
-import { PALETTE } from "./palette.js?v=6b3863e-1791194200";
-import { SPRITES, drawSprite, spriteSize } from "./sprites.js?v=6b3863e-1791194200";
-import { buildCreature, paintGrid, formKey, eggSpriteFor } from "./creature.js?v=6b3863e-1791194200";
-import { drawFace, POOLS } from "./face.js?v=6b3863e-1791194200";
-import { drawSky } from "./sky.js?v=6b3863e-1791194200";
-import { drawWall, drawFloor, drawRug, drawCurtain, drawFurniture, drawLampGlow, HAT_SPRITE } from "./deco.js?v=6b3863e-1791194200";
-import { WALK_STOPS as WALK_STOPS_REF, walkDist as walkDistRef } from "./anim.js?v=6b3863e-1791194200";
+import { PALETTE } from "./palette.js?v=2a0ebed-1791194422";
+import { SPRITES, drawSprite, spriteSize } from "./sprites.js?v=2a0ebed-1791194422";
+import { buildCreature, paintGrid, formKey, eggSpriteFor } from "./creature.js?v=2a0ebed-1791194422";
+import { drawFace, POOLS } from "./face.js?v=2a0ebed-1791194422";
+import { drawSky } from "./sky.js?v=2a0ebed-1791194422";
+import { drawWall, drawFloor, drawRug, drawCurtain, drawFurniture, drawLampGlow, HAT_SPRITE, FURN_HALF } from "./deco.js?v=2a0ebed-1791194422";
+
+// 방 배치(그리기와 동작이 같은 좌표를 쓰게 한 곳에서 계산)
+export function roomLayout(w, h, deco = {}) {
+  const floorY = Math.round(h * 0.5);
+  const rugY = Math.round(floorY + (h - floorY) * 0.38);
+  const furnBase = floorY + Math.round((h - floorY) * 0.24);
+  const half = (id) => FURN_HALF[id] || 12;
+  const furnPos = { furnL: Math.max(half(deco.furnL) + 2, Math.round(w * 0.13)), furnR: Math.min(w - half(deco.furnR) - 2, Math.round(w * 0.87)) };
+  return { floorY, cx: Math.round(w / 2), rugY, baseY: rugY + 4, furnBase, furnPos };
+}
+import { WALK_STOPS as WALK_STOPS_REF, walkDist as walkDistRef } from "./anim.js?v=2a0ebed-1791194422";
 const clamp01 = (x) => Math.max(0, Math.min(1, x));
 
 const FLOOR = "#f5b98c";
@@ -45,8 +55,7 @@ export function drawRoom(ctx, { w, h, now, scene, f, wall = Date.now(), loc = { 
   drawRug(ctx, cx, rugY, w, deco.rug || (scene && scene.rug === "star" ? "rug_star" : "rug_pink"));
 
   // 가구(왼쪽·오른쪽, 펫 뒤)
-  const furnBase = floorY + Math.round((h - floorY) * 0.24);
-  const furnPos = { furnL: Math.max(20, Math.round(w * 0.13)), furnR: Math.min(w - 21, Math.round(w * 0.87)) }; // 가장 넓은 가구(소파·침대)도 화면 안에
+  const { furnBase, furnPos } = roomLayout(w, h, deco); // 가구는 넓이에 맞춰 화면 안에
   const darkNow = (f && f.darkness) || 0;
   for (const slot of ["furnL", "furnR"]) if (deco[slot]) drawFurniture(ctx, deco[slot], furnPos[slot], furnBase, { now, dark: darkNow });
 
@@ -55,6 +64,7 @@ export function drawRoom(ctx, { w, h, now, scene, f, wall = Date.now(), loc = { 
   const baseY = rugY + 4;
   const poopRects = drawPoops(ctx, sc.poopSlots || [], { cx, rugY, w, pop: fr.poopPop || 0 });
   const box = fr.hidePet ? null : drawPet(ctx, sc, fr, { cx, baseY, now });
+  if (fr.onSofa && deco.furnR === "sofa") drawFurniture(ctx, "sofa", furnPos.furnR, furnBase, { front: true }); // 소파에 앉은 모습: 좌석 앞면·팔걸이를 펫 앞에
   const px = cx + Math.round(fr.pose.dx);
   for (const pr of fr.props) {
     const sp = SPRITES[pr.sprite]; if (!sp || pr.alpha <= 0) continue;
@@ -499,7 +509,7 @@ function drawPet(ctx, scene, fr, { cx, baseY, now }) {
   const lift = Math.round(5 * Math.min(1, bed * 1.6)); // 쿠션 위에 올라앉음
   const base = baseY + Math.round(pose.dy) - lift;
   // 그림자 (높이 뛸수록 작아짐)
-  if (bed <= 0) {
+  if (bed <= 0 && !fr.onSofa) { // 소파 위에선 바닥 그림자 없음
     ctx.fillStyle = "rgba(59,44,53,0.18)";
     const shw = Math.round(bodyW * (1 - Math.min(0.5, -pose.dy / 30)));
     ctx.fillRect(Math.round(cx + pose.dx - shw / 2), baseY - 1, shw, 3);

@@ -91,6 +91,12 @@ export function frame(a, now, scene, { roam = 20 } = {}) {
   } else if (!busy(a, now)) {
     w.target = w.x; // 멈춤
   }
+  // 소파가 있으면 가끔 올라가 쉰다(9초). scene.sofaDx = 소파 자리(가운데 기준)
+  if (scene.sofaDx != null && calm && !crying && !scene.sick && !a.minigame && !a.inGame) {
+    if (!a.sofa) a.sofa = { nextAt: now + 15000 + hash(now * 0.9) * 20000, until: 0 };
+    if (!busy(a, now) && now > a.sofa.nextAt && now > a.sofa.until) { a.sofa.until = now + 9000; a.sofa.nextAt = now + 50000 + hash(now * 1.7) * 60000; }
+    if (now < a.sofa.until) { w.target = scene.sofaDx; w.nextAt = now + 1500; }
+  } else if (a.sofa) a.sofa.until = 0;
   const diff = w.target - w.x;
   if (Math.abs(diff) > 0.3) {
     const step = Math.sign(diff) * Math.min(Math.abs(diff), (dt / 1000) * 14);
@@ -98,6 +104,8 @@ export function frame(a, now, scene, { roam = 20 } = {}) {
     p.dy -= Math.abs(Math.sin(now / 90)) * 1.5; // 통통 걷기
   }
   p.dx = w.x; p.facing = w.facing;
+  f.onSofa = !!(a.sofa && now < a.sofa.until && scene.sofaDx != null && Math.abs(w.x - scene.sofaDx) < 1.5 && calm);
+  if (f.onSofa) { p.dy += scene.sofaLift != null ? scene.sofaLift : -9; p.facing = -1; if (!p.eyes) p.eyes = Math.floor(now / 1600) % 4 === 0 ? "closed" : "happy"; p.mouth = p.mouth || "smile"; } // 소파 위에서 쉬기
   // 기분이 아주 좋으면 가끔 콩 뛰기
   if (calm && scene.mood > 80 && !busy(a, now) && now > a.hop.nextAt) { a.hop.at = now; a.hop.nextAt = now + 7000 + hash(now) * 6000; }
   // 기분이 아주 좋고 배도 부르면 가끔 엉덩이춤(놀이·행동 중엔 안 함)

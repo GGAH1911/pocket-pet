@@ -1,7 +1,7 @@
 // 방 꾸미기 그림: 벽지·바닥·러그·커튼·가구. 상점 미리보기(작은 그림)도 같은 함수로 그린다.
 // 좌표는 캔버스 논리 픽셀. 가구는 x(가운데)·base(바닥에 닿는 y) 기준.
-import { PALETTE } from "./palette.js?v=6b3863e-1791194200";
-import { SPRITES, drawSprite, spriteSize } from "./sprites.js?v=6b3863e-1791194200";
+import { PALETTE } from "./palette.js?v=2a0ebed-1791194422";
+import { SPRITES, drawSprite, spriteSize } from "./sprites.js?v=2a0ebed-1791194422";
 
 export const HAT_SPRITE = { hat_ribbon: "hatRibbon", hat_straw: "hatStraw", hat_glasses: "hatGlasses", hat_crown: "hatCrown", hat_flower: "hatFlower" };
 
@@ -87,7 +87,9 @@ export function drawCurtain(ctx, r, id) {
 
 // ---------- 가구 ----------
 // opts: { now, dark(0~1) }
-export function drawFurniture(ctx, id, x, base, { now = 0, dark = 0 } = {}) {
+// 가구 가로 반폭(화면 끝에서 안 잘리게 자리 잡을 때 씀)
+export const FURN_HALF = { sofa: 28, cloudbed: 18, shelf: 12, lamp: 9, plant: 10, fishbowl: 11, radio: 10 };
+export function drawFurniture(ctx, id, x, base, { now = 0, dark = 0, front = false } = {}) {
   const k = P.k;
   if (id === "lamp") {
     rect(ctx, x - 5, base - 2, 10, 2, k); rect(ctx, x - 1, base - 22, 2, 20, P.N);
@@ -102,11 +104,15 @@ export function drawFurniture(ctx, id, x, base, { now = 0, dark = 0 } = {}) {
     for (const sy of [-21, -11]) rect(ctx, x - 10, base + sy, 20, 2, P.N);
     const books = [P.p, P.b, P.y, P.g, P.v, P.r];
     for (let row = 0; row < 3; row++) for (let i = 0; i < 5; i++) rect(ctx, x - 9 + i * 4, base - 30 + row * 10, 3, 8 - (i % 2), books[(i + row) % books.length]);
-  } else if (id === "sofa") {
-    rect(ctx, x - 16, base - 16, 32, 13, k); rect(ctx, x - 15, base - 15, 30, 11, P.P);
-    rect(ctx, x - 13, base - 20, 26, 7, k); rect(ctx, x - 12, base - 19, 24, 5, P.p);
-    rect(ctx, x - 18, base - 13, 5, 10, k); rect(ctx, x - 17, base - 12, 3, 8, P.p); rect(ctx, x + 13, base - 13, 5, 10, k); rect(ctx, x + 14, base - 12, 3, 8, P.p);
-    rect(ctx, x - 12, base - 11, 24, 4, P.p); rect(ctx, x - 10, base - 10, 8, 1, P.w); rect(ctx, x - 14, base - 3, 3, 3, P.N); rect(ctx, x + 11, base - 3, 3, 3, P.N);
+  } else if (id === "sofa") { // 펫이 앉을 만큼 넓은 소파(가로 약 54)
+    if (!front) {
+      rect(ctx, x - 22, base - 27, 44, 15, k); rect(ctx, x - 21, base - 26, 42, 13, P.p); // 등받이
+      for (const bx of [-13, 0, 13]) rect(ctx, x + bx - 1, base - 24, 2, 9, P.P); // 등받이 단추 줄
+      rect(ctx, x - 25, base - 15, 50, 4, k); rect(ctx, x - 24, base - 14, 48, 3, "#ffc2cf"); // 좌석 윗면
+    }
+    rect(ctx, x - 25, base - 12, 50, 10, k); rect(ctx, x - 24, base - 11, 48, 8, P.P); rect(ctx, x - 22, base - 10, 10, 1, P.p); // 좌석 앞면
+    rect(ctx, x - 28, base - 19, 7, 17, k); rect(ctx, x - 27, base - 18, 5, 15, P.p); rect(ctx, x + 21, base - 19, 7, 17, k); rect(ctx, x + 22, base - 18, 5, 15, P.p); // 팔걸이
+    rect(ctx, x - 26, base - 2, 3, 2, P.N); rect(ctx, x + 23, base - 2, 3, 2, P.N);
   } else if (id === "fishbowl") {
     rect(ctx, x - 7, base - 8, 14, 8, k); rect(ctx, x - 6, base - 7, 12, 6, P.n);
     ellipse(ctx, x, base - 17, 10, 9, k); ellipse(ctx, x, base - 17, 9, 8, "#cfeaff"); rect(ctx, x - 9, base - 17, 18, 7, P.b); rect(ctx, x - 6, base - 23, 3, 2, P.w);
