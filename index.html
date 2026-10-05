@@ -92,6 +92,8 @@
     .paynote i { flex: none; width: 10px; height: 10px; border-radius: 3px; background: #3e9b6a; }
     .banner { background: #ffe9f0; border: 2px dashed var(--ink); border-radius: 14px; padding: 12px; margin-bottom: 10px; font-size: 13px; }
     .banner b { display: block; font-size: 15px; margin-bottom: 2px; }
+    .savecode { font: 800 17px/1.5 ui-monospace, "SF Mono", Menlo, monospace; letter-spacing: .5px; text-align: center; background: #fff; border: 2px dashed var(--ink); border-radius: 10px; padding: 10px 6px; margin: 8px 0; word-break: break-all; user-select: all; -webkit-user-select: all; }
+    #cl-input { width: 100%; font: 700 15px ui-monospace, Menlo, monospace; padding: 10px; border: 2px solid var(--line); border-radius: 10px; text-transform: uppercase; background: #fff; }
     .fine { font-size: 11px; opacity: .7; line-height: 1.6; margin: 6px 2px; }
     .slots { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 8px; scrollbar-width: none; } .slots::-webkit-scrollbar { display: none; }
     .strip { display: flex; gap: 8px; overflow-x: auto; padding: 2px 2px 8px; scrollbar-width: none; } .strip::-webkit-scrollbar { display: none; }
@@ -263,6 +265,10 @@
       <div id="dex-body"></div>
       <div id="dex-retire"></div>
     </section>
+    <section class="sheet" data-sheet="cloud" hidden>
+      <h2>이어하기</h2>
+      <div id="cloud-body"></div>
+    </section>
     <section class="sheet" data-sheet="save" hidden>
       <h2>저장 (기기 옮기기)</h2>
       <p class="small">다른 휴대폰이나 홈 화면 앱으로 옮길 때 써요. <b>내보내기</b>로 코드를 복사하고, 옮길 곳에서 코드를 붙여 넣은 뒤 <b>불러오기</b>를 눌러요.</p>
@@ -319,6 +325,6 @@
       </div>
     </div>
   </div>
-  <script type="module" src="src/main.js?v=a5da7e2-1791205652"></script>
+  <script type="module" src="src/main.js?v=da9d75f-1791208696"></script>
 </body>
 </html>

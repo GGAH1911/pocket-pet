@@ -1,28 +1,29 @@
 // 부팅 순서는 이 파일 한 곳에서만 정해요.
 // (지난 게임에서 파일 읽는 순서 때문에 저장 기본값이 빠지는 버그가 있었어요.)
 // 순서: 저장 불러오기 → 꺼져 있던 시간 계산 → 화면 시작 → 서비스 워커·알림 확인 → 알림 일정 올리기
-import { createPet } from "./core/state.js?v=a5da7e2-1791205652";
-import { advance, feed, play, wash, walk, wakeFromNap, cleanPoop, toggleLight, giveMedicine, patPet, switchEndMode, retirePet } from "./core/sim.js?v=a5da7e2-1791205652";
-import { predictNotifications } from "./core/notify.js?v=a5da7e2-1791205652";
-import { josa } from "./core/josa.js?v=a5da7e2-1791205652";
-import { drawRoom, drawIcon, roomLayout } from "./render/screen.js?v=a5da7e2-1791205652";
-import { createAnimator, play as playAnim, frame as animFrame, addFx, DUR as ANIM_DUR } from "./render/anim.js?v=a5da7e2-1791205652";
-import { pickGame, createGame, GAME_NAMES } from "./app/games.js?v=a5da7e2-1791205652";
-import { EGGS, findEgg, createStreak, specialDay, SPECIAL_KO, HAT_OF, wishTime, MAKER_LETTER } from "./app/eggs.js?v=a5da7e2-1791205652";
-import { earn, buy, equip, unequip, grant as grantItem, gems, canAfford, dailyStatus, claimDaily, DAILY, grantPurchase } from "./core/economy.js?v=a5da7e2-1791205652";
-import { ITEMS, ITEM, SLOTS, TABS, PICKS, PACKS, SOON, BASIC_EQUIP } from "./core/catalog.js?v=a5da7e2-1791205652";
-import { renderShop, renderDeco, dailyCard, spriteCanvas } from "./app/shop-ui.js?v=a5da7e2-1791205652";
-import { formKey, lookOf, FORMS as FORMS_REF, SPOT_COLORS, eggSpriteFor } from "./render/creature.js?v=a5da7e2-1791205652";
-import { guessLocation, sunTimes, moonIllumination, moonPosition, moonPhaseName } from "./core/astro.js?v=a5da7e2-1791205652";
-import { classifyWeather, weatherUrl, parseWeather } from "./core/weather.js?v=a5da7e2-1791205652";
-import { createFacePicker, pickFace } from "./render/face.js?v=a5da7e2-1791205652";
-import { SPRITES, drawSprite } from "./render/sprites.js?v=a5da7e2-1791205652";
-import { loadProfile, saveProfile, freshProfile, exportCode, importCode, SAVE_KEYS, setSaveMirror } from "./app/store.js?v=a5da7e2-1791205652";
-import * as native from "./app/native.js?v=a5da7e2-1791205652";
-import { planReconcile, isPaid } from "./core/billing.js?v=a5da7e2-1791205652";
-import { sfx, setSoundEnabled } from "./app/sound.js?v=a5da7e2-1791205652";
-import { markSeen, recordPet, renderCollection, letterText, portrait, currentKey, HOW_KO, unlockedSet, REWARDS, nextGoal, adultsSeen, ADULT_KEYS, formOrder, EGG_COLOR_KO } from "./app/collection.js?v=a5da7e2-1791205652";
-import { deviceInfo, registerSW, enablePush, ensurePush, uploadSchedule, sendTest, serverStatus } from "./app/push.js?v=a5da7e2-1791205652";
+import { createPet } from "./core/state.js?v=da9d75f-1791208696";
+import { advance, feed, play, wash, walk, wakeFromNap, cleanPoop, toggleLight, giveMedicine, patPet, switchEndMode, retirePet } from "./core/sim.js?v=da9d75f-1791208696";
+import { predictNotifications } from "./core/notify.js?v=da9d75f-1791208696";
+import { josa } from "./core/josa.js?v=da9d75f-1791208696";
+import { drawRoom, drawIcon, roomLayout } from "./render/screen.js?v=da9d75f-1791208696";
+import { createAnimator, play as playAnim, frame as animFrame, addFx, DUR as ANIM_DUR } from "./render/anim.js?v=da9d75f-1791208696";
+import { pickGame, createGame, GAME_NAMES } from "./app/games.js?v=da9d75f-1791208696";
+import { EGGS, findEgg, createStreak, specialDay, SPECIAL_KO, HAT_OF, wishTime, MAKER_LETTER } from "./app/eggs.js?v=da9d75f-1791208696";
+import { earn, buy, equip, unequip, grant as grantItem, gems, canAfford, dailyStatus, claimDaily, DAILY, grantPurchase } from "./core/economy.js?v=da9d75f-1791208696";
+import { ITEMS, ITEM, SLOTS, TABS, PICKS, PACKS, SOON, BASIC_EQUIP } from "./core/catalog.js?v=da9d75f-1791208696";
+import { renderShop, renderDeco, dailyCard, spriteCanvas } from "./app/shop-ui.js?v=da9d75f-1791208696";
+import { formKey, lookOf, FORMS as FORMS_REF, SPOT_COLORS, eggSpriteFor } from "./render/creature.js?v=da9d75f-1791208696";
+import { guessLocation, sunTimes, moonIllumination, moonPosition, moonPhaseName } from "./core/astro.js?v=da9d75f-1791208696";
+import { classifyWeather, weatherUrl, parseWeather } from "./core/weather.js?v=da9d75f-1791208696";
+import { createFacePicker, pickFace } from "./render/face.js?v=da9d75f-1791208696";
+import { SPRITES, drawSprite } from "./render/sprites.js?v=da9d75f-1791208696";
+import { loadProfile, saveProfile, freshProfile, exportCode, importCode, SAVE_KEYS, setSaveMirror } from "./app/store.js?v=da9d75f-1791208696";
+import * as native from "./app/native.js?v=da9d75f-1791208696";
+import * as cloud from "./app/cloud.js?v=da9d75f-1791208696";
+import { planReconcile, isPaid } from "./core/billing.js?v=da9d75f-1791208696";
+import { sfx, setSoundEnabled } from "./app/sound.js?v=da9d75f-1791208696";
+import { markSeen, recordPet, renderCollection, letterText, portrait, currentKey, HOW_KO, unlockedSet, REWARDS, nextGoal, adultsSeen, ADULT_KEYS, formOrder, EGG_COLOR_KO } from "./app/collection.js?v=da9d75f-1791208696";
+import { deviceInfo, registerSW, enablePush, ensurePush, uploadSchedule, sendTest, serverStatus } from "./app/push.js?v=da9d75f-1791208696";
 
 const clock = { offset: 0, now() { return Date.now() + this.offset; } }; // offset은 개발 도구만 바꾼다
 
@@ -35,6 +36,7 @@ if (QS.has("dev") && QS.has("reset")) { localStorage.clear(); history.replaceSta
 await native.restoreSave(SAVE_KEYS); // 앱: WebView 저장소가 지워졌으면 기기 저장소에서 되살림(웹은 아무 일 없음)
 setSaveMirror(native.mirrorSave);
 let profile = loadProfile();
+const cloudBootSeen = profile.lastSeen || 0; // 이 기기를 마지막으로 쓴 시각(켜자마자 바뀌기 전 값, 다른 기기 기록과 비교할 때 씀)
 const anim = createAnimator();
 const faces = createFacePicker();
 let petBox = null; // 마지막으로 그린 펫 위치(쓰다듬기 판정용)
@@ -171,7 +173,115 @@ function reward(kind, sub = null) { const r = earn(profile.econ, kind, clock.now
 
 // ---------- 저장 + 알림 일정 ----------
 let syncTimer = 0;
-function persist() { saveProfile(profile); }
+function persist() { if (leaving) return; saveProfile(profile); markCloudDirty(); }
+// ---------- 클라우드 이어하기(켜 둔 경우만) ----------
+let cloudBusy = false, cloudTimer = 0, cloudLastCheck = 0, leaving = false;
+function markCloudDirty() {
+  const c = profile.cloud; if (!c?.key) return;
+  c.dirty = true;
+  clearTimeout(cloudTimer);
+  cloudTimer = setTimeout(() => cloudSync(), Math.max(2000, (c.lastUp || 0) + cloud.UPLOAD_GAP_MS - Date.now()));
+}
+async function cloudSync({ urgent = false, keepalive = false } = {}) {
+  const c = profile.cloud;
+  if (cloudBusy || !cloud.uploadDue(c, Date.now(), { urgent })) return;
+  cloudBusy = true;
+  try {
+    const r = await cloud.cloudPut(c.key, cloud.blobOf(profile), c.rev, { keepalive });
+    if (r.ok) { c.rev = r.rev; c.dirty = false; c.lastUp = Date.now(); c.err = null; }
+    else if (r.conflict) { c.holdUntil = Date.now() + 3600 * 1000; showCloudConflict(); }
+    else if (r.wait) { c.holdUntil = Date.now() + r.wait; clearTimeout(cloudTimer); cloudTimer = setTimeout(() => cloudSync({ urgent }), r.wait + 500); }
+    saveProfile(profile);
+  } catch (e) { c.err = String(e?.message || e); } finally { cloudBusy = false; }
+}
+// 켤 때·다시 열 때: 다른 기기가 더 최근에 저장했으면 가져온다(이 기기에 안 올린 변경이 있으면 고르게)
+async function cloudCheck({ atBoot = false } = {}) {
+  const c = profile.cloud; if (!c?.key || !navigator.onLine) return;
+  if (!atBoot && Date.now() - cloudLastCheck < 5 * 60 * 1000) return;
+  cloudLastCheck = Date.now();
+  try {
+    const remote = await cloud.cloudGet(c.key);
+    if (!remote) { c.rev = null; markCloudDirty(); return; } // 서버에서 지워졌거나 오래돼 정리됨 → 이 기기 기록으로 다시 올림
+    if (remote.rev === c.rev) return;
+    // 서버 기록이 이 기기를 마지막으로 쓴 뒤에 저장됐으면 = 다른 기기에서 더 나중에 키움 → 묻지 않고 불러옴.
+    // 이 기기도 그 뒤에 썼는데 아직 못 올렸으면(둘 다 바뀜) 고르게 한다. (시간만 흘러 생긴 변경으로 매번 묻지 않게)
+    const seen = atBoot ? cloudBootSeen : (profile.lastSeen || 0);
+    if (!c.dirty || remote.updated > seen) applyCloud(remote, c.key, "다른 기기에서 키운 기록을 불러왔어요");
+    else showCloudConflict(remote);
+  } catch (e) { console.warn("이어하기 확인 실패", e); }
+}
+function applyCloud(remote, key, msg) {
+  const p = cloud.profileFromBlob(remote.blob, profile);
+  p.cloud = { key, rev: remote.rev, dirty: false, lastUp: Date.now() };
+  p.lastSeen = Date.now();
+  // 새로고침 직전 '화면 내려감' 처리가 옛 기록(메모리의 profile)을 다시 저장해 덮어쓰던 문제 → 먼저 바꿔 끼우고 저장을 멈춤
+  profile = p; leaving = true;
+  saveProfile(p);
+  sessionStorage.setItem("almochi:say", msg);
+  location.reload();
+}
+function showCloudConflict(remote = null) {
+  if (document.querySelector(".dexcard.cloudpick")) return;
+  const c = profile.cloud;
+  const card = document.createElement("div"); card.className = "dexcard cloudpick";
+  const when = remote?.updated ? new Date(remote.updated).toLocaleString("ko-KR", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "";
+  card.innerHTML = `<div class="dexcard-in"><button class="x" aria-label="나중에">✕</button><b>다른 기기에 더 최근 기록이 있어요</b>
+    <p class="small">${when ? `${when}에 다른 기기에서 저장했어요. ` : ""}어느 쪽으로 이어 할까요? 고르지 않은 쪽 기록은 사라져요.</p>
+    <button class="big" id="cp-remote">그 기록 불러오기</button><button class="big ghost" id="cp-local">이 기기 기록으로 덮어쓰기</button></div>`;
+  document.body.append(card);
+  const close = () => card.remove();
+  card.querySelector(".x").addEventListener("click", () => { c.holdUntil = Date.now() + 3600 * 1000; saveProfile(profile); close(); });
+  card.querySelector("#cp-remote").addEventListener("click", async () => {
+    try { const r = remote || await cloud.cloudGet(c.key); if (r) applyCloud(r, c.key, "다른 기기의 기록으로 이어 해요"); else close(); } catch (e) { say(e.message, 5000); }
+  });
+  card.querySelector("#cp-local").addEventListener("click", async () => {
+    try { const r = await cloud.cloudPut(c.key, cloud.blobOf(profile), c.rev, { force: true }); if (r.ok) { c.rev = r.rev; c.dirty = false; c.lastUp = Date.now(); c.holdUntil = 0; saveProfile(profile); say("이 기기 기록으로 저장했어요", 4000); } close(); }
+    catch (e) { say(e.message, 5000); }
+  });
+}
+function renderCloud() {
+  const c = profile.cloud, box = $("cloud-body");
+  const last = c?.lastUp ? new Date(c.lastUp).toLocaleString("ko-KR", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "아직 없음";
+  box.innerHTML = c?.key ? `
+    <p class="small">이 코드로 다른 휴대폰·웹에서 이어 키울 수 있어요.</p>
+    <div class="savecode" id="cl-code">${cloud.showKey(c.key)}</div>
+    <button class="big" id="cl-copy">코드 복사</button>
+    <p class="warn small">이 코드만 있으면 누구나 이 기록을 불러올 수 있어요. 남에게 보여 주지 말고 메모나 스크린샷으로 꼭 보관해 주세요. 잃어버리면 서버 기록을 찾을 수 없어요.</p>
+    <p class="small">마지막 서버 저장: <b>${last}</b>${c.err ? ` · <span class="dim">실패: ${c.err}</span>` : ""}</p>
+    <button class="big ghost" id="cl-now">지금 저장</button>
+    <h3 class="sec">다른 코드로 불러오기</h3>
+    <input id="cl-input" placeholder="XXXX-XXXX-..." autocomplete="off" autocapitalize="characters"><button class="big ghost" id="cl-load">불러오기</button>
+    <button class="big ghost danger" id="cl-off">이어하기 끄고 서버 기록 지우기</button>`
+    : `
+    <p class="small">펫 기록은 이 휴대폰 안에 저장돼요. 이어하기를 켜면 서버에도 보관해서, 휴대폰을 바꾸거나 앱을 지워도 <b>이어하기 코드</b>로 이어 키울 수 있어요. 로그인은 없어요.</p>
+    <button class="big" id="cl-on">이어하기 켜기 (코드 만들기)</button>
+    <h3 class="sec">다른 기기에서 키우던 펫 불러오기</h3>
+    <input id="cl-input" placeholder="XXXX-XXXX-..." autocomplete="off" autocapitalize="characters"><button class="big ghost" id="cl-load">불러오기</button>
+    <p class="fine">서버에는 펫·도감·별사탕·하트 보석·꾸미기 기록만 보관해요. 400일 동안 안 쓰면 지워져요. <a href="privacy.html" target="_blank" rel="noopener">개인정보 처리방침</a></p>`;
+  $("cl-on")?.addEventListener("click", async () => {
+    profile.cloud = { key: cloud.newSaveKey(), rev: null, dirty: true, lastUp: 0 }; saveProfile(profile);
+    await cloudSync({ urgent: true });
+    say(profile.cloud.err ? "코드는 만들었는데 서버 저장은 실패했어요. 인터넷 연결 뒤 다시 저장돼요" : "이어하기를 켰어요. 코드를 꼭 보관해 주세요", 6000);
+    renderCloud(); renderQuickSettings();
+  });
+  $("cl-copy")?.addEventListener("click", async () => { try { await navigator.clipboard.writeText(cloud.showKey(c.key)); say("코드를 복사했어요", 2500); } catch { say("복사가 안 돼요. 코드를 길게 눌러 복사해 주세요", 4000); } });
+  $("cl-now")?.addEventListener("click", async () => { c.dirty = true; await cloudSync({ urgent: true }); renderCloud(); say(c.err ? "저장하지 못했어요: " + c.err : "서버에 저장했어요", 3000); });
+  $("cl-load")?.addEventListener("click", async () => {
+    const key = cloud.readKey($("cl-input").value);
+    if (!key) { say("코드가 올바르지 않아요. 32글자를 모두 넣어 주세요", 4000); return; }
+    try {
+      const r = await cloud.cloudGet(key);
+      if (!r) { say("이 코드로 저장된 기록이 없어요", 4000); return; }
+      if (!confirm("지금 기기의 펫을 이 기록으로 바꿀까요? 지금 펫은 사라져요.")) return;
+      applyCloud(r, key, "이어하기 코드로 기록을 불러왔어요");
+    } catch (e) { say(e.message || "불러오지 못했어요", 5000); }
+  });
+  $("cl-off")?.addEventListener("click", async () => {
+    if (!confirm("이어하기를 끄고 서버에 있는 기록을 지울까요? 이 휴대폰의 펫은 그대로 남아요.")) return;
+    try { await cloud.cloudDelete(c.key); profile.cloud = null; saveProfile(profile); say("서버 기록을 지웠어요", 4000); renderCloud(); renderQuickSettings(); }
+    catch (e) { say(e.message || "지우지 못했어요", 5000); }
+  });
+}
 function scheduleSync(delay = 2500) {
   clearTimeout(syncTimer);
   syncTimer = setTimeout(() => syncNow(), delay);
@@ -640,6 +750,7 @@ function openSheet(name) {
   if (name === "deco") renderDecoUI();
   if (name === "menu") renderQuickSettings();
   if (name === "help") renderHelp();
+  if (name === "cloud") renderCloud();
 }
 
 // ---------- 상점 ----------
@@ -700,7 +811,7 @@ async function settlePurchase(job) {
     if (r.ok) { gainFx({ gem: job.pack.gems || 0, star: job.pack.stars || 0 }); sfx("win"); say(`${job.pack.name}을(를) 받았어요!`, 5000); }
   }
   if (profile.payPending) delete profile.payPending[job.token];
-  persist(); renderWallet();
+  persist(); renderWallet(); cloudSync({ urgent: true });
 }
 async function reconcilePurchases({ manual = false } = {}) {
   if (!IS_APP) { if (manual) say("앱에서 산 상품을 다시 불러오는 기능이에요. 웹에서는 산 것이 없어요", 4000); return; }
@@ -731,10 +842,12 @@ function renderQuickSettings() {
   box.innerHTML = `
     <div class="set">소리<button class="tg ${s.sound ? "on" : ""}" id="q-sound" aria-label="소리"></button></div>
     <div class="set">알림<button class="goarrow" id="q-notify">${notifyOn ? "켜짐" : "꺼짐"} ›</button></div>
+    <div class="set">이어하기<button class="goarrow" id="q-cloud">${profile.cloud?.key ? "켜짐" : "꺼짐"} ›</button></div>
     <div class="set">잠자는 시간<span class="r">${SLEEP_PRESETS.map(([a, , l]) => `<button class="seg ${s.sleep.start === a ? "on" : ""}" data-sleep="${a}">${l}</button>`).join("")}</span></div>
     <p class="fine">자는 시간은 8시간이에요 (${s.sleep.start} → ${s.sleep.end}). 자는 동안엔 알림이 조용해요.</p>`;
   $("q-sound").addEventListener("click", () => { s.sound = !s.sound; setSoundEnabled(s.sound); if (s.sound) sfx("happy"); persist(); renderQuickSettings(); });
   $("q-notify").addEventListener("click", () => openSheet("notify"));
+  $("q-cloud").addEventListener("click", () => openSheet("cloud"));
   for (const b of box.querySelectorAll("[data-sleep]")) b.addEventListener("click", () => {
     const pr = SLEEP_PRESETS.find((x) => x[0] === b.dataset.sleep); s.sleep = { start: pr[0], end: pr[1] };
     if (profile.pet) advance(profile.pet, clock.now(), S());
@@ -976,7 +1089,7 @@ function bootApp() {
       if ([...document.querySelectorAll(".sheet")].some((x) => !x.hidden)) { closeSheet(); return; }
       native.minimizeApp();
     },
-    pause: () => { profile.lastSeen = Date.now(); persist(); syncNow(); },
+    pause: () => { profile.lastSeen = Date.now(); persist(); syncNow(); cloudSync({ urgent: true }); },
     resume: () => { tick(); native.clearDelivered(); syncNow(); reconcilePurchases(); },
   });
   native.onNotifyTap(() => {
@@ -1056,11 +1169,15 @@ function boot() {
 
   // 앱을 닫거나 다른 앱으로 갈 때 일정 올리기
   document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "hidden") { profile.lastSeen = Date.now(); persist(); syncNow({ keepalive: true }); }
-    else if (profile.pet && !profile.pet.ended && !document.querySelector(".dexcard")) showDaily(); // 날짜가 바뀐 뒤 다시 열면 선물
+    if (leaving) return;
+    if (document.visibilityState === "hidden") { profile.lastSeen = Date.now(); persist(); syncNow({ keepalive: true }); cloudSync({ urgent: true, keepalive: true }); return; }
+    cloudCheck(); // 다시 보일 때: 다른 기기 기록 확인(5분에 한 번까지)
+    if (profile.pet && !profile.pet.ended && !document.querySelector(".dexcard")) showDaily(); // 날짜가 바뀐 뒤 다시 열면 선물
     else { tick(); updateWeather(); navigator.clearAppBadge?.().catch(() => {}); }
   });
   navigator.clearAppBadge?.().catch(() => {});
+  const cloudMsg = sessionStorage.getItem("almochi:say"); if (cloudMsg) { sessionStorage.removeItem("almochi:say"); setTimeout(() => say(cloudMsg, 6000), 800); }
+  cloudCheck({ atBoot: true });
   setInterval(() => syncNow(), 10 * 60 * 1000);
   setInterval(() => { if (document.visibilityState === "visible") profile.lastSeen = Date.now(); }, 30000);
   // 알림을 눌러서 앱이 앞으로 나오면 크게 반기기(서비스 워커가 알려 줌)
@@ -1081,7 +1198,7 @@ function boot() {
   // 개발 도구(공개 배포에는 없음): ?dev 로 열기
   if (QS.has("dev")) {
     window.__pp = { clock, getProfile: () => profile, tick, anim, playAnim: (n, d) => playAnim(anim, n, performance.now(), d), mg: () => mg, layout: () => layout, forceGame: null, boxes: () => ({ windowBox, petBox, memoBox }), render: () => renderStats() };
-    import("./dev/panel.js?v=a5da7e2-1791205652").then((m) => m.mount({ clock, getProfile: () => profile, tick, renderStats, syncNow, serverStatus })).catch(() => {});
+    import("./dev/panel.js?v=da9d75f-1791208696").then((m) => m.mount({ clock, getProfile: () => profile, tick, renderStats, syncNow, serverStatus })).catch(() => {});
   }
 }
 
