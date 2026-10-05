@@ -1,26 +1,26 @@
 // 부팅 순서는 이 파일 한 곳에서만 정해요.
 // (지난 게임에서 파일 읽는 순서 때문에 저장 기본값이 빠지는 버그가 있었어요.)
 // 순서: 저장 불러오기 → 꺼져 있던 시간 계산 → 화면 시작 → 서비스 워커·알림 확인 → 알림 일정 올리기
-import { createPet } from "./core/state.js?v=5c1a1ee-1791196182";
-import { advance, feed, play, wash, walk, wakeFromNap, cleanPoop, toggleLight, giveMedicine, patPet, switchEndMode, retirePet } from "./core/sim.js?v=5c1a1ee-1791196182";
-import { predictNotifications } from "./core/notify.js?v=5c1a1ee-1791196182";
-import { josa } from "./core/josa.js?v=5c1a1ee-1791196182";
-import { drawRoom, drawIcon, roomLayout } from "./render/screen.js?v=5c1a1ee-1791196182";
-import { createAnimator, play as playAnim, frame as animFrame, addFx, DUR as ANIM_DUR } from "./render/anim.js?v=5c1a1ee-1791196182";
-import { pickGame, createGame, GAME_NAMES } from "./app/games.js?v=5c1a1ee-1791196182";
-import { EGGS, findEgg, createStreak, specialDay, SPECIAL_KO, HAT_OF, wishTime, MAKER_LETTER } from "./app/eggs.js?v=5c1a1ee-1791196182";
-import { earn, buy, equip, unequip, grant as grantItem, gems, canAfford, dailyStatus, claimDaily, DAILY } from "./core/economy.js?v=5c1a1ee-1791196182";
-import { ITEMS, ITEM, SLOTS, TABS, PICKS, PACKS, SOON, BASIC_EQUIP } from "./core/catalog.js?v=5c1a1ee-1791196182";
-import { renderShop, renderDeco, dailyCard, spriteCanvas } from "./app/shop-ui.js?v=5c1a1ee-1791196182";
-import { formKey, lookOf, FORMS as FORMS_REF, SPOT_COLORS, eggSpriteFor } from "./render/creature.js?v=5c1a1ee-1791196182";
-import { guessLocation, sunTimes, moonIllumination, moonPosition, moonPhaseName } from "./core/astro.js?v=5c1a1ee-1791196182";
-import { classifyWeather, weatherUrl, parseWeather } from "./core/weather.js?v=5c1a1ee-1791196182";
-import { createFacePicker, pickFace } from "./render/face.js?v=5c1a1ee-1791196182";
-import { SPRITES, drawSprite } from "./render/sprites.js?v=5c1a1ee-1791196182";
-import { loadProfile, saveProfile, freshProfile, exportCode, importCode } from "./app/store.js?v=5c1a1ee-1791196182";
-import { sfx, setSoundEnabled } from "./app/sound.js?v=5c1a1ee-1791196182";
-import { markSeen, recordPet, renderCollection, letterText, portrait, currentKey, HOW_KO, unlockedSet, REWARDS, nextGoal, adultsSeen, ADULT_KEYS, formOrder, EGG_COLOR_KO } from "./app/collection.js?v=5c1a1ee-1791196182";
-import { deviceInfo, registerSW, enablePush, ensurePush, uploadSchedule, sendTest, serverStatus } from "./app/push.js?v=5c1a1ee-1791196182";
+import { createPet } from "./core/state.js?v=a6bb7a5-1791197400";
+import { advance, feed, play, wash, walk, wakeFromNap, cleanPoop, toggleLight, giveMedicine, patPet, switchEndMode, retirePet } from "./core/sim.js?v=a6bb7a5-1791197400";
+import { predictNotifications } from "./core/notify.js?v=a6bb7a5-1791197400";
+import { josa } from "./core/josa.js?v=a6bb7a5-1791197400";
+import { drawRoom, drawIcon, roomLayout } from "./render/screen.js?v=a6bb7a5-1791197400";
+import { createAnimator, play as playAnim, frame as animFrame, addFx, DUR as ANIM_DUR } from "./render/anim.js?v=a6bb7a5-1791197400";
+import { pickGame, createGame, GAME_NAMES } from "./app/games.js?v=a6bb7a5-1791197400";
+import { EGGS, findEgg, createStreak, specialDay, SPECIAL_KO, HAT_OF, wishTime, MAKER_LETTER } from "./app/eggs.js?v=a6bb7a5-1791197400";
+import { earn, buy, equip, unequip, grant as grantItem, gems, canAfford, dailyStatus, claimDaily, DAILY } from "./core/economy.js?v=a6bb7a5-1791197400";
+import { ITEMS, ITEM, SLOTS, TABS, PICKS, PACKS, SOON, BASIC_EQUIP } from "./core/catalog.js?v=a6bb7a5-1791197400";
+import { renderShop, renderDeco, dailyCard, spriteCanvas } from "./app/shop-ui.js?v=a6bb7a5-1791197400";
+import { formKey, lookOf, FORMS as FORMS_REF, SPOT_COLORS, eggSpriteFor } from "./render/creature.js?v=a6bb7a5-1791197400";
+import { guessLocation, sunTimes, moonIllumination, moonPosition, moonPhaseName } from "./core/astro.js?v=a6bb7a5-1791197400";
+import { classifyWeather, weatherUrl, parseWeather } from "./core/weather.js?v=a6bb7a5-1791197400";
+import { createFacePicker, pickFace } from "./render/face.js?v=a6bb7a5-1791197400";
+import { SPRITES, drawSprite } from "./render/sprites.js?v=a6bb7a5-1791197400";
+import { loadProfile, saveProfile, freshProfile, exportCode, importCode } from "./app/store.js?v=a6bb7a5-1791197400";
+import { sfx, setSoundEnabled } from "./app/sound.js?v=a6bb7a5-1791197400";
+import { markSeen, recordPet, renderCollection, letterText, portrait, currentKey, HOW_KO, unlockedSet, REWARDS, nextGoal, adultsSeen, ADULT_KEYS, formOrder, EGG_COLOR_KO } from "./app/collection.js?v=a6bb7a5-1791197400";
+import { deviceInfo, registerSW, enablePush, ensurePush, uploadSchedule, sendTest, serverStatus } from "./app/push.js?v=a6bb7a5-1791197400";
 
 const clock = { offset: 0, now() { return Date.now() + this.offset; } }; // offset은 개발 도구만 바꾼다
 
@@ -304,10 +304,10 @@ function showNote(title, text) {
   const inner = document.createElement("div"); inner.className = "dexcard-in";
   const b = document.createElement("b"); b.textContent = title;
   const p = document.createElement("p"); p.className = "letter"; p.textContent = text;
-  const close = document.createElement("button"); close.className = "big ghost"; close.textContent = "닫기";
+  const close = document.createElement("button"); close.className = "x"; close.textContent = "✕"; close.setAttribute("aria-label", "닫기");
   close.addEventListener("click", () => card.remove());
   card.addEventListener("click", (e) => { if (e.target === card) card.remove(); });
-  inner.append(b, p, close); card.append(inner); document.body.append(card);
+  inner.append(close, b, p); card.append(inner); document.body.append(card);
 }
 
 function onTap(ev) {
@@ -651,7 +651,7 @@ function renderShopUI() {
     onEquip: (it) => { equip(profile.econ, it); persist(); sfx("tap"); say(`${it.name}을(를) 끼웠어요`, 2500); renderShopUI(); },
     onBuy: (it) => {
       const r = buy(profile.econ, it, clock.now());
-      if (!r.ok) { sfx("refuse"); say(r.reason === "poor" ? (it.price.gem ? "보석이 모자라요" : "별사탕이 모자라요. 돌봄·놀이·산책으로 모아요") : "살 수 없어요"); return; }
+      if (!r.ok) { sfx("refuse"); say(r.reason === "poor" ? (it.price.gem ? "하트 보석이 모자라요" : "별사탕이 모자라요. 돌봄·놀이·산책으로 모아요") : "살 수 없어요"); return; }
       equip(profile.econ, it); persist(); sfx("win"); renderWallet();
       say(`${it.name}을(를) 샀어요! 방에 놓았어요`, 4000); renderShopUI();
     },
@@ -828,7 +828,7 @@ function renderSettings() {
 
 // 처음부터 다시: 펫만 지운다. 도감·화폐·산 꾸미기·찾은 비밀은 남긴다(산 것이 사라지면 안 됨)
 function resetPet() {
-  if (!confirm("지금 펫을 지우고 처음부터 시작할까요? (도감·별사탕·보석·꾸미기는 남아요)")) return;
+  if (!confirm("지금 펫을 지우고 처음부터 시작할까요? (도감, 별사탕, 하트 보석, 꾸미기는 남아요)")) return;
   const keep = { deviceId: profile.deviceId, push: profile.push, settings: profile.settings, seenGuide: true, collection: profile.collection, seen: profile.seen, econ: profile.econ, eggs: profile.eggs };
   profile = { ...freshProfile(), ...keep };
   persist(); closeSheet(); showStart(); renderStats();
@@ -929,6 +929,9 @@ function boot() {
   });
   $("backdrop").addEventListener("click", closeSheet);
   for (const btn of document.querySelectorAll("[data-open]")) btn.addEventListener("click", () => openSheet(btn.dataset.open));
+  for (const sh of document.querySelectorAll(".sheet")) if (!sh.querySelector(".x")) { // 닫기는 어디서나 오른쪽 위 ✕ 하나
+    const x = document.createElement("button"); x.className = "x"; x.textContent = "✕"; x.setAttribute("aria-label", "닫기"); x.dataset.close = ""; sh.prepend(x);
+  }
   for (const btn of document.querySelectorAll("[data-close]")) btn.addEventListener("click", closeSheet);
 
   canvas.addEventListener("pointerdown", onTap);
@@ -988,7 +991,7 @@ function boot() {
   // 개발 도구(공개 배포에는 없음): ?dev 로 열기
   if (QS.has("dev")) {
     window.__pp = { clock, getProfile: () => profile, tick, anim, playAnim: (n, d) => playAnim(anim, n, performance.now(), d), mg: () => mg, layout: () => layout, forceGame: null, boxes: () => ({ windowBox, petBox, memoBox }), render: () => renderStats() };
-    import("./dev/panel.js?v=5c1a1ee-1791196182").then((m) => m.mount({ clock, getProfile: () => profile, tick, renderStats, syncNow, serverStatus })).catch(() => {});
+    import("./dev/panel.js?v=a6bb7a5-1791197400").then((m) => m.mount({ clock, getProfile: () => profile, tick, renderStats, syncNow, serverStatus })).catch(() => {});
   }
 }
 

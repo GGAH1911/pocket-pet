@@ -61,17 +61,17 @@ export const TABS = [
   { id: "furn", name: "가구", slots: ["furnL", "furnR"] },
   { id: "hat", name: "옷", slots: ["hat"] },
   { id: "soon", name: "알·산책" },
-  { id: "gem", name: "보석" },
+  { id: "gem", name: "하트 보석" },
 ];
 export const PICKS = ["sofa", "wall_berry", "lamp", "hat_ribbon", "rug_rainbow", "fishbowl"]; // 추천 탭
 
 // 돈으로 사는 보석 상품(앱에서만). sku는 Play 콘솔 상품 id와 같게.
 export const PACKS = [
-  { id: "starter", sku: "starter_pack", name: "시작 꾸러미", krw: 3300, gems: 300, stars: 1000, items: ["cloudbed"], once: true, desc: "보석 300 + 구름 침대 + 별사탕 1,000" },
-  { id: "gem60", sku: "gem_60", name: "보석 60", krw: 1100, gems: 60 },
-  { id: "gem330", sku: "gem_330", name: "보석 330", krw: 5500, gems: 330, bonus: "+10% 더" },
-  { id: "gem720", sku: "gem_720", name: "보석 720", krw: 11000, gems: 720, bonus: "+20% 더" },
-  { id: "gem1500", sku: "gem_1500", name: "보석 1,500", krw: 22000, gems: 1500, bonus: "+25% 더" },
+  { id: "starter", sku: "starter_pack", name: "시작 꾸러미", krw: 3300, gems: 300, stars: 1000, items: ["cloudbed"], once: true, desc: "하트 보석 300 + 구름 침대 + 별사탕 1,000" },
+  { id: "gem60", sku: "gem_60", name: "하트 보석 60", krw: 1100, gems: 60 },
+  { id: "gem330", sku: "gem_330", name: "하트 보석 330", krw: 5500, gems: 330, bonus: "+10% 더" },
+  { id: "gem720", sku: "gem_720", name: "하트 보석 720", krw: 11000, gems: 720, bonus: "+20% 더" },
+  { id: "gem1500", sku: "gem_1500", name: "하트 보석 1,500", krw: 22000, gems: 1500, bonus: "+25% 더" },
 ];
 export const PACK = Object.fromEntries(PACKS.map((p) => [p.id, p]));
 

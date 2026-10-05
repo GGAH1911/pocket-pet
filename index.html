@@ -57,8 +57,10 @@
     .sheet.shop, .sheet.deco { max-height: 50%; padding-top: 12px; }
     .sheet.deco { max-height: 40%; }
     .shop-top { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; } .shop-top b { font-size: 17px; } .shop-top .sp { flex: 1; }
-    .shop-top .x { border: 0; background: #fff; width: 32px; height: 32px; border-radius: 10px; box-shadow: 0 2px 0 var(--line); }
-    .shop-top .done { border: 0; background: var(--deep); color: #fff; border-radius: 12px; padding: 8px 14px; font-weight: 800; box-shadow: 0 2px 0 #b84d6b; }
+    /* 닫기는 어디서나 오른쪽 위 같은 ✕ 하나(시트·카드 공통) */
+    .x { flex: none; border: 0; background: #fff; width: 36px; height: 36px; border-radius: 10px; box-shadow: 0 2px 0 var(--line); font-size: 16px; font-weight: 800; color: var(--ink); padding: 0; }
+    .sheet > .x { position: sticky; top: -6px; float: right; margin: -6px -4px 0 8px; z-index: 2; }
+    .dexcard-in { position: relative; } .dexcard-in > .x { position: absolute; top: 10px; right: 10px; }
     .tabs { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 8px; scrollbar-width: none; } .tabs::-webkit-scrollbar { display: none; }
     .tab { border: 0; flex: none; padding: 7px 12px; border-radius: 999px; background: #fff; font-size: 13px; font-weight: 800; box-shadow: 0 2px 0 var(--line); }
     .tab.on { background: var(--deep); color: #fff; box-shadow: 0 2px 0 #b84d6b; }
@@ -79,7 +81,10 @@
     .pack { display: flex; align-items: center; gap: 10px; background: #fff; border: 0; width: 100%; border-radius: 14px; padding: 10px 12px; margin-bottom: 8px; box-shadow: 0 2px 0 var(--line); text-align: left; }
     .pack canvas { width: 32px; height: 26px; image-rendering: pixelated; }
     .pack .g { flex: 1; font-weight: 900; font-size: 15px; } .pack .g small { display: block; font-weight: 600; font-size: 11px; opacity: .7; }
-    .krw { background: var(--deep); color: #fff; border-radius: 10px; padding: 7px 10px; font-weight: 800; font-size: 13px; }
+    /* 진짜 돈이 나가는 버튼만 초록: 게임 화폐 버튼(분홍)과 섞이지 않게 */
+    .krw { background: #3e9b6a; color: #fff; border-radius: 10px; padding: 7px 10px; font-weight: 800; font-size: 13px; box-shadow: 0 2px 0 #2b7350; }
+    .paynote { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: #2b7350; background: #e6f4ea; border-radius: 10px; padding: 7px 10px; margin-bottom: 10px; }
+    .paynote i { flex: none; width: 10px; height: 10px; border-radius: 3px; background: #3e9b6a; }
     .banner { background: linear-gradient(135deg, #ffe0ea, #fff1d6); border-radius: 16px; padding: 12px; margin-bottom: 10px; font-size: 13px; }
     .banner b { display: block; font-size: 15px; margin-bottom: 2px; }
     .fine { font-size: 11px; opacity: .7; line-height: 1.6; margin: 6px 2px; }
@@ -167,6 +172,7 @@
     .dexcard-in { background: #fffaf2; border-radius: 18px; padding: 16px; max-width: 340px; width: 100%; text-align: center; box-shadow: 0 6px 0 var(--line); }
     .dexcard-in canvas { width: 168px; height: 138px; image-rendering: pixelated; display: block; margin: 0 auto 6px; }
     .dexcard-in b { display: block; font-size: 18px; margin-bottom: 6px; }
+    .dexcard-in > b { padding: 6px 40px 0; }
     .dexcard-in .small { margin: 3px 0; }
     .dexcard-in .hint { background: #fff4d6; border-radius: 10px; padding: 8px; font-weight: 700; }
     .dexcard-in .letter { white-space: pre-line; text-align: left; background: #fff; border-radius: 10px; padding: 10px; line-height: 1.6; }
@@ -198,6 +204,7 @@
 
     <div id="backdrop" hidden></div>
     <section class="sheet" data-sheet="menu" hidden>
+      <h2>메뉴</h2>
       <div class="tiles">
         <button class="tile" data-open="dex"><canvas data-sprite="iconBook"></canvas>도감</button>
         <button class="tile" data-open="shop"><canvas data-sprite="iconShop"></canvas>상점</button>
@@ -207,7 +214,6 @@
       <h3 class="sec">설정</h3>
       <div id="quick-settings"></div>
       <button class="link" data-open="help">도움말 · 기기 옮기기 · 개인정보 처리방침</button>
-      <button class="big ghost" data-close>닫기</button>
     </section>
     <section class="sheet" data-sheet="food" hidden>
       <h2>무엇을 줄까요?</h2>
@@ -220,7 +226,7 @@
       <div id="shop-body"></div>
     </section>
     <section class="sheet deco" data-sheet="deco" hidden>
-      <div class="shop-top"><b>꾸미기</b><span class="small dim">바꾸면 바로 저장돼요</span><span class="sp"></span><button class="done" data-close>다 했어요</button></div>
+      <div class="shop-top"><b>꾸미기</b><span class="small dim">바꾸면 바로 저장돼요</span><span class="sp"></span><button class="x" data-close aria-label="닫기">✕</button></div>
       <div class="slots" id="deco-slots"></div>
       <div class="strip" id="deco-strip"></div>
     </section>
@@ -229,7 +235,6 @@
       <div id="help-body"></div>
       <button class="big ghost" data-open="save">기기 옮기기 (저장 코드)</button>
       <button class="big ghost danger" id="btn-reset2">처음부터 다시</button>
-      <button class="big ghost" data-close>닫기</button>
     </section>
     <section class="sheet" data-sheet="play" hidden>
       <h2>어떻게 놀까요?</h2>
@@ -239,19 +244,16 @@
     <section class="sheet" data-sheet="notify" hidden>
       <h2>알림</h2>
       <div id="notify-body"></div>
-      <button class="big ghost" data-close>닫기</button>
     </section>
     <section class="sheet" data-sheet="settings" hidden>
       <h2>설정</h2>
       <div id="settings-body"></div>
-      <button class="big ghost" data-close>닫기</button>
     </section>
 
     <section class="sheet" data-sheet="dex" hidden>
       <h2>도감</h2>
       <div id="dex-body"></div>
       <div id="dex-retire"></div>
-      <button class="big ghost" data-close>닫기</button>
     </section>
     <section class="sheet" data-sheet="save" hidden>
       <h2>저장 (기기 옮기기)</h2>
@@ -260,7 +262,6 @@
       <textarea id="save-code" placeholder="여기에 저장 코드를 붙여 넣으세요"></textarea>
       <button class="big ghost" id="btn-import">불러오기</button>
       <p class="small" id="save-msg"></p>
-      <button class="big ghost" data-close>닫기</button>
     </section>
     <div id="mg" hidden>
       <div id="mg-title"></div>
@@ -310,6 +311,6 @@
       </div>
     </div>
   </div>
-  <script type="module" src="src/main.js?v=5c1a1ee-1791196182"></script>
+  <script type="module" src="src/main.js?v=a6bb7a5-1791197400"></script>
 </body>
 </html>

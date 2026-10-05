@@ -1,8 +1,8 @@
 // 상점·꾸미기·매일 선물 화면. 상태와 규칙은 core/economy.js·catalog.js, 여기는 DOM만.
-import { ITEMS, ITEM, SLOTS, TABS, PICKS, PACKS, SOON } from "../core/catalog.js?v=5c1a1ee-1791196182";
-import { canAfford, gems, DAILY } from "../core/economy.js?v=5c1a1ee-1791196182";
-import { drawThumb } from "../render/deco.js?v=5c1a1ee-1791196182";
-import { SPRITES, drawSprite, spriteSize } from "../render/sprites.js?v=5c1a1ee-1791196182";
+import { ITEMS, ITEM, SLOTS, TABS, PICKS, PACKS, SOON } from "../core/catalog.js?v=a6bb7a5-1791197400";
+import { canAfford, gems, DAILY } from "../core/economy.js?v=a6bb7a5-1791197400";
+import { drawThumb } from "../render/deco.js?v=a6bb7a5-1791197400";
+import { SPRITES, drawSprite, spriteSize } from "../render/sprites.js?v=a6bb7a5-1791197400";
 
 const el = (tag, attrs = {}, ...kids) => {
   const e = document.createElement(tag);
@@ -65,7 +65,7 @@ export function renderShop(tabsEl, bodyEl, ctx) {
   if (owned) bar.append(el("button", { text: on ? "끼우는 중" : "끼우기", disabled: on, onclick: () => ctx.onEquip(it) }));
   else if (it.price) {
     const ok = canAfford(econ, it.price);
-    if (!ok && it.price.gem) bar.append(el("button", { class: "ghost", text: "보석 사기", onclick: () => ctx.onGoGem() }));
+    if (!ok && it.price.gem) bar.append(el("button", { class: "ghost", text: "하트 보석 사기", onclick: () => ctx.onGoGem() }));
     bar.append(el("button", { disabled: !ok, onclick: () => ctx.onBuy(it) }, priceEl(it.price), document.createTextNode(ok ? " 사기" : " 모자라요")));
   }
   bodyEl.append(bar);
@@ -73,6 +73,7 @@ export function renderShop(tabsEl, bodyEl, ctx) {
 
 function renderGemShop(box, ctx) {
   const { econ } = ctx;
+  box.append(el("div", { class: "paynote" }, el("i"), document.createTextNode("초록 버튼은 진짜 돈이 나가요. 구글 결제 화면에서 한 번 더 확인해요")));
   if (!econ.bought.starter) {
     const st = PACKS.find((p) => p.once);
     box.append(el("div", { class: "banner" }, el("b", { text: "처음 한 번만! 시작 꾸러미" }), document.createTextNode(st.desc),
@@ -81,9 +82,9 @@ function renderGemShop(box, ctx) {
   for (const p of PACKS.filter((x) => !x.once)) {
     box.append(el("button", { class: "pack", onclick: () => ctx.onPack(p) }, spriteCanvas("coinGem", 32, 26), el("span", { class: "g" }, document.createTextNode(p.name), el("small", { text: p.bonus || "기본" })), el("span", { class: "krw", text: won(p.krw) })));
   }
-  box.append(el("p", { class: "fine", text: `가진 보석 ${gems(econ)}개 (산 보석 ${econ.gemPaid} · 받은 보석 ${econ.gemFree}). 받은 보석부터 먼저 써요.` }));
-  box.append(el("p", { class: "fine", text: "쓰지 않은 산 보석은 산 날부터 7일 안에 환불을 요청할 수 있어요. 이미 쓴 보석과 꾸미기 상품은 사기 전에 방에 미리 놓아 볼 수 있어서 환불이 어려워요. 랜덤 뽑기는 없어요." }));
-  if (!ctx.isApp) box.append(el("p", { class: "warn small", text: "보석은 플레이스토어 앱에서 살 수 있어요(준비 중). 지금은 매일 선물과 비밀 찾기로 받을 수 있어요." }));
+  box.append(el("p", { class: "fine", text: `가진 하트 보석 ${gems(econ)}개 (산 것 ${econ.gemPaid}, 받은 것 ${econ.gemFree}). 받은 것부터 먼저 써요.` }));
+  box.append(el("p", { class: "fine", text: "쓰지 않은 산 하트 보석은 산 날부터 7일 안에 환불을 요청할 수 있어요. 이미 쓴 하트 보석과 꾸미기 상품은 사기 전에 방에 미리 놓아 볼 수 있어서 환불이 어려워요. 랜덤 뽑기는 없어요." }));
+  if (!ctx.isApp) box.append(el("p", { class: "warn small", text: "하트 보석은 플레이스토어 앱에서 살 수 있어요(준비 중). 지금은 매일 선물과 비밀 찾기로 받을 수 있어요." }));
   box.append(el("button", { class: "big ghost", text: "구매 복원", onclick: () => ctx.onRestore() }));
 }
 
@@ -117,7 +118,7 @@ export function dailyCard({ status, onClaim, onClose }) {
   const inner = el("div", { class: "dexcard-in" }, el("b", { text: status.available ? "오늘의 선물" : "오늘 선물은 받았어요" }),
     el("div", { class: "small dim", text: "하루 한 번 열어 보기만 하면 돼요. 하루 빠져도 처음으로 안 돌아가요" }), stamps);
   if (status.available) inner.append(el("button", { class: "big", text: "받기", onclick: () => { onClaim(); card.remove(); } }));
-  inner.append(el("button", { class: "big ghost", text: "닫기", onclick: () => { card.remove(); onClose?.(); } }));
+  inner.prepend(el("button", { class: "x", "aria-label": "닫기", text: "✕", onclick: () => { card.remove(); onClose?.(); } }));
   card.append(inner);
   card.addEventListener("click", (e) => { if (e.target === card) card.remove(); });
   return card;
