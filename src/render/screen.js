@@ -1,10 +1,10 @@
 // 방 화면 그리기. 게임 규칙은 모르고 받은 상태만 그린다.
 // 캔버스는 "도트 해상도"로 그리고 CSS가 정수배로 키운다.
-import { PALETTE } from "./palette.js?v=5b3d2dd-1791174729";
-import { SPRITES, drawSprite, spriteSize } from "./sprites.js?v=5b3d2dd-1791174729";
-import { buildCreature, paintGrid, formKey } from "./creature.js?v=5b3d2dd-1791174729";
-import { drawFace } from "./face.js?v=5b3d2dd-1791174729";
-import { drawSky } from "./sky.js?v=5b3d2dd-1791174729";
+import { PALETTE } from "./palette.js?v=6356ff8-1791174878";
+import { SPRITES, drawSprite, spriteSize } from "./sprites.js?v=6356ff8-1791174878";
+import { buildCreature, paintGrid, formKey } from "./creature.js?v=6356ff8-1791174878";
+import { drawFace } from "./face.js?v=6356ff8-1791174878";
+import { drawSky } from "./sky.js?v=6356ff8-1791174878";
 
 const FLOOR = "#f5b98c";
 const FLOOR_LINE = "#e9a274";
@@ -180,8 +180,8 @@ function drawCushion(ctx, x, baseY, bodyW, bed, theme) {
 
 const CACHE = new Map(); // 같은 모습은 다시 계산하지 않기 위한 캐시
 
-// ---------- 밤잠: 쿠션 위에 깐 이불 ----------
-// 이불은 몸을 덮지 않는다. 쿠션 위에 펼쳐 깔고 펫이 그 위에 앉아 잔다. 앞자락은 쿠션 앞으로 늘어진다.
+// ---------- 밤잠 이불 ----------
+// 쿠션 위에 앉은 펫의 몸 아래쪽을 앞에서 덮는다(입 아래까지, 얼굴은 보임). 숨 쉴 때 가장자리가 살짝 물결침.
 // 이불 색: 테마 기본색, 몸 색과 겹치면 다른 색(파란 몸에 하늘색 이불이면 안 보이므로)
 function blanketColors(theme, built) {
   if (theme !== "fantasy") return [PALETTE.p, PALETTE.P, PALETTE.w];
@@ -189,35 +189,31 @@ function blanketColors(theme, built) {
   return ["b", "B"].includes(body) ? [PALETTE.v, PALETTE.V, PALETTE.y] : [PALETTE.b, PALETTE.B, PALETTE.y];
 }
 
-function drawUnderBlanket(ctx, x, baseY, bodyW, k, theme, built) {
-  const [c1, c2, dot] = blanketColors(theme, built);
-  const full = bodyW + 22;
-  const W = Math.round(full * Math.min(1, 0.35 + k * 0.65)); // 펼쳐지며 넓어짐
+function drawBlanket(ctx, x, base, box, P, bodyW, k, now, theme, built) {
+  const W = bodyW + 8;
   const left = Math.round(x - W / 2);
-  const top = baseY - 7; // 쿠션 윗면 높이
-  const bottom = baseY + 3; // 쿠션 앞으로 늘어진 자락 끝
-  ctx.globalAlpha = Math.min(1, k * 2);
+  const bottom = base + 3;
+  const mouthBottom = P.cy - P.ry * 0.12 + Math.max(3, Math.round(P.ry * 0.32)) + 2; // 얼굴(입)까지는 보이게
+  const targetTop = box.oy + Math.round(Math.max(mouthBottom, P.cy + P.ry * 0.3) * CELL);
+  const top = Math.round(bottom - (bottom - targetTop) * k);
+  if (bottom - top < 2) return;
+  const [c1, c2, dot] = blanketColors(theme, built);
   for (let xx = 0; xx < W; xx++) {
+    const wave = Math.round(Math.sin(xx / 4 + now / 700) * 0.8);
+    const edge = xx === 0 || xx === W - 1 ? 2 : xx === 1 || xx === W - 2 ? 1 : 0; // 둥근 모서리
+    const yTop = top + wave + edge;
     const px = left + xx;
-    const corner = xx === 0 || xx === W - 1 ? 2 : xx === 1 || xx === W - 2 ? 1 : 0;
-    const hem = bottom + (Math.floor((xx + 2) / 5) % 2); // 앞자락 끝 살짝 물결
-    const yTop = top + corner;
-    ctx.fillStyle = PALETTE.k; ctx.fillRect(px, yTop - 1, 1, 1); ctx.fillRect(px, hem, 1, 1);
-    ctx.fillStyle = c1; ctx.fillRect(px, yTop, 1, Math.max(0, 4 - corner)); // 쿠션 위에 깔린 윗면
-    ctx.fillStyle = c2; ctx.fillRect(px, top + 4, 1, Math.max(0, hem - top - 4)); // 앞으로 늘어진 면(그늘)
-    if (xx === 0 || xx === W - 1) { ctx.fillStyle = PALETTE.k; ctx.fillRect(px, yTop, 1, hem - yTop); }
+    ctx.fillStyle = PALETTE.k; ctx.fillRect(px, yTop - 1, 1, 1); // 윗선
+    ctx.fillStyle = PALETTE.w; ctx.fillRect(px, yTop, 1, 2); // 접힌 깃
+    ctx.fillStyle = c1; ctx.fillRect(px, yTop + 2, 1, Math.max(0, bottom - yTop - 2));
+    if (xx === 0 || xx === W - 1) { ctx.fillStyle = PALETTE.k; ctx.fillRect(px, yTop, 1, bottom - yTop); }
   }
-  ctx.fillStyle = PALETTE.k; ctx.fillRect(left + 1, top + 4, W - 2, 1); // 접히는 모서리 선
-  // 무늬
+  ctx.fillStyle = c2; ctx.fillRect(left + 1, bottom - 2, W - 2, 2); // 아래 그림자
+  // 무늬(동물: 흰 땡땡이, 상상: 노란 별)
   ctx.fillStyle = dot;
-  for (let xx = left + 3; xx < left + W - 3; xx += 6) { ctx.fillRect(xx, top + 1, 2, 1); ctx.fillRect(xx + 3, top + 6, 1, 1); }
-  // 오른쪽 앞 귀퉁이를 살짝 접어 올린 자락
-  if (k >= 0.9) {
-    const fx = left + W - 7;
-    ctx.fillStyle = PALETTE.k; ctx.fillRect(fx - 1, top + 5, 7, 1); ctx.fillRect(fx - 1, top + 5, 1, 4);
-    ctx.fillStyle = PALETTE.w; ctx.fillRect(fx, top + 6, 5, 2); ctx.fillRect(fx, top + 8, 3, 1);
+  for (let yy = top + 5; yy < bottom - 3; yy += 5) for (let xx = left + 3 + ((yy / 5) % 2) * 3; xx < left + W - 3; xx += 6) {
+    ctx.fillRect(xx, yy, 2, 1); ctx.fillRect(xx, yy, 1, 2);
   }
-  ctx.globalAlpha = 1;
 }
 
 function drawPet(ctx, scene, fr, { cx, baseY, now }) {
@@ -242,8 +238,6 @@ function drawPet(ctx, scene, fr, { cx, baseY, now }) {
   const bodyW = Math.round(built.P.rx * 2 * CELL);
   const x = cx + Math.round(pose.dx);
   if (bed > 0) drawCushion(ctx, x, baseY, bodyW, bed, scene.theme);
-  const blanketK = fr.silhouette ? 0 : fr.blanket || 0; // 밤잠: 쿠션 위에 이불을 펼쳐 깔고 그 위에 앉아 잠(0 → 1)
-  if (blanketK > 0) drawUnderBlanket(ctx, x, baseY, bodyW, blanketK, scene.theme, built);
   const lift = Math.round(5 * Math.min(1, bed * 1.6)); // 쿠션 위에 올라앉음
   const base = baseY + Math.round(pose.dy) - lift;
   // 그림자 (높이 뛸수록 작아짐)
@@ -253,6 +247,8 @@ function drawPet(ctx, scene, fr, { cx, baseY, now }) {
     ctx.fillRect(Math.round(cx + pose.dx - shw / 2), baseY - 1, shw, 3);
   }
   const box = paintGrid(ctx, built.g, x, base, CELL, { alpha: fr.petAlpha ?? 1, tint: scene.sick && !fr.silhouette ? "rgba(150,210,150,0.22)" : null });
+  const blanketK = fr.silhouette ? 0 : fr.blanket || 0; // 밤잠 이불(0 → 1): 아래에서 올라와 몸 아래쪽을 덮음
+  if (blanketK > 0) drawBlanket(ctx, x, base, box, built.P, bodyW, blanketK, now, scene.theme, built);
 
   if (faceInfo) {
     // 눈물

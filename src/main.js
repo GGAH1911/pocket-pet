@@ -1,21 +1,21 @@
 // 부팅 순서는 이 파일 한 곳에서만 정해요.
 // (지난 게임에서 파일 읽는 순서 때문에 저장 기본값이 빠지는 버그가 있었어요.)
 // 순서: 저장 불러오기 → 꺼져 있던 시간 계산 → 화면 시작 → 서비스 워커·알림 확인 → 알림 일정 올리기
-import { createPet } from "./core/state.js?v=5b3d2dd-1791174729";
-import { advance, feed, play, wash, cleanPoop, toggleLight, giveMedicine, patPet, switchEndMode, retirePet } from "./core/sim.js?v=5b3d2dd-1791174729";
-import { predictNotifications } from "./core/notify.js?v=5b3d2dd-1791174729";
-import { josa } from "./core/josa.js?v=5b3d2dd-1791174729";
-import { drawRoom, drawIcon } from "./render/screen.js?v=5b3d2dd-1791174729";
-import { createAnimator, play as playAnim, frame as animFrame, addFx } from "./render/anim.js?v=5b3d2dd-1791174729";
-import { formKey, lookOf, FORMS as FORMS_REF } from "./render/creature.js?v=5b3d2dd-1791174729";
-import { guessLocation, sunTimes, moonIllumination, moonPosition, moonPhaseName } from "./core/astro.js?v=5b3d2dd-1791174729";
-import { classifyWeather, weatherUrl, parseWeather } from "./core/weather.js?v=5b3d2dd-1791174729";
-import { createFacePicker, pickFace } from "./render/face.js?v=5b3d2dd-1791174729";
-import { SPRITES } from "./render/sprites.js?v=5b3d2dd-1791174729";
-import { loadProfile, saveProfile, freshProfile, exportCode, importCode } from "./app/store.js?v=5b3d2dd-1791174729";
-import { sfx, setSoundEnabled } from "./app/sound.js?v=5b3d2dd-1791174729";
-import { markSeen, recordPet, renderCollection, letterText, portrait, currentKey, HOW_KO } from "./app/collection.js?v=5b3d2dd-1791174729";
-import { deviceInfo, registerSW, enablePush, ensurePush, uploadSchedule, sendTest, serverStatus } from "./app/push.js?v=5b3d2dd-1791174729";
+import { createPet } from "./core/state.js?v=6356ff8-1791174878";
+import { advance, feed, play, wash, cleanPoop, toggleLight, giveMedicine, patPet, switchEndMode, retirePet } from "./core/sim.js?v=6356ff8-1791174878";
+import { predictNotifications } from "./core/notify.js?v=6356ff8-1791174878";
+import { josa } from "./core/josa.js?v=6356ff8-1791174878";
+import { drawRoom, drawIcon } from "./render/screen.js?v=6356ff8-1791174878";
+import { createAnimator, play as playAnim, frame as animFrame, addFx } from "./render/anim.js?v=6356ff8-1791174878";
+import { formKey, lookOf, FORMS as FORMS_REF } from "./render/creature.js?v=6356ff8-1791174878";
+import { guessLocation, sunTimes, moonIllumination, moonPosition, moonPhaseName } from "./core/astro.js?v=6356ff8-1791174878";
+import { classifyWeather, weatherUrl, parseWeather } from "./core/weather.js?v=6356ff8-1791174878";
+import { createFacePicker, pickFace } from "./render/face.js?v=6356ff8-1791174878";
+import { SPRITES } from "./render/sprites.js?v=6356ff8-1791174878";
+import { loadProfile, saveProfile, freshProfile, exportCode, importCode } from "./app/store.js?v=6356ff8-1791174878";
+import { sfx, setSoundEnabled } from "./app/sound.js?v=6356ff8-1791174878";
+import { markSeen, recordPet, renderCollection, letterText, portrait, currentKey, HOW_KO } from "./app/collection.js?v=6356ff8-1791174878";
+import { deviceInfo, registerSW, enablePush, ensurePush, uploadSchedule, sendTest, serverStatus } from "./app/push.js?v=6356ff8-1791174878";
 
 const clock = { offset: 0, now() { return Date.now() + this.offset; } }; // offset은 개발 도구만 바꾼다
 
@@ -634,7 +634,7 @@ function boot() {
   // 개발 도구(공개 배포에는 없음): ?dev 로 열기
   if (QS.has("dev")) {
     window.__pp = { clock, getProfile: () => profile, tick, anim, playAnim: (n, d) => playAnim(anim, n, performance.now(), d) };
-    import("./dev/panel.js?v=5b3d2dd-1791174729").then((m) => m.mount({ clock, getProfile: () => profile, tick, renderStats, syncNow, serverStatus })).catch(() => {});
+    import("./dev/panel.js?v=6356ff8-1791174878").then((m) => m.mount({ clock, getProfile: () => profile, tick, renderStats, syncNow, serverStatus })).catch(() => {});
   }
 }
 
