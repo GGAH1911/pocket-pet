@@ -1,11 +1,15 @@
 // 저장: 휴대폰 브라우저 저장소(localStorage). 직전 저장본을 백업으로 하나 더 둔다.
-import { DEFAULT_SETTINGS } from "../core/rules.js?v=4532693-1791199752";
-import { SAVE_VERSION, migratePet } from "../core/state.js?v=4532693-1791199752";
-import { newEcon, normalizeEcon, grant, equip } from "../core/economy.js?v=4532693-1791199752";
-import { ensureBasics, ITEM } from "../core/catalog.js?v=4532693-1791199752";
+import { DEFAULT_SETTINGS } from "../core/rules.js?v=a5da7e2-1791205652";
+import { SAVE_VERSION, migratePet } from "../core/state.js?v=a5da7e2-1791205652";
+import { newEcon, normalizeEcon, grant, equip } from "../core/economy.js?v=a5da7e2-1791205652";
+import { ensureBasics, ITEM } from "../core/catalog.js?v=a5da7e2-1791205652";
 
 const KEY = "pocket-pet:save";
 const BACKUP = "pocket-pet:save:backup";
+export const SAVE_KEYS = [KEY, BACKUP];
+// 앱에서는 저장할 때마다 기기 저장소(Preferences)에도 같은 내용을 쓴다(main.js가 연결)
+let mirror = null;
+export function setSaveMirror(fn) { mirror = fn; }
 
 function newDeviceId() {
   const b = new Uint8Array(16); crypto.getRandomValues(b);
@@ -52,6 +56,7 @@ export function saveProfile(p) {
   const prev = localStorage.getItem(KEY);
   if (prev) localStorage.setItem(BACKUP, prev);
   localStorage.setItem(KEY, s);
+  if (mirror) { if (prev) mirror(BACKUP, prev); mirror(KEY, s); }
 }
 
 // 저장 내보내기/불러오기: 글자 코드(기기 변경, 사파리 → 홈 화면 앱 옮기기, 저장소 삭제 대비)

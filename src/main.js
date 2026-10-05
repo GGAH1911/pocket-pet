@@ -1,26 +1,28 @@
 // 부팅 순서는 이 파일 한 곳에서만 정해요.
 // (지난 게임에서 파일 읽는 순서 때문에 저장 기본값이 빠지는 버그가 있었어요.)
 // 순서: 저장 불러오기 → 꺼져 있던 시간 계산 → 화면 시작 → 서비스 워커·알림 확인 → 알림 일정 올리기
-import { createPet } from "./core/state.js?v=4532693-1791199752";
-import { advance, feed, play, wash, walk, wakeFromNap, cleanPoop, toggleLight, giveMedicine, patPet, switchEndMode, retirePet } from "./core/sim.js?v=4532693-1791199752";
-import { predictNotifications } from "./core/notify.js?v=4532693-1791199752";
-import { josa } from "./core/josa.js?v=4532693-1791199752";
-import { drawRoom, drawIcon, roomLayout } from "./render/screen.js?v=4532693-1791199752";
-import { createAnimator, play as playAnim, frame as animFrame, addFx, DUR as ANIM_DUR } from "./render/anim.js?v=4532693-1791199752";
-import { pickGame, createGame, GAME_NAMES } from "./app/games.js?v=4532693-1791199752";
-import { EGGS, findEgg, createStreak, specialDay, SPECIAL_KO, HAT_OF, wishTime, MAKER_LETTER } from "./app/eggs.js?v=4532693-1791199752";
-import { earn, buy, equip, unequip, grant as grantItem, gems, canAfford, dailyStatus, claimDaily, DAILY } from "./core/economy.js?v=4532693-1791199752";
-import { ITEMS, ITEM, SLOTS, TABS, PICKS, PACKS, SOON, BASIC_EQUIP } from "./core/catalog.js?v=4532693-1791199752";
-import { renderShop, renderDeco, dailyCard, spriteCanvas } from "./app/shop-ui.js?v=4532693-1791199752";
-import { formKey, lookOf, FORMS as FORMS_REF, SPOT_COLORS, eggSpriteFor } from "./render/creature.js?v=4532693-1791199752";
-import { guessLocation, sunTimes, moonIllumination, moonPosition, moonPhaseName } from "./core/astro.js?v=4532693-1791199752";
-import { classifyWeather, weatherUrl, parseWeather } from "./core/weather.js?v=4532693-1791199752";
-import { createFacePicker, pickFace } from "./render/face.js?v=4532693-1791199752";
-import { SPRITES, drawSprite } from "./render/sprites.js?v=4532693-1791199752";
-import { loadProfile, saveProfile, freshProfile, exportCode, importCode } from "./app/store.js?v=4532693-1791199752";
-import { sfx, setSoundEnabled } from "./app/sound.js?v=4532693-1791199752";
-import { markSeen, recordPet, renderCollection, letterText, portrait, currentKey, HOW_KO, unlockedSet, REWARDS, nextGoal, adultsSeen, ADULT_KEYS, formOrder, EGG_COLOR_KO } from "./app/collection.js?v=4532693-1791199752";
-import { deviceInfo, registerSW, enablePush, ensurePush, uploadSchedule, sendTest, serverStatus } from "./app/push.js?v=4532693-1791199752";
+import { createPet } from "./core/state.js?v=a5da7e2-1791205652";
+import { advance, feed, play, wash, walk, wakeFromNap, cleanPoop, toggleLight, giveMedicine, patPet, switchEndMode, retirePet } from "./core/sim.js?v=a5da7e2-1791205652";
+import { predictNotifications } from "./core/notify.js?v=a5da7e2-1791205652";
+import { josa } from "./core/josa.js?v=a5da7e2-1791205652";
+import { drawRoom, drawIcon, roomLayout } from "./render/screen.js?v=a5da7e2-1791205652";
+import { createAnimator, play as playAnim, frame as animFrame, addFx, DUR as ANIM_DUR } from "./render/anim.js?v=a5da7e2-1791205652";
+import { pickGame, createGame, GAME_NAMES } from "./app/games.js?v=a5da7e2-1791205652";
+import { EGGS, findEgg, createStreak, specialDay, SPECIAL_KO, HAT_OF, wishTime, MAKER_LETTER } from "./app/eggs.js?v=a5da7e2-1791205652";
+import { earn, buy, equip, unequip, grant as grantItem, gems, canAfford, dailyStatus, claimDaily, DAILY, grantPurchase } from "./core/economy.js?v=a5da7e2-1791205652";
+import { ITEMS, ITEM, SLOTS, TABS, PICKS, PACKS, SOON, BASIC_EQUIP } from "./core/catalog.js?v=a5da7e2-1791205652";
+import { renderShop, renderDeco, dailyCard, spriteCanvas } from "./app/shop-ui.js?v=a5da7e2-1791205652";
+import { formKey, lookOf, FORMS as FORMS_REF, SPOT_COLORS, eggSpriteFor } from "./render/creature.js?v=a5da7e2-1791205652";
+import { guessLocation, sunTimes, moonIllumination, moonPosition, moonPhaseName } from "./core/astro.js?v=a5da7e2-1791205652";
+import { classifyWeather, weatherUrl, parseWeather } from "./core/weather.js?v=a5da7e2-1791205652";
+import { createFacePicker, pickFace } from "./render/face.js?v=a5da7e2-1791205652";
+import { SPRITES, drawSprite } from "./render/sprites.js?v=a5da7e2-1791205652";
+import { loadProfile, saveProfile, freshProfile, exportCode, importCode, SAVE_KEYS, setSaveMirror } from "./app/store.js?v=a5da7e2-1791205652";
+import * as native from "./app/native.js?v=a5da7e2-1791205652";
+import { planReconcile, isPaid } from "./core/billing.js?v=a5da7e2-1791205652";
+import { sfx, setSoundEnabled } from "./app/sound.js?v=a5da7e2-1791205652";
+import { markSeen, recordPet, renderCollection, letterText, portrait, currentKey, HOW_KO, unlockedSet, REWARDS, nextGoal, adultsSeen, ADULT_KEYS, formOrder, EGG_COLOR_KO } from "./app/collection.js?v=a5da7e2-1791205652";
+import { deviceInfo, registerSW, enablePush, ensurePush, uploadSchedule, sendTest, serverStatus } from "./app/push.js?v=a5da7e2-1791205652";
 
 const clock = { offset: 0, now() { return Date.now() + this.offset; } }; // offset은 개발 도구만 바꾼다
 
@@ -30,6 +32,8 @@ const stage = $("stage"), canvas = $("room"), ctx = canvas.getContext("2d");
 let view = { w: DOT_WIDTH, h: 200 };
 const QS = new URLSearchParams(location.search);
 if (QS.has("dev") && QS.has("reset")) { localStorage.clear(); history.replaceState(null, "", location.pathname + "?dev"); } // 개발용 초기화
+await native.restoreSave(SAVE_KEYS); // 앱: WebView 저장소가 지워졌으면 기기 저장소에서 되살림(웹은 아무 일 없음)
+setSaveMirror(native.mirrorSave);
 let profile = loadProfile();
 const anim = createAnimator();
 const faces = createFacePicker();
@@ -128,7 +132,7 @@ function renderStats() {
   box.innerHTML = rows.map(([label, k]) => {
     const v = Math.round(p.stats[k]);
     const cls = v <= 20 ? "low" : v <= 50 ? "mid" : "";
-    return `<div class="stat ${cls}" title="${label} ${v}">${label}<i><u style="width:${v}%"></u></i></div>`;
+    return `<div class="stat ${cls}" title="${label} ${v}">${label}<i><u style="width:${v}%"></u></i><b>${v}</b></div>`;
   }).join("");
   const key = currentKey(p);
   $("sub").textContent = `${key ? FORMS_REF[key]?.name || "" : "알"} · ${Math.floor(p.ageMin / 1440) + 1}일째`;
@@ -136,13 +140,9 @@ function renderStats() {
   // 기운이 낮은 낮에는 "재우기"로 보여서 낮잠을 재울 수 있다는 걸 알게
   const napHint = p.lightOn && !p.asleep && p.napLeft <= 0 && p.stage !== "egg" && p.stats.energy < 50;
   $("btn-light").querySelector("span").textContent = !p.lightOn ? (p.napLeft > 0 ? "깨우기" : "불 켜기") : napHint ? "재우기" : "불 끄기";
-  // 아플 때만 꾸미기 자리에 약
+  // 약 버튼은 늘 그 자리에(안 아플 땐 흐리게, 아플 땐 강조). 꾸미기는 위쪽 헤더 버튼으로 옮김(사용자 요청, 디자인 자문)
   const ex = $("btn-extra"), sick = !!p.sick;
-  if (ex.dataset.act !== (sick ? "medicine" : "deco")) {
-    ex.dataset.act = sick ? "medicine" : "deco"; ex.classList.toggle("sick", sick);
-    ex.querySelector("span").textContent = sick ? "약" : "꾸미기";
-    drawIcon(ex.querySelector("canvas"), SPRITES[sick ? "iconMedicine" : "iconDeco"]);
-  }
+  ex.classList.toggle("sick", sick); ex.classList.toggle("dim", !sick);
 }
 
 // 위쪽 화폐
@@ -180,7 +180,8 @@ async function syncNow({ keepalive = false } = {}) {
   if (!profile.pet || !profile.push.subscribed) return;
   try {
     const { notes } = predictNotifications(profile.pet, clock.now(), profile.settings);
-    await uploadSchedule(profile.deviceId, notes, { keepalive });
+    if (IS_APP) await native.scheduleLocal(notes, clock.now());
+    else await uploadSchedule(profile.deviceId, notes, { keepalive });
     profile.push.lastSync = Date.now(); profile.push.nextAt = notes[0]?.at || null; persist();
   } catch (e) { console.warn("알림 일정 올리기 실패", e); }
 }
@@ -199,18 +200,25 @@ function careReward(name, before, p, r) {
   else if (name === "lightOff" && before.asleep && before.lightOn) reward("care", "lightOff");
 }
 
+// 밥·씻기 같은 돌봄 동작이 끝나기 전에는 다른 돌봄(재우기 포함)을 받지 않는다.
+// (사용자 지적: 씻는 도중 재우기를 누르면 욕조 속에서 잠들었음. 반대로 자는 중 씻기는 먼저 깨움 → 둘 다 '하던 걸 끝내고' 규칙으로 맞춤)
+const BUSY_KO = { meal: "밥 먹는", snack: "간식 먹는", play: "노는", wash: "씻는", medicine: "약 먹는" };
+let actBusy = { until: 0, name: "" };
 function act(fn, okText, anims) {
   const p = profile.pet; if (!p) return;
   if (walking()) return; // 산책 중엔 다른 행동 안 함
+  if (performance.now() < actBusy.until) { say(`${BUSY_KO[actBusy.name] || "하던"} 중이에요. 끝나면 해 주세요`, 2500); sfx("refuse"); return; }
   const before = { poops: p.poops, lightOn: p.lightOn, sick: p.sick, hunger: p.stats.hunger, clean: p.stats.clean, asleep: p.asleep };
   const r = fn(p, clock.now());
   handleEvents(r.events);
   const t = performance.now();
   if (r.ok) {
     const [name, data] = anims(r, before);
+    if (BUSY_KO[name]) actBusy = { until: performance.now() + (r.woke ? 1300 : 0) + (ANIM_DUR[name] || 1000), name };
     if (r.woke) { // 낮잠 중이었으면 먼저 깨고(기지개) 그다음 행동
       say(`${josa(p.name, "을", "를")} 깨웠어요. ${okText(p, r)}`);
-      if (name) setTimeout(() => { playAnim(anim, name, performance.now(), data); sfx(SFX_OF[name] || "tap"); }, 1300);
+      // 깨우기(불 켜기)는 깨는 것 자체가 행동이라 기지개(untuck)를 두 번 틀지 않는다(쿠션이 두 번 생겼다 사라지던 원인)
+      if (name && name !== "untuck") setTimeout(() => { playAnim(anim, name, performance.now(), data); sfx(SFX_OF[name] || "tap"); }, 1300);
     } else {
       say(okText(p, r));
       if (name) { playAnim(anim, name, t, data); sfx(SFX_OF[name] || "tap"); }
@@ -238,7 +246,7 @@ const ACTIONS = {
   deco: () => openDeco(),
   wash: () => act((p, t) => wash(p, t, S()), (p) => (p.poops ? "뽀득뽀득 깨끗해졌어요. 바닥의 똥은 톡 눌러 치워요" : "뽀득뽀득 깨끗해졌어요"), () => ["wash"]),
   light: () => act((p, t) => toggleLight(p, t, S()), (p, r) => (r.napped ? `불을 껐어요. ${I(p.name)} 낮잠을 자요 (1시간 뒤 깨요)` : r.woke ? `불을 켰어요. ${I(p.name)} 낮잠에서 깼어요` : r.notSleepy ? `불을 껐어요. ${I(p.name)} 아직 안 졸린대요` : p.lightOn ? "불을 켰어요" : "불을 껐어요"), (r) => (r.napped ? ["tuckIn", { night: false }] : r.woke ? ["untuck", { night: false }] : [r.lightOn ? "lightOn" : "lightOff"])),
-  medicine: () => act((p, t) => giveMedicine(p, t, S()), (p) => (p.sick ? "약을 먹었어요. 한 번 더 필요해요" : "다 나았어요"), () => ["medicine"]),
+  medicine: () => (profile.pet && !profile.pet.sick && !profile.pet.ended && profile.pet.stage !== "egg" ? (say("지금은 안 아파요", 2000), sfx("tap")) : act((p, t) => giveMedicine(p, t, S()), (p) => (p.sick ? "약을 먹었어요. 한 번 더 필요해요" : "다 나았어요"), () => ["medicine"])),
 };
 
 const PREV_STAGE = { baby: "egg", child: "baby", teen: "child", adult: "teen" };
@@ -660,10 +668,49 @@ function renderShopUI() {
     onRestore: () => restorePurchases(),
   });
 }
-// 돈 결제: 웹에서는 안내만(M8 앱에서 Play 결제 연결)
-const IS_APP = false;
-function buyPack(pack) { sfx("tap"); say(`${pack.name}은(는) 플레이스토어 앱에서 살 수 있어요(준비 중)`, 5000); }
-function restorePurchases() { say("앱에서 산 상품을 다시 불러오는 기능이에요. 웹에서는 산 것이 없어요", 4000); }
+// 돈 결제: 웹에서는 안내만, 앱은 플레이 결제(서버 없음, 규칙은 core/billing.js·docs/m8-plan.md)
+const IS_APP = native.IS_APP;
+let paying = false;
+async function buyPack(pack) {
+  sfx("tap");
+  if (!IS_APP) { say(`${pack.name}은(는) 플레이스토어 앱에서 살 수 있어요(준비 중)`, 5000); return; }
+  if (paying) return;
+  if (pack.once && profile.econ.bought[pack.id]) { say("이미 산 상품이에요", 3000); return; }
+  paying = true;
+  try {
+    const t = await native.payBuy(pack);
+    if (!t?.purchaseToken) { say("결제가 끝나지 않았어요", 4000); return; }
+    if (!isPaid(t)) { say("결제가 확인되면 다음에 앱을 열 때 받아요", 6000); return; }
+    profile.payPending = { ...(profile.payPending || {}), [t.purchaseToken]: { sku: pack.sku, at: Date.now() } }; persist(); // 지급 대기 먼저 저장
+    await settlePurchase({ do: pack.once ? "ack" : "consume", token: t.purchaseToken, pack });
+  } catch (e) {
+    const msg = String(e?.message || e);
+    if (/cancel/i.test(msg)) say("결제를 취소했어요", 3000);
+    else if (/BILLING_UNAVAILABLE|unavailable/i.test(msg)) say("이 기기에서는 구글 결제를 쓸 수 없어요(플레이 스토어 로그인·제한 설정을 확인해 주세요)", 7000);
+    else say("결제를 마치지 못했어요. 돈이 나갔다면 앱을 다시 열면 받아요", 7000);
+    console.warn("결제 실패", e);
+  } finally { paying = false; renderShopUI(); }
+}
+// 소비(또는 확인)가 끝난 뒤에만 지급. 실패하면 지급 대기로 남겨 두고 다음에 앱을 열 때 다시 시도
+async function settlePurchase(job) {
+  if (job.do === "consume" || job.do === "consumeOnly") await native.payConsume(job.token);
+  if (job.do === "ack" && !job.acknowledged) { try { await native.payAck(job.token); } catch (e) { if (!/already/i.test(String(e?.message))) throw e; } }
+  if (job.do !== "consumeOnly") {
+    const r = grantPurchase(profile.econ, job.pack, job.token, Date.now());
+    if (r.ok) { gainFx({ gem: job.pack.gems || 0, star: job.pack.stars || 0 }); sfx("win"); say(`${job.pack.name}을(를) 받았어요!`, 5000); }
+  }
+  if (profile.payPending) delete profile.payPending[job.token];
+  persist(); renderWallet();
+}
+async function reconcilePurchases({ manual = false } = {}) {
+  if (!IS_APP) { if (manual) say("앱에서 산 상품을 다시 불러오는 기능이에요. 웹에서는 산 것이 없어요", 4000); return; }
+  try {
+    const jobs = planReconcile(await native.payList(), profile.econ, profile.payPending || {});
+    for (const j of jobs) { try { await settlePurchase(j); } catch (e) { console.warn("결제 정리 실패", j, e); } }
+    if (manual) say(jobs.length ? "산 상품을 다시 불러왔어요" : "새로 받을 상품이 없어요. 하트 보석은 쓰면 사라지는 상품이라 기기를 바꾸면 복원되지 않아요(저장 내보내기로 옮겨요)", 7000);
+  } catch (e) { if (manual) say("구글 결제에 연결하지 못했어요. 잠시 뒤 다시 해 주세요", 5000); console.warn(e); }
+}
+function restorePurchases() { reconcilePurchases({ manual: true }); }
 
 // ---------- 꾸미기 모드 ----------
 const decoState = { slot: "wall" };
@@ -720,8 +767,27 @@ function closeSheet() {
   $("backdrop").hidden = true;
 }
 
+async function renderNotifyApp() {
+  const box = $("notify-body");
+  const perm = await native.notifyPermission();
+  const on = profile.push.subscribed && perm === "granted";
+  let html = on
+    ? `<p class="ok">알림 켜짐 · 휴대폰 안에서 예약돼요(인터넷 없어도 와요)</p><button class="big" id="btn-test">시험 알림 (1분 뒤)</button><p class="small">누른 뒤 홈으로 나가서 1~2분 기다려 보세요. 휴대폰이 절전 중이면 몇 분 늦게 올 수 있어요.</p><button class="big ghost" id="btn-off">알림 끄기</button>`
+    : `<p>상태: <b>${perm === "denied" ? "알림 막힘(휴대폰 설정 → 앱 → 알모찌 → 알림에서 허용해 주세요)" : "아직 안 켬"}</b></p><button class="big" id="btn-enable">알림 받기</button>`;
+  html += `<p class="small dim">알림 종류마다 소리가 달라요. 휴대폰 설정 → 앱 → 알모찌 → 알림에서 종류별로 끄거나 소리를 바꿀 수 있어요.</p>`;
+  box.innerHTML = html;
+  $("btn-enable")?.addEventListener("click", async () => {
+    const r = await native.askNotifyPermission();
+    if (r === "granted") { profile.push.subscribed = true; persist(); await syncNow(); say("알림을 켰어요. 시험 알림으로 확인해 보세요", 6000); }
+    else say("알림이 막혀 있어요. 휴대폰 설정에서 허용해 주세요", 6000);
+    renderNotifyApp(); renderQuickSettings();
+  });
+  $("btn-test")?.addEventListener("click", async () => { await native.testLocal(profile.pet?.name); say("1분 뒤 시험 알림이 와요. 홈으로 나가서 기다려 보세요", 8000); });
+  $("btn-off")?.addEventListener("click", async () => { profile.push.subscribed = false; persist(); await native.cancelLocal(); say("알림을 껐어요", 3000); renderNotifyApp(); renderQuickSettings(); });
+}
 function renderNotify() {
   profile.seenGuide = true; persist();
+  if (IS_APP) { renderNotifyApp(); return; }
   const d = deviceInfo();
   const box = $("notify-body");
   let html = "";
@@ -900,6 +966,29 @@ function tick() {
 }
 
 // ---------- 시작 ----------
+// 앱 전용: 뒤로 가기(놀이 → 창 → 카드 → 홈으로), 백그라운드 전환, 알림 누름, 결제 정리
+function bootApp() {
+  native.onAppEvents({
+    back: () => {
+      if (mg) { endMinigame(true); return; }
+      const card = [...document.querySelectorAll(".dexcard")].find((c) => !c.hidden);
+      if (card) { card.querySelector(".x")?.click(); return; }
+      if ([...document.querySelectorAll(".sheet")].some((x) => !x.hidden)) { closeSheet(); return; }
+      native.minimizeApp();
+    },
+    pause: () => { profile.lastSeen = Date.now(); persist(); syncNow(); },
+    resume: () => { tick(); native.clearDelivered(); syncNow(); reconcilePurchases(); },
+  });
+  native.onNotifyTap(() => {
+    if (profile.pet && profile.pet.stage !== "egg" && !profile.pet.asleep && !profile.pet.ended) {
+      setTimeout(() => { playAnim(anim, "greetBig", performance.now()); say(`와 줬구나! ${I(profile.pet.name)} 기다렸어요`, 5000); }, 400);
+    }
+  });
+  native.clearDelivered();
+  if (profile.push.subscribed) syncNow();
+  reconcilePurchases();
+}
+
 function boot() {
   for (const btn of document.querySelectorAll("[data-icon]")) drawIcon(btn.querySelector("canvas"), SPRITES[btn.dataset.icon]);
   for (const btn of document.querySelectorAll("[data-act]")) btn.addEventListener("click", () => ACTIONS[btn.dataset.act]());
@@ -981,17 +1070,18 @@ function boot() {
     }
   });
 
-  // 서비스 워커·알림 연결 확인
-  registerSW().then(async () => {
+  // 서비스 워커·알림 연결 확인(웹). 앱은 서비스 워커 없이 기기 안 알림
+  if (!IS_APP) registerSW().then(async () => {
     if (profile.push.subscribed) {
       try { await ensurePush(profile.deviceId); await syncNow(); } catch (e) { console.warn(e); }
     }
   });
+  else bootApp();
 
   // 개발 도구(공개 배포에는 없음): ?dev 로 열기
   if (QS.has("dev")) {
     window.__pp = { clock, getProfile: () => profile, tick, anim, playAnim: (n, d) => playAnim(anim, n, performance.now(), d), mg: () => mg, layout: () => layout, forceGame: null, boxes: () => ({ windowBox, petBox, memoBox }), render: () => renderStats() };
-    import("./dev/panel.js?v=4532693-1791199752").then((m) => m.mount({ clock, getProfile: () => profile, tick, renderStats, syncNow, serverStatus })).catch(() => {});
+    import("./dev/panel.js?v=a5da7e2-1791205652").then((m) => m.mount({ clock, getProfile: () => profile, tick, renderStats, syncNow, serverStatus })).catch(() => {});
   }
 }
 

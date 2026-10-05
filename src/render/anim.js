@@ -30,7 +30,10 @@ export function addFx(a, type, x, y, now, dur = 600, extra = {}) {
   a.fx.push({ type, x, y, start: now, dur, ...extra });
 }
 
+const BED_ANIMS = new Set(["tuckIn", "untuck"]);
 export function play(a, type, now, data = {}) {
+  // 쿠션이 나타나는/사라지는 도중에 반대 동작이 오면, 지금 보이는 크기에서 이어서(두 번 생겼다 사라지는 것처럼 보이지 않게)
+  if (BED_ANIMS.has(type) && a.cur && BED_ANIMS.has(a.cur.type) && busy(a, now)) data = { ...data, fromBed: a.lastBed ?? null, fromBlanket: a.lastBlanket ?? null };
   a.cur = { type, start: now, dur: DUR[type] || 1000, data };
 }
 
@@ -153,6 +156,7 @@ export function frame(a, now, scene, { roam = 20 } = {}) {
     if (t >= 1) { a.cur = null; }
     else applyOneShot(f, c, t, now, scene);
   }
+  a.lastBed = f.bed; a.lastBlanket = f.blanket;
   return f;
 }
 
@@ -493,15 +497,17 @@ function applyOneShot(f, c, t, now, scene) {
     }
     case "tuckIn": {
       // 잠들 때: 쿠션이 톡 → 이불이 아래에서 스르륵 올라와 덮음
-      f.bed = Math.max(0.001, ease(t / 0.5));
-      f.blanket = c.data.night ? ease(clamp01((t - 0.35) / 0.65)) : 0; // 쿠션이 먼저, 이불은 그다음(밤잠만)
+      const b0 = c.data.fromBed ?? 0, k0 = c.data.fromBlanket ?? 0; // 깨는 도중이었으면 그 크기에서 이어서
+      f.bed = Math.max(0.001, b0 + (1 - b0) * ease(clamp01(t / 0.5)));
+      f.blanket = c.data.night ? k0 + (1 - k0) * ease(clamp01((t - 0.35) / 0.65)) : 0; // 쿠션이 먼저, 이불은 그다음(밤잠만)
       if (t < 0.35) { p.eyes = "closed"; p.mouth = "yawn"; } // 하품
       break;
     }
     case "untuck": {
       // 깰 때: 기지개 켜며 이불이 내려가고 쿠션이 사라짐
-      f.bed = 1 - ease(clamp01((t - 0.3) / 0.7));
-      f.blanket = c.data.night ? 1 - ease(clamp01(t / 0.5)) : 0; // 이불 먼저 걷고 쿠션이 사라짐
+      const b0 = c.data.fromBed ?? 1, k0 = c.data.fromBlanket ?? 1; // 잠드는 도중이었으면 그 크기에서 줄어듦
+      f.bed = b0 * (1 - ease(clamp01((t - 0.3) / 0.7)));
+      f.blanket = c.data.night ? k0 * (1 - ease(clamp01(t / 0.5))) : 0; // 이불 먼저 걷고 쿠션이 사라짐
       p.sy *= 1 + Math.sin(clamp01(t / 0.6) * Math.PI) * 0.12; p.sx *= 1 - Math.sin(clamp01(t / 0.6) * Math.PI) * 0.06;
       p.eyes = t < 0.5 ? "closed" : null; p.mouth = t < 0.5 ? "yawn" : null;
       break;
