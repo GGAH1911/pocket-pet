@@ -1,7 +1,7 @@
 // 방 꾸미기 그림: 벽지·바닥·러그·커튼·가구. 상점 미리보기(작은 그림)도 같은 함수로 그린다.
 // 좌표는 캔버스 논리 픽셀. 가구는 x(가운데)·base(바닥에 닿는 y) 기준.
-import { PALETTE } from "./palette.js?v=2a0ebed-1791194422";
-import { SPRITES, drawSprite, spriteSize } from "./sprites.js?v=2a0ebed-1791194422";
+import { PALETTE } from "./palette.js?v=c043b5f-1791194688";
+import { SPRITES, drawSprite, spriteSize } from "./sprites.js?v=c043b5f-1791194688";
 
 export const HAT_SPRITE = { hat_ribbon: "hatRibbon", hat_straw: "hatStraw", hat_glasses: "hatGlasses", hat_crown: "hatCrown", hat_flower: "hatFlower" };
 
@@ -30,7 +30,7 @@ export function drawWall(ctx, w, floorY, id = "wall_basic") {
 // ---------- 바닥 ----------
 export function drawFloor(ctx, w, h, floorY, id = "floor_wood") {
   if (id === "floor_check") {
-    for (let y = floorY; y < h; y += 8) for (let x = 0; x < w; x += 8) rect(ctx, x, y, 8, 8, ((x + y) / 8) % 2 ? "#f6e7d2" : "#fffaf2");
+    for (let y = floorY; y < h; y += 8) for (let x = 0; x < w; x += 8) rect(ctx, x, y, 8, 8, (Math.floor(x / 8) + Math.floor((y - floorY) / 8)) % 2 ? "#efd9bd" : "#fffaf2"); // 칸 번호로 번갈아(바닥 시작 위치와 무관)
   } else if (id === "floor_carpet") {
     rect(ctx, 0, floorY, w, h - floorY, "#e4d2fb");
     for (let y = floorY + 4; y < h; y += 6) for (let x = (y % 12) ? 2 : 5; x < w; x += 6) rect(ctx, x, y, 1, 1, "#d2baf5");
