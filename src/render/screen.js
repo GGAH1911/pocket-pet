@@ -1,10 +1,10 @@
 // 방 화면 그리기. 게임 규칙은 모르고 받은 상태만 그린다.
 // 캔버스는 "도트 해상도"로 그리고 CSS가 정수배로 키운다.
-import { PALETTE } from "./palette.js?v=d171e6b-1791172096";
-import { SPRITES, drawSprite, spriteSize } from "./sprites.js?v=d171e6b-1791172096";
-import { buildCreature, paintGrid, formKey } from "./creature.js?v=d171e6b-1791172096";
-import { drawFace } from "./face.js?v=d171e6b-1791172096";
-import { drawSky } from "./sky.js?v=d171e6b-1791172096";
+import { PALETTE } from "./palette.js?v=543dee1-1791172481";
+import { SPRITES, drawSprite, spriteSize } from "./sprites.js?v=543dee1-1791172481";
+import { buildCreature, paintGrid, formKey } from "./creature.js?v=543dee1-1791172481";
+import { drawFace } from "./face.js?v=543dee1-1791172481";
+import { drawSky } from "./sky.js?v=543dee1-1791172481";
 
 const FLOOR = "#f5b98c";
 const FLOOR_LINE = "#e9a274";
@@ -175,34 +175,7 @@ function drawCushion(ctx, x, baseY, bodyW, bed, theme) {
   ctx.globalAlpha = 1;
 }
 
-// 이불: 아래에서 올라와 몸 아래쪽 절반을 덮음. 숨 쉴 때 가장자리가 살짝 물결침
-function drawBlanket(ctx, x, base, box, P, bodyW, bed, now, theme) {
-  const W = bodyW + 8;
-  const left = Math.round(x - W / 2);
-  const bottom = base + 3;
-  const mouthBottom = P.cy - P.ry * 0.12 + Math.max(3, Math.round(P.ry * 0.32)) + 2; // 얼굴(입)까지는 보이게
-  const targetTop = box.oy + Math.round(Math.max(mouthBottom, P.cy + P.ry * 0.3) * CELL);
-  const top = Math.round(bottom - (bottom - targetTop) * bed);
-  if (bottom - top < 2) return;
-  const [c1, c2, dot] = theme === "fantasy" ? [PALETTE.b, PALETTE.B, PALETTE.y] : [PALETTE.p, PALETTE.P, PALETTE.w];
-  for (let xx = 0; xx < W; xx++) {
-    const wave = Math.round(Math.sin(xx / 4 + now / 700) * 0.8);
-    const edge = xx === 0 || xx === W - 1 ? 2 : xx === 1 || xx === W - 2 ? 1 : 0; // 둥근 모서리
-    const yTop = top + wave + edge;
-    const px = left + xx;
-    ctx.fillStyle = PALETTE.k; ctx.fillRect(px, yTop - 1, 1, 1); // 윗선
-    ctx.fillStyle = PALETTE.w; ctx.fillRect(px, yTop, 1, 2); // 접힌 깃
-    ctx.fillStyle = c1; ctx.fillRect(px, yTop + 2, 1, Math.max(0, bottom - yTop - 2));
-    if (xx === 0 || xx === W - 1) { ctx.fillStyle = PALETTE.k; ctx.fillRect(px, yTop, 1, bottom - yTop); }
-  }
-  ctx.fillStyle = c2; ctx.fillRect(left + 1, bottom - 2, W - 2, 2); // 아래 그림자
-  // 무늬(동물: 흰 땡땡이, 상상: 노란 별)
-  ctx.fillStyle = dot;
-  for (let yy = top + 5; yy < bottom - 3; yy += 5) for (let xx = left + 3 + ((yy / 5) % 2) * 3; xx < left + W - 3; xx += 6) {
-    ctx.fillRect(xx, yy, 2, 1); ctx.fillRect(xx, yy, 1, 2);
-  }
-}
-const CACHE = new Map();
+const CACHE = new Map(); // 같은 모습은 다시 계산하지 않기 위한 캐시
 
 function drawPet(ctx, scene, fr, { cx, baseY, now }) {
   const pose = fr.pose;
@@ -211,10 +184,12 @@ function drawPet(ctx, scene, fr, { cx, baseY, now }) {
   // 같은 모습은 다시 계산하지 않는다(숨쉬기처럼 미세한 늘어남은 0.02 단위로 묶음)
   const q = (v) => Math.round(v * 50) / 50;
   const look = scene.look || {}, fc = scene.face || {};
-  const ck = [key, q(pose.sx), q(pose.sy), pose.facing >= 0 ? 1 : -1, look.spot, look.chub, look.messy ? 1 : 0, fr.silhouette ? 1 : 0, pose.eyes, pose.mouth, fc.L, fc.R, fc.m, (fc.ex || []).join(","), fc.dy || 0, fc.look || 0].join("|");
+  const blk = fr.silhouette ? 0 : Math.round((fr.blanket || 0) * 10) / 10; // 밤잠 이불(덮인 정도)
+  const bphase = blk > 0 ? Math.floor(now / 450) % 6 : 0; // 숨결 물결
+  const ck = [key, q(pose.sx), q(pose.sy), pose.facing >= 0 ? 1 : -1, look.spot, look.chub, look.messy ? 1 : 0, fr.silhouette ? 1 : 0, pose.eyes, pose.mouth, fc.L, fc.R, fc.m, (fc.ex || []).join(","), fc.dy || 0, fc.look || 0, blk, bphase, scene.theme].join("|");
   let cached = CACHE.get(ck);
   if (!cached) {
-    const built = buildCreature(key, { sx: q(pose.sx), sy: q(pose.sy), facing: pose.facing, look, silhouette: fr.silhouette ? "w" : null });
+    const built = buildCreature(key, { sx: q(pose.sx), sy: q(pose.sy), facing: pose.facing, look, silhouette: fr.silhouette ? "w" : null, blanket: blk > 0 ? { k: blk, phase: bphase, theme: scene.theme } : null });
     if (!built) return null;
     const faceInfo = fr.silhouette ? null : drawFace(built.g, built.P, scene.face, { eyes: pose.eyes, mouth: pose.mouth });
     cached = { built, faceInfo };
@@ -235,7 +210,7 @@ function drawPet(ctx, scene, fr, { cx, baseY, now }) {
     ctx.fillRect(Math.round(cx + pose.dx - shw / 2), baseY - 1, shw, 3);
   }
   const box = paintGrid(ctx, built.g, x, base, CELL, { alpha: fr.petAlpha ?? 1, tint: scene.sick && !fr.silhouette ? "rgba(150,210,150,0.22)" : null });
-  if (bed > 0) drawBlanket(ctx, x, base, box, built.P, bodyW, bed, now, scene.theme);
+
   if (faceInfo) {
     // 눈물
     if (pose.tears) {

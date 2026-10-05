@@ -2,7 +2,7 @@
 // 몸 모양(타원·물방울·구름) + 귀·뿔·날개·꼬리·발·무늬를 도트 격자(칸)에 칠하고,
 // 바깥 테두리와 그림자를 자동으로 입힌다. 자세(늘어남·찌그러짐·바라보는 방향)는 매 프레임 반영된다.
 // 얼굴(표정)은 face.js 가 이 격자 위에 따로 얹는다.
-import { PALETTE } from "./palette.js?v=d171e6b-1791172096";
+import { PALETTE } from "./palette.js?v=543dee1-1791172481";
 
 const GW = 64, GH = 50; // 격자 크기(칸): 가장 큰 형태가 통통+늘어남이어도 안 잘리게
 
@@ -319,7 +319,32 @@ export function lookOf(pet) {
 }
 
 // 격자에 캐릭터를 칠한다. 결과: { g, P } (얼굴을 얹을 기준점 포함)
-export function buildCreature(key, { sx = 1, sy = 1, facing = 1, look = {}, silhouette = null } = {}) {
+// 밤잠 이불: 몸 위에 덮여 몸 모양을 따라 둥글게 감싼다(목 아래부터 발끝까지).
+// k: 덮인 정도(0 → 1), phase: 숨결 물결, theme: 무늬
+const BLANKET = { animal: ["p", "P", "w"], fantasy: ["b", "B", "y"] };
+function drawBlanketCells(g, P, { k = 1, phase = 0, theme = "animal" } = {}) {
+  const [c1, c2, dot] = BLANKET[theme] || BLANKET.animal;
+  const neck = P.cy - P.ry * 0.12 + Math.max(3, Math.round(P.ry * 0.32)) + 2.5; // 입 바로 아래(한 칸 띄움)
+  const top = P.base - (P.base - neck) * k;
+  const rxB = P.rx + 1.4, ryB = P.ry + 0.9;
+  for (let y = Math.floor(top) - 1; y <= P.base; y++) {
+    for (let x = Math.floor(P.cx - rxB - 1); x <= Math.ceil(P.cx + rxB + 1); x++) {
+      const dx = (x + 0.5 - P.cx) / rxB, dy = (y + 0.5 - P.cy) / ryB;
+      const inBody = dx * dx + Math.min(dy, 0) ** 2 <= 1; // 아래쪽은 몸 폭 그대로 바닥까지 늘어뜨림
+      if (!inBody) continue;
+      const edge = top + Math.sin((x + phase) / 2.2) * 0.6; // 숨결에 살짝 물결
+      if (y + 0.5 < edge) continue;
+      const row = y + 0.5 - edge;
+      let col = row < 1.4 ? "w" : c1; // 접힌 깃
+      if (col === c1 && y >= P.base - 1) col = c2; // 바닥 쪽 그림자
+      if (col === c1 && Math.abs(dx) > 0.86) col = c2; // 양옆으로 늘어진 부분은 진하게
+      if (col === c1 && (Math.floor(y) % 3 === 0) && ((x + Math.floor(y / 3)) % 4 === 0)) col = dot; // 무늬
+      g.c[y * g.w + x] = col;
+    }
+  }
+}
+
+export function buildCreature(key, { sx = 1, sy = 1, facing = 1, look = {}, silhouette = null, blanket = null } = {}) {
   const form = FORMS[key];
   if (!form) return null;
   const g = grid();
@@ -328,8 +353,9 @@ export function buildCreature(key, { sx = 1, sy = 1, facing = 1, look = {}, silh
   const base = GH - 2;
   const P = { cx: GW / 2, cy: base - ry, rx, ry, base, f: facing >= 0 ? 1 : -1, spot: look.spot || "p", messy: !!look.messy };
   form.draw(g, P);
+  if (blanket && blanket.k > 0 && !silhouette) drawBlanketCells(g, P, blanket);
   if (silhouette) for (let i = 0; i < g.c.length; i++) if (g.c[i]) g.c[i] = silhouette;
-  outline(g);
+  outline(g); // 이불까지 한 덩어리로 테두리
   return { g, P, form };
 }
 

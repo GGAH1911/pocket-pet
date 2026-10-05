@@ -50,7 +50,8 @@ export function frame(a, now, scene, { roam = 20 } = {}) {
     flash: 0,
     egg: null, // { shake, cracks }
     showKey: null, // 진화·부화 중 다른 모습을 보여줄 때
-    bed: 0, // 쿠션·이불(0 없음 → 1 다 덮음)
+    bed: 0, // 쿠션(0 없음 → 1), 낮잠·밤잠 모두
+    blanket: 0, // 몸 위에 덮는 이불(0 → 1), 밤잠에만
     silhouette: false,
     fx: [],
   };
@@ -107,6 +108,7 @@ export function frame(a, now, scene, { roam = 20 } = {}) {
   // ---- 상태 표현 ----
   if (scene.asleep || scene.napping) {
     f.bed = 1;
+    if (scene.asleep) { f.blanket = 1; p.sy *= 0.9; p.sx *= 1.05; } // 밤잠: 이불 덮고 낮게 웅크림
     p.eyes = "sleep";
     for (let i = 0; i < 3; i++) {
       const ph = ((now / 1800) + i / 3) % 1;
@@ -321,13 +323,15 @@ function applyOneShot(f, c, t, now, scene) {
     }
     case "tuckIn": {
       // 잠들 때: 쿠션이 톡 → 이불이 아래에서 스르륵 올라와 덮음
-      f.bed = Math.max(0.001, ease(t));
+      f.bed = Math.max(0.001, ease(t / 0.5));
+      f.blanket = c.data.night ? ease(clamp01((t - 0.35) / 0.65)) : 0; // 쿠션이 먼저, 이불은 그다음(밤잠만)
       if (t < 0.35) { p.eyes = "closed"; p.mouth = "yawn"; } // 하품
       break;
     }
     case "untuck": {
       // 깰 때: 기지개 켜며 이불이 내려가고 쿠션이 사라짐
-      f.bed = 1 - ease(t);
+      f.bed = 1 - ease(clamp01((t - 0.3) / 0.7));
+      f.blanket = c.data.night ? 1 - ease(clamp01(t / 0.5)) : 0; // 이불 먼저 걷고 쿠션이 사라짐
       p.sy *= 1 + Math.sin(clamp01(t / 0.6) * Math.PI) * 0.12; p.sx *= 1 - Math.sin(clamp01(t / 0.6) * Math.PI) * 0.06;
       p.eyes = t < 0.5 ? "closed" : null; p.mouth = t < 0.5 ? "yawn" : null;
       break;
