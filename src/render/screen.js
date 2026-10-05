@@ -1,11 +1,11 @@
 // 방 화면 그리기. 게임 규칙은 모르고 받은 상태만 그린다.
 // 캔버스는 "도트 해상도"로 그리고 CSS가 정수배로 키운다.
-import { PALETTE } from "./palette.js?v=bb30c32-1791190203";
-import { SPRITES, drawSprite, spriteSize } from "./sprites.js?v=bb30c32-1791190203";
-import { buildCreature, paintGrid, formKey, eggSpriteFor } from "./creature.js?v=bb30c32-1791190203";
-import { drawFace, POOLS } from "./face.js?v=bb30c32-1791190203";
-import { drawSky } from "./sky.js?v=bb30c32-1791190203";
-import { WALK_STOPS as WALK_STOPS_REF, walkDist as walkDistRef } from "./anim.js?v=bb30c32-1791190203";
+import { PALETTE } from "./palette.js?v=ec5f954-1791192854";
+import { SPRITES, drawSprite, spriteSize } from "./sprites.js?v=ec5f954-1791192854";
+import { buildCreature, paintGrid, formKey, eggSpriteFor } from "./creature.js?v=ec5f954-1791192854";
+import { drawFace, POOLS } from "./face.js?v=ec5f954-1791192854";
+import { drawSky } from "./sky.js?v=ec5f954-1791192854";
+import { WALK_STOPS as WALK_STOPS_REF, walkDist as walkDistRef } from "./anim.js?v=ec5f954-1791192854";
 const clamp01 = (x) => Math.max(0, Math.min(1, x));
 
 const FLOOR = "#f5b98c";
@@ -406,7 +406,7 @@ function toBackView(g) {
   }
   g.backColor = main;
 }
-// 동그랗고 복슬한 꼬리(몸 색 + 흰 끝) + 엉덩이 골
+// 동그랗고 복슬한 꼬리(몸 색 + 흰 끝). 엉덩이 골 선은 그리지 않는다(사용자 요청)
 const SHADE = { o: "O", p: "P", b: "B", g: "G", v: "V", y: "Y", w: "s", n: "k", c: "S" };
 function drawTail(ctx, x, base, built, wag) {
   const bc = built.g.backColor || "o";
@@ -418,7 +418,6 @@ function drawTail(ctx, x, base, built, wag) {
   rows.forEach((hw, r) => { ctx.fillStyle = col; ctx.fillRect(tx - hw, ty - 3 + r, hw * 2, 1); });
   ctx.fillStyle = sh; ctx.fillRect(tx - 3, ty + 2, 7, 1); ctx.fillRect(tx + 3, ty - 1, 2, 3); // 아래·오른쪽 그늘
   ctx.fillStyle = PALETTE.w; ctx.fillRect(tx - 3, ty - 2, 3, 2); ctx.fillRect(tx - 2, ty, 1, 1); // 복슬한 흰 끝
-  ctx.fillStyle = PALETTE.k; ctx.fillRect(Math.round(x), base - 3, 1, 3); // 엉덩이 골
 }
 function drawHat(ctx, box, hat, P, facing) {
   const sp = SPRITES[hat]; if (!sp) return;
@@ -513,10 +512,7 @@ function drawPet(ctx, scene, fr, { cx, baseY, now }) {
     ctx.fillRect(Math.round(cx + pose.dx - shw / 2), baseY - 1, shw, 3);
   }
   const box = paintGrid(ctx, built.g, x, base, CELL, { alpha: fr.petAlpha ?? 1, tint: scene.sick && !fr.silhouette ? "rgba(150,210,150,0.22)" : null });
-  if (fr.back && !fr.silhouette) { // 엉덩이춤: 꼬리 없는 그림엔 복슬 꼬리, 용처럼 꼬리가 그려진 친구는 엉덩이 골만
-    if (fr.tailKind === "own") { ctx.fillStyle = PALETTE.k; ctx.fillRect(Math.round(x), base - 3, 1, 3); }
-    else drawTail(ctx, x, base, built, fr.tailWag || 0);
-  }
+  if (fr.back && !fr.silhouette && fr.tailKind !== "own") drawTail(ctx, x, base, built, fr.tailWag || 0); // 엉덩이춤: 꼬리 없는 그림엔 복슬 꼬리, 용처럼 꼬리가 그려진 친구는 그대로
   if (fr.hat && !fr.silhouette && box) drawHat(ctx, box, fr.hat, built.P, pose.facing);
   const blanketK = fr.silhouette ? 0 : fr.blanket || 0; // 밤잠 이불(0 → 1): 아래에서 올라와 몸 아래쪽을 덮음
   if (blanketK > 0) drawBlanket(ctx, x, base, box, built.P, bodyW, blanketK, now, scene.theme, built);

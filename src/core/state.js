@@ -1,5 +1,5 @@
 // 펫 상태의 단일 정의. 화면·저장 코드는 이 모양만 믿어요.
-import { SPEEDS, POOP } from "./rules.js?v=bb30c32-1791190203";
+import { SPEEDS, POOP } from "./rules.js?v=ec5f954-1791192854";
 
 export const SAVE_VERSION = 3;
 
