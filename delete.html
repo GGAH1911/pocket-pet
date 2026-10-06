@@ -14,8 +14,9 @@
 <body><main>
 <h1>알모찌 서버 기록 삭제</h1>
 <p>게임에서 <b>이어하기</b>를 켰다면 펫 기록이 운영자(티엠이)의 서버에 보관돼요. 앱이 없어도 여기서 <b>이어하기 코드</b>(32글자)를 넣으면 서버 기록을 바로 지울 수 있어요. 게임 안 메뉴 → 이어하기 → "이어하기 끄고 서버 기록 지우기"로도 지울 수 있어요.</p>
-<p class="s">지우는 것: 그 코드로 저장된 게임 기록(펫·도감·별사탕·하트 보석·꾸미기) 전부. 휴대폰 안의 기록은 지워지지 않아요(앱을 지우면 함께 지워져요). 아직 쓰지 않은 기기 이전 코드도 함께 지워져요. 결제 거래기록은 전자상거래법에 따라 5년 동안 따로 보관돼요(이름·연락처 없음). 지운 기록은 되살릴 수 없어요. 400일 동안 쓰지 않은 기록은 자동으로 지워져요.</p>
+<p class="s">지우는 것: 그 코드로 저장된 게임 기록(펫·도감·별사탕·꾸미기) 전부. 휴대폰 안의 기록은 지워지지 않아요(앱을 지우면 함께 지워져요). 아직 쓰지 않은 기기 이전 코드도 함께 지워져요. 결제 거래기록은 전자상거래법에 따라 5년 동안 따로 보관돼요(이름·연락처 없음). 지운 기록은 되살릴 수 없어요. 400일 동안 쓰지 않은 기록은 자동으로 지워져요.</p>
 <input id="k" placeholder="XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX" autocomplete="off">
+<label class="s" style="display:flex;gap:8px;margin-top:10px;align-items:flex-start"><input type="checkbox" id="w" style="width:auto;margin-top:2px"> <span>하트 보석 지갑도 지우기 (남은 하트 보석과 산 꾸미기가 사라져요). 이어하기를 켠 기기의 지갑만 여기서 지울 수 있어요. 그 밖의 지갑은 게임 안 상점 → 하트 보석 → "서버 지갑 지우기"로 지우거나 주문번호와 함께 이메일로 요청해 주세요.</span></label>
 <button id="go">서버 기록 지우기</button>
 <p id="r"></p>
 <p class="s">If you enabled cloud continue in Almochi, enter your 32-character continue code above to permanently delete your cloud save. Data on your phone is not affected. Unused saves are deleted automatically after 400 days.</p>
@@ -27,9 +28,10 @@ document.getElementById("go").onclick = async () => {
   const r = document.getElementById("r");
   const k = document.getElementById("k").value.toUpperCase().replace(/[^A-Z0-9]/g, "");
   if (k.length !== 32 || ![...k].every((c) => ALPHA.includes(c))) { r.textContent = "코드가 올바르지 않아요. 32글자를 모두 넣어 주세요."; return; }
-  if (!confirm("이 코드의 서버 기록을 지울까요? 되살릴 수 없어요.")) return;
+  const w = document.getElementById("w").checked;
+  if (!confirm(w ? "이 코드의 서버 기록과 하트 보석 지갑을 지울까요? 되살릴 수 없어요." : "이 코드의 서버 기록을 지울까요? 되살릴 수 없어요.")) return;
   try {
-    const res = await fetch("https://pocket-pet-push.hwangi0404.workers.dev/save", { method: "DELETE", headers: { "x-save-key": k } });
+    const res = await fetch("https://pocket-pet-push.hwangi0404.workers.dev/save" + (w ? "?wallet=1" : ""), { method: "DELETE", headers: { "x-save-key": k } });
     r.textContent = res.ok ? "지웠어요. 이 코드로 저장된 서버 기록이 없어요." : "지우지 못했어요. 잠시 뒤 다시 해 주세요.";
   } catch { r.textContent = "서버에 닿지 않아요. 인터넷 연결을 확인해 주세요."; }
 };

@@ -1,29 +1,31 @@
 // 부팅 순서는 이 파일 한 곳에서만 정해요.
 // (지난 게임에서 파일 읽는 순서 때문에 저장 기본값이 빠지는 버그가 있었어요.)
 // 순서: 저장 불러오기 → 꺼져 있던 시간 계산 → 화면 시작 → 서비스 워커·알림 확인 → 알림 일정 올리기
-import { createPet } from "./core/state.js?v=9a16dcf-1791264188";
-import { advance, feed, play, wash, walk, wakeFromNap, cleanPoop, toggleLight, giveMedicine, patPet, switchEndMode, retirePet } from "./core/sim.js?v=9a16dcf-1791264188";
-import { predictNotifications } from "./core/notify.js?v=9a16dcf-1791264188";
-import { josa } from "./core/josa.js?v=9a16dcf-1791264188";
-import { drawRoom, drawIcon, roomLayout } from "./render/screen.js?v=9a16dcf-1791264188";
-import { createAnimator, play as playAnim, frame as animFrame, addFx, DUR as ANIM_DUR } from "./render/anim.js?v=9a16dcf-1791264188";
-import { pickGame, createGame, GAME_NAMES } from "./app/games.js?v=9a16dcf-1791264188";
-import { EGGS, findEgg, createStreak, specialDay, SPECIAL_KO, HAT_OF, wishTime, MAKER_LETTER } from "./app/eggs.js?v=9a16dcf-1791264188";
-import { earn, buy, equip, unequip, grant as grantItem, gems, canAfford, dailyStatus, claimDaily, DAILY, grantPurchase } from "./core/economy.js?v=9a16dcf-1791264188";
-import { ITEMS, ITEM, SLOTS, TABS, PICKS, PACKS, SOON, BASIC_EQUIP } from "./core/catalog.js?v=9a16dcf-1791264188";
-import { renderShop, renderDeco, dailyCard, spriteCanvas } from "./app/shop-ui.js?v=9a16dcf-1791264188";
-import { formKey, lookOf, FORMS as FORMS_REF, SPOT_COLORS, eggSpriteFor } from "./render/creature.js?v=9a16dcf-1791264188";
-import { guessLocation, sunTimes, moonIllumination, moonPosition, moonPhaseName } from "./core/astro.js?v=9a16dcf-1791264188";
-import { classifyWeather, weatherUrl, parseWeather } from "./core/weather.js?v=9a16dcf-1791264188";
-import { createFacePicker, pickFace } from "./render/face.js?v=9a16dcf-1791264188";
-import { SPRITES, drawSprite } from "./render/sprites.js?v=9a16dcf-1791264188";
-import { loadProfile, saveProfile, freshProfile, exportCode, importCode, SAVE_KEYS, setSaveMirror, resetProfile } from "./app/store.js?v=9a16dcf-1791264188";
-import * as native from "./app/native.js?v=9a16dcf-1791264188";
-import * as cloud from "./app/cloud.js?v=9a16dcf-1791264188";
-import { planReconcile, isPaid } from "./core/billing.js?v=9a16dcf-1791264188";
-import { sfx, setSoundEnabled } from "./app/sound.js?v=9a16dcf-1791264188";
-import { markSeen, recordPet, renderCollection, letterText, portrait, currentKey, HOW_KO, unlockedSet, REWARDS, nextGoal, adultsSeen, ADULT_KEYS, formOrder, EGG_COLOR_KO } from "./app/collection.js?v=9a16dcf-1791264188";
-import { deviceInfo, registerSW, enablePush, ensurePush, uploadSchedule, sendTest, serverStatus, PUSH_SERVER } from "./app/push.js?v=9a16dcf-1791264188";
+import { createPet } from "./core/state.js?v=e280776-1791270907";
+import { advance, feed, play, wash, walk, wakeFromNap, cleanPoop, toggleLight, giveMedicine, patPet, switchEndMode, retirePet } from "./core/sim.js?v=e280776-1791270907";
+import { predictNotifications } from "./core/notify.js?v=e280776-1791270907";
+import { josa } from "./core/josa.js?v=e280776-1791270907";
+import { drawRoom, drawIcon, roomLayout } from "./render/screen.js?v=e280776-1791270907";
+import { createAnimator, play as playAnim, frame as animFrame, addFx, DUR as ANIM_DUR } from "./render/anim.js?v=e280776-1791270907";
+import { pickGame, createGame, GAME_NAMES } from "./app/games.js?v=e280776-1791270907";
+import { EGGS, findEgg, createStreak, specialDay, SPECIAL_KO, HAT_OF, wishTime, MAKER_LETTER } from "./app/eggs.js?v=e280776-1791270907";
+import { earn, buy, equip, unequip, grant as grantItem, gems, canAfford, dailyStatus, claimDaily, DAILY } from "./core/economy.js?v=e280776-1791270907";
+import { ITEMS, ITEM, SLOTS, TABS, PICKS, PACKS, SOON, BASIC_EQUIP } from "./core/catalog.js?v=e280776-1791270907";
+import { renderShop, renderDeco, dailyCard, spriteCanvas } from "./app/shop-ui.js?v=e280776-1791270907";
+import { formKey, lookOf, FORMS as FORMS_REF, SPOT_COLORS, eggSpriteFor } from "./render/creature.js?v=e280776-1791270907";
+import { guessLocation, sunTimes, moonIllumination, moonPosition, moonPhaseName } from "./core/astro.js?v=e280776-1791270907";
+import { classifyWeather, weatherUrl, parseWeather } from "./core/weather.js?v=e280776-1791270907";
+import { createFacePicker, pickFace } from "./render/face.js?v=e280776-1791270907";
+import { SPRITES, drawSprite } from "./render/sprites.js?v=e280776-1791270907";
+import { loadProfile, saveProfile, freshProfile, exportCode, importCode, SAVE_KEYS, setSaveMirror, resetProfile } from "./app/store.js?v=e280776-1791270907";
+import * as native from "./app/native.js?v=e280776-1791270907";
+import * as cloud from "./app/cloud.js?v=e280776-1791270907";
+import { planReconcile, isPaid } from "./core/billing.js?v=e280776-1791270907";
+import { queueEarn, needsWallet, pendingGems, reconcileOwned } from "./core/wallet.js?v=e280776-1791270907";
+import * as wallet from "./app/wallet.js?v=e280776-1791270907";
+import { sfx, setSoundEnabled } from "./app/sound.js?v=e280776-1791270907";
+import { markSeen, recordPet, renderCollection, letterText, portrait, currentKey, HOW_KO, unlockedSet, REWARDS, nextGoal, adultsSeen, ADULT_KEYS, formOrder, EGG_COLOR_KO } from "./app/collection.js?v=e280776-1791270907";
+import { deviceInfo, registerSW, enablePush, ensurePush, uploadSchedule, sendTest, serverStatus, PUSH_SERVER } from "./app/push.js?v=e280776-1791270907";
 
 const clock = { offset: 0, now() { return Date.now() + this.offset; } }; // offset은 개발 도구만 바꾼다
 
@@ -173,6 +175,7 @@ function renderWallet() {
   if (walletShown.star !== e.star) { $("n-star").textContent = e.star.toLocaleString(); if (walletShown.star >= 0 && e.star > walletShown.star) bump("coin-star"); }
   if (walletShown.gem !== g) { $("n-gem").textContent = g.toLocaleString(); if (walletShown.gem >= 0 && g > walletShown.gem) bump("coin-gem"); }
   walletShown = { star: e.star, gem: g };
+  $("coin-gem").classList.toggle("stale", !!profile.wallet?.created && !gemOnline()); // 마지막으로 받은 서버 값(확인 전이면 흐리게)
 }
 function bump(id) { const b = $(id); b.classList.add("bump"); setTimeout(() => b.classList.remove("bump"), 180); }
 // 벌었을 때 화폐 옆에 +n
@@ -187,7 +190,58 @@ function gainFx(res) {
   }
   renderWallet(); persist();
 }
-function reward(kind, sub = null) { const r = earn(profile.econ, kind, clock.now(), sub); gainFx(r); return r; }
+function reward(kind, sub = null) { const r = earn(profile.econ, kind, clock.now(), sub); gainFx({ star: r.star }); return r; } // 보석은 서버 지갑에 적립 요청(earnGem)
+
+// ---------- 하트 보석 서버 지갑(docs/wallet.md) ----------
+// 보석 잔액·보석으로 산 꾸미기는 서버가 정한다. 인터넷이 없으면 보석은 못 쓰고, 받을 보석은 대기열에 두었다가 연결되면 보낸다.
+const wsave = () => saveProfile(profile);
+let gemBusy = false, walletSyncing = false;
+// 지갑이 있으면 실제 요청 결과로, 없으면(보석 0) 기기 연결 상태로 판단
+const gemOnline = () => navigator.onLine && (!profile.wallet?.created || (wallet.net.ok && Date.now() - wallet.net.at < 30 * 60 * 1000));
+async function walletSync() {
+  if (walletSyncing || !navigator.onLine) { renderWallet(); return; }
+  walletSyncing = true;
+  try {
+    const wl = profile.wallet;
+    if (wl?.key || needsWallet(profile)) await (wl?.created ? wallet.refresh(profile, wsave) : wallet.ensureWallet(profile, wsave));
+    if (profile.walletMergeFrom && profile.wallet?.created) { // 다른 기기 기록을 불러올 때 못 끝낸 합치기
+      const r = await wallet.mergeInto(profile.wallet.key, profile.walletMergeFrom);
+      if (r.ok || [404, 409, 410].includes(r.status)) { delete profile.walletMergeFrom; if (r.data?.w) await wallet.refresh(profile, wsave); wsave(); }
+    }
+    const got = await wallet.flushEarn(profile, wsave);
+    if (got) { gainFx({ gem: got }); }
+    await sealWallet();
+  } catch (e) { console.warn("지갑 확인 실패", e); } finally { walletSyncing = false; }
+  renderWallet(); persist();
+  if (!document.querySelector('[data-sheet="shop"]').hidden) renderShopUI();
+  if (!document.querySelector('[data-sheet="deco"]').hidden) renderDecoUI();
+}
+// 이어하기가 켜져 있으면 지갑 열쇠를 이어하기 코드로 잠가 기록에 넣고(walletEnc), 서버 지갑에 이어하기를 연결해 둔다(삭제 페이지에서 함께 지우기)
+async function sealWallet() {
+  const wl = profile.wallet, c = profile.cloud;
+  if (!wl?.key || !wl.created || !c?.key) return;
+  const tag = (await wallet.acctOf("tag:" + wl.key)).slice(0, 8); // 어느 지갑을 잠갔는지(열쇠 일부를 드러내지 않게 해시로)
+  if (await wallet.sealedFor(profile.walletEnc, c.key) && profile.walletEnc.w === tag) return;
+  profile.walletEnc = { ...(await wallet.sealWalletKey(wl.key, c.key)), w: tag };
+  await wallet.linkSave(wl.key, c.key);
+  persist();
+}
+// 무료 보석(매일 선물 7일째·비밀 알): 서버 지갑에 적립 요청. 오프라인이면 대기열
+function earnGem(kind, id = null) {
+  queueEarn(profile, kind, id, wallet.newOp()); wsave();
+  walletSync();
+}
+// 다른 기기 기록(이어하기·저장 코드)을 불러올 때 지갑 정하기: 들어오는 지갑이 있으면 그것을 쓰고, 이 기기 지갑의 산 보석·산 꾸미기는 합친다
+async function adoptWallet(p, incomingKey) {
+  const mine = profile.wallet;
+  if (!incomingKey || incomingKey === mine?.key) { p.wallet = mine; return; }
+  p.wallet = { key: incomingKey, queue: mine?.queue || [], created: true, migrated: true };
+  p.econ.gemFree = 0; p.econ.gemPaid = 0; // 새로 받아 올 때까지
+  if (mine?.created && ((mine.paid || 0) > 0 || (mine.owned || []).length)) {
+    const r = await wallet.mergeInto(incomingKey, mine.key).catch(() => ({ ok: false, status: 0 }));
+    if (!r.ok && ![404, 409, 410].includes(r.status)) p.walletMergeFrom = mine.key; // 연결되면 다시
+  }
+}
 
 // ---------- 저장 + 알림 일정 ----------
 let syncTimer = 0;
@@ -227,12 +281,13 @@ async function cloudCheck({ atBoot = false } = {}) {
     // 서버 기록이 이 기기를 마지막으로 쓴 뒤에 저장됐으면 = 다른 기기에서 더 나중에 키움 → 묻지 않고 불러옴.
     // 이 기기도 그 뒤에 썼는데 아직 못 올렸으면(둘 다 바뀜) 고르게 한다. (시간만 흘러 생긴 변경으로 매번 묻지 않게)
     const seen = atBoot ? cloudBootSeen : (profile.lastSeen || 0);
-    if (!c.dirty || remote.updated > seen) applyCloud(remote, c.key, "다른 기기에서 키운 기록을 불러왔어요");
+    if (!c.dirty || remote.updated > seen) await applyCloud(remote, c.key, "다른 기기에서 키운 기록을 불러왔어요");
     else showCloudConflict(remote);
   } catch (e) { console.warn("이어하기 확인 실패", e); }
 }
-function applyCloud(remote, key, msg) {
+async function applyCloud(remote, key, msg) {
   const p = cloud.profileFromBlob(remote.blob, profile);
+  await adoptWallet(p, await wallet.openWalletKey(p.walletEnc, key));
   p.cloud = { key, rev: remote.rev, dirty: false, lastUp: Date.now() };
   p.lastSeen = Date.now();
   // 새로고침 직전 '화면 내려감' 처리가 옛 기록(메모리의 profile)을 다시 저장해 덮어쓰던 문제 → 먼저 바꿔 끼우고 저장을 멈춤
@@ -253,7 +308,7 @@ function showCloudConflict(remote = null) {
   const close = () => card.remove();
   card.querySelector(".x").addEventListener("click", () => { c.holdUntil = Date.now() + 3600 * 1000; saveProfile(profile); close(); });
   card.querySelector("#cp-remote").addEventListener("click", async () => {
-    try { const r = remote || await cloud.cloudGet(c.key); if (r) applyCloud(r, c.key, "다른 기기의 기록으로 이어 해요"); else close(); } catch (e) { say(e.message, 5000); }
+    try { const r = remote || await cloud.cloudGet(c.key); if (r) await applyCloud(r, c.key, "다른 기기의 기록으로 이어 해요"); else close(); } catch (e) { say(e.message, 5000); }
   });
   card.querySelector("#cp-local").addEventListener("click", async () => {
     try { const r = await cloud.cloudPut(c.key, cloud.blobOf(profile), c.rev, { force: true }); if (r.ok) { c.rev = r.rev; c.dirty = false; c.lastUp = Date.now(); c.holdUntil = 0; saveProfile(profile); say("이 기기 기록으로 저장했어요", 4000); } close(); }
@@ -283,9 +338,10 @@ function renderCloud() {
     <h3 class="sec">다른 기기에서 키우던 펫 불러오기</h3>
     <p class="small">옛 휴대폰에서 만든 <b>기기 이전 코드(8글자)</b>나 <b>이어하기 코드(32글자)</b>를 넣어 주세요.</p>
     <input id="cl-input" placeholder="XXXX-XXXX" autocomplete="off" autocapitalize="characters"><button class="big ghost" id="cl-load">불러오기</button>
-    <p class="fine">서버에는 펫·도감·별사탕·하트 보석·꾸미기 기록만 보관해요. 400일 동안 안 쓰면 지워져요. <a href="privacy.html" target="_blank" rel="noopener">개인정보 처리방침</a></p>`;
+    <p class="fine">서버에는 펫·도감·별사탕·꾸미기 기록만 보관해요. 400일 동안 안 쓰면 지워져요. 하트 보석은 따로 서버 지갑에 있어요. <a href="privacy.html" target="_blank" rel="noopener">개인정보 처리방침</a></p>`;
   $("cl-on")?.addEventListener("click", async () => {
     profile.cloud = { key: cloud.newSaveKey(), rev: null, dirty: true, lastUp: 0 }; saveProfile(profile);
+    await sealWallet().catch(() => {}); // 지갑 열쇠를 이어하기 코드로 잠가 함께 올림
     await cloudSync({ urgent: true });
     say(profile.cloud.err ? "코드는 만들었는데 서버 저장은 실패했어요. 인터넷 연결 뒤 다시 저장돼요" : "이어하기를 켰어요. 코드를 꼭 보관해 주세요", 6000);
     renderCloud(); renderQuickSettings();
@@ -311,8 +367,8 @@ function renderCloud() {
       }
       const r = await cloud.cloudGet(key);
       if (!r) { say("이 코드로 저장된 기록이 없어요", 4000); return; }
-      if (!confirm("지금 기기의 펫을 이 기록으로 바꿀까요? 지금 펫은 사라져요.")) return;
-      applyCloud(r, key, "이어하기 코드로 기록을 불러왔어요");
+      if (!confirm(`지금 기기의 펫을 이 기록으로 바꿀까요? 지금 펫은 사라져요.${giftGemNote()}`)) return;
+      await applyCloud(r, key, "이어하기 코드로 기록을 불러왔어요");
     } catch (e) { say(e.message || "불러오지 못했어요", 5000); }
   });
   $("cl-off")?.addEventListener("click", async () => {
@@ -461,7 +517,7 @@ const streaks = { pet: createStreak(8, 3000), win: createStreak(5, 4000), egg: c
 let memoBox = null, lastWish = null;
 function discover(id) {
   if (!findEgg(profile, id, clock.now())) return;
-  setTimeout(() => reward("eggFound"), 1900);
+  setTimeout(() => { const r = reward("eggFound"); if (r.gem) earnGem("egg", id); }, 1900);
   const e = EGGS.find((x) => x.id === id);
   setTimeout(() => { say(`비밀 발견! '${e.name}' (≡ → 도감에서 모아 봐요)`, 6000); sfx("win"); }, 1800);
   persist();
@@ -735,16 +791,24 @@ async function doExport() {
   persist();
   const code = exportCode(profile);
   $("save-code").value = code;
-  try { await navigator.clipboard.writeText(code); $("save-msg").textContent = "코드를 복사했어요. 다른 기기(또는 홈 화면 앱)에서 '불러오기'에 붙여 넣으세요."; }
-  catch { $("save-code").select(); $("save-msg").textContent = "아래 코드를 길게 눌러 전부 복사해 주세요."; }
+  const warn = profile.wallet?.key ? " 이 코드에는 하트 보석 지갑도 들어 있어요. 남에게 주지 마세요." : "";
+  try { await navigator.clipboard.writeText(code); $("save-msg").textContent = "코드를 복사했어요. 다른 기기(또는 홈 화면 앱)에서 '불러오기'에 붙여 넣으세요." + warn; }
+  catch { $("save-code").select(); $("save-msg").textContent = "아래 코드를 길게 눌러 전부 복사해 주세요." + warn; }
 }
-function doImport() {
+async function doImport() {
   try {
     const p = importCode($("save-code").value, profile);
-    if (!confirm("지금 기기의 펫을 이 저장으로 바꿀까요? 지금 펫은 사라져요.")) return;
+    const inc = p.walletIncoming; delete p.walletIncoming;
+    if (!confirm(`지금 기기의 펫을 이 저장으로 바꿀까요? 지금 펫은 사라져요.${inc && inc !== profile.wallet?.key ? giftGemNote() : ""}`)) return;
+    await adoptWallet(p, inc);
     profile = p; persist();
     location.reload();
   } catch (e) { $("save-msg").textContent = e.message; }
+}
+// 다른 지갑으로 바뀔 때: 받은 보석은 옮겨지지 않음을 미리 알림(산 보석·산 꾸미기는 옮겨짐)
+function giftGemNote() {
+  const f = profile.wallet?.created ? Math.max(0, profile.wallet.free || 0) : 0;
+  return f > 0 ? `\n\n이 기기의 받은 하트 보석 ${f}개는 옮겨지지 않아요(산 보석과 산 꾸미기는 옮겨져요).` : "";
 }
 
 // ---------- 시작 화면 ----------
@@ -800,6 +864,7 @@ function openSheet(name) {
   if (name === "help") renderHelp();
   if (name === "cloud") renderCloud();
   if (name === "shop" || name === "deco") fitCanvas(); // 창이 덮는 만큼 방을 다시 맞춤
+  if ((name === "shop" || name === "deco") && profile.wallet?.key && (!profile.wallet.at || Date.now() - profile.wallet.at > 5 * 60 * 1000)) walletSync();
 }
 
 // ---------- 상점 ----------
@@ -814,10 +879,13 @@ function openShop(tab = null, sel = null) {
 function renderShopUI() {
   renderShop($("shop-tabs"), $("shop-body"), {
     econ: profile.econ, state: shopState, isApp: IS_APP,
+    gem: { online: gemOnline(), busy: gemBusy, buy: profile.wallet?.buy || "off", at: profile.wallet?.at || 0, pending: pendingGems(profile), has: !!profile.wallet?.created },
+    onDeleteWallet: () => deleteWalletNow(),
     rerender: renderShopUI,
     onSelect: (it) => { previewDeco = it ? { [it.slot]: it.id } : null; },
     onEquip: (it) => { equip(profile.econ, it); persist(); sfx("tap"); say(`${josa(it.name, "을", "를")} 끼웠어요`, 2500); renderShopUI(); },
     onBuy: (it) => {
+      if (it.price?.gem) { buyWithGem(it); return; }
       const r = buy(profile.econ, it, clock.now());
       if (!r.ok) { sfx("refuse"); say(r.reason === "poor" ? (it.price.gem ? "하트 보석이 모자라요" : "별사탕이 모자라요. 돌봄·놀이·산책으로 모아요") : "살 수 없어요"); return; }
       equip(profile.econ, it); persist(); sfx("win"); renderWallet();
@@ -828,7 +896,32 @@ function renderShopUI() {
     onRestore: () => restorePurchases(),
   });
 }
-// 돈 결제: 웹에서는 안내만, 앱은 플레이 결제(서버 없음, 규칙은 core/billing.js·docs/m8-plan.md)
+// 보석으로 꾸미기 사기: 서버 지갑이 잔액을 확인하고 빼고 물건을 적는다(한 번에). 연결이 없으면 못 산다
+async function buyWithGem(it) {
+  if (gemBusy) return;
+  if (!navigator.onLine) { sfx("refuse"); say("하트 보석은 인터넷에 연결됐을 때만 쓸 수 있어요. 별사탕 상품은 언제나 살 수 있어요", 5000); return; }
+  gemBusy = true; renderShopUI();
+  try {
+    const r = await wallet.spendGem(profile, wsave, it.id, it.price.gem);
+    if (r.ok) { equip(profile.econ, it); persist(); sfx("win"); renderWallet(); say(`${josa(it.name, "을", "를")} 샀어요! 방에 놓았어요`, 4000); return; }
+    sfx("refuse");
+    const d = r.data || {};
+    if (r.status === 0) say(d.error === "slow" ? "서버가 늦어요. 다시 누르면 이어서 확인해요(두 번 빠지지 않아요)" : "인터넷에 연결되지 않았어요. 연결된 뒤 다시 해 주세요", 5000);
+    else if (r.status === 402) say("하트 보석이 모자라요", 3000);
+    else if (d.reason === "owned") { equip(profile.econ, it); persist(); say("이미 가지고 있어요", 3000); }
+    else if (d.reason === "price") say("가격이 바뀌었어요. 다시 확인해 주세요", 4000);
+    else say(d.error || "지금은 살 수 없어요. 잠시 뒤 다시 해 주세요", 4000);
+  } finally { gemBusy = false; renderWallet(); renderShopUI(); }
+}
+// 서버 지갑 지우기(처리방침 7번): 남은 보석·보석으로 산 꾸미기가 사라진다. 법정 보존 거래기록은 서버에 남음
+async function deleteWalletNow() {
+  if (!confirm("서버의 하트 보석 지갑을 지울까요? 남은 하트 보석과 하트 보석·결제로 얻은 꾸미기가 사라지고 되살릴 수 없어요.")) return;
+  if (!(await wallet.deleteWallet(profile.wallet.key))) { say("지우지 못했어요. 인터넷 연결 뒤 다시 해 주세요", 4000); return; }
+  profile.wallet = null; profile.walletEnc = null; delete profile.walletMergeFrom;
+  reconcileOwned(profile.econ, [], []); profile.econ.gemFree = 0; profile.econ.gemPaid = 0;
+  persist(); renderWallet(); renderShopUI(); say("서버 지갑을 지웠어요", 4000);
+}
+// 돈 결제: 웹에서는 안내만, 앱은 플레이 결제 → 서버 지갑이 적립(docs/wallet.md 2-4, 원화 결제는 서버가 구글로 확인하는 verify 모드에서만 연다)
 const IS_APP = native.IS_APP;
 let paying = false;
 async function buyPack(pack) {
@@ -836,9 +929,13 @@ async function buyPack(pack) {
   if (!IS_APP) { say(`${josa(pack.name, "은", "는")} 플레이스토어 앱에서 살 수 있어요(준비 중)`, 5000); return; }
   if (paying) return;
   if (pack.once && profile.econ.bought[pack.id]) { say("이미 산 상품이에요", 3000); return; }
+  if (!navigator.onLine) { say("결제하려면 인터넷 연결이 필요해요", 4000); return; }
   paying = true;
   try {
-    const t = await native.payBuy(pack, await payAcct());
+    const c = await wallet.ensureWallet(profile, wsave); // 결제 전에 지갑이 있어야 함(구글에 지갑 대조값을 함께 보냄)
+    if (!c.ok) { say("서버에 닿지 않아요. 인터넷 연결 뒤 다시 해 주세요", 5000); return; }
+    if ((profile.wallet.buy || "off") === "off") { say("하트 보석 결제는 준비 중이에요", 4000); return; }
+    const t = await native.payBuy(pack, await wallet.acctOf(profile.wallet.key));
     if (!t?.purchaseToken) { say("결제가 끝나지 않았어요", 4000); return; }
     if (!isPaid(t)) { say("결제가 확인되면 다음에 앱을 열 때 받아요", 6000); return; }
     profile.payPending = { ...(profile.payPending || {}), [t.purchaseToken]: { sku: pack.sku, at: Date.now(), orderId: t.orderId || null } }; persist(); // 지급 대기 먼저 저장
@@ -847,43 +944,51 @@ async function buyPack(pack) {
     const msg = String(e?.message || e);
     if (/cancel/i.test(msg)) say("결제를 취소했어요", 3000);
     else if (/pending/i.test(msg)) say("결제가 확인되면 다음에 앱을 열 때 받아요", 6000); // 편의점 결제 등 대기 결제(전수 조사 C4)
+    else if (/^credit:/.test(msg)) say("결제는 끝났어요. 인터넷이 연결되면 하트 보석이 들어와요", 7000);
     else if (/BILLING_UNAVAILABLE|unavailable/i.test(msg)) say("이 기기에서는 구글 결제를 쓸 수 없어요(플레이 스토어 로그인·제한 설정을 확인해 주세요)", 7000);
     else say("결제를 마치지 못했어요. 돈이 나갔다면 앱을 다시 열면 받아요", 7000);
     console.warn("결제 실패", e);
   } finally { paying = false; renderShopUI(); }
 }
-// 소비(또는 확인)가 끝난 뒤에만 지급. 실패하면 지급 대기로 남겨 두고 다음에 앱을 열 때 다시 시도
+// 서버 지갑 적립 → 그 뒤 구글 소비(보석 묶음)·확인(시작 꾸러미). 어디서 끊겨도 지급 대기에 남아 다음에 앱을 열 때 이어서 한다
 async function settlePurchase(job) {
-  if (job.do === "consume" || job.do === "consumeOnly") await native.payConsume(job.token);
-  if (job.do === "ack" && !job.acknowledged) { try { await native.payAck(job.token); } catch (e) { if (!/already/i.test(String(e?.message))) throw e; } }
-  if (job.do !== "consumeOnly") {
-    const r = grantPurchase(profile.econ, job.pack, job.token, Date.now(), { orderId: job.orderId });
-    if (r.ok) queueOrderReport(job);
-    if (r.ok) { gainFx({ gem: job.pack.gems || 0, star: job.pack.stars || 0 }); sfx("win"); say(`${josa(job.pack.name, "을", "를")} 받았어요!`, 5000); }
+  if (job.do !== "consumeOnly" && job.do !== "ackOnly") {
+    const r = await wallet.creditPurchase(profile, wsave, { token: job.token, sku: job.pack.sku, orderId: job.orderId });
+    if (!r.ok) {
+      if (r.voided) { if (profile.payPending) delete profile.payPending[job.token]; persist(); say("결제가 취소되어 환불됐어요", 6000); return; }
+      throw new Error("credit:" + (r.pending ? "pending" : r.reason || r.status)); // 지급 대기 유지
+    }
+    const first = !profile.econ.orders[job.token]; // 별사탕(꾸러미)은 기기 화폐라 이 기기 기록으로 한 번만
+    if (first) {
+      profile.econ.orders[job.token] = { at: Date.now(), sku: job.pack.sku, gems: job.pack.gems || 0, stars: job.pack.stars || 0, ...(job.orderId ? { orderId: String(job.orderId).slice(0, 64) } : {}) };
+      profile.econ.star += job.pack.stars || 0;
+    }
+    if (r.first || first) { gainFx({ gem: r.first ? job.pack.gems || 0 : 0, star: first ? job.pack.stars || 0 : 0 }); sfx("win"); say(`${josa(job.pack.name, "을", "를")} 받았어요!`, 5000); }
+    persist();
   }
+  if (job.do === "grant") { /* 구글 소비는 이미 끝남 */ }
+  else if (job.pack.once) { if (!job.acknowledged) { try { await native.payAck(job.token); } catch (e) { if (!/already/i.test(String(e?.message))) throw e; } } }
+  else await native.payConsume(job.token);
   if (profile.payPending) delete profile.payPending[job.token];
   persist(); renderWallet(); cloudSync({ urgent: true });
 }
 async function reconcilePurchases({ manual = false } = {}) {
   if (!IS_APP) { if (manual) say("앱에서 산 상품을 다시 불러오는 기능이에요. 웹에서는 산 것이 없어요", 4000); return; }
   try {
+    if (Object.keys(profile.payPending || {}).length && !(await wallet.ensureWallet(profile, wsave)).ok) { if (manual) say("서버에 닿지 않아요. 인터넷 연결 뒤 다시 해 주세요", 5000); return; }
     const jobs = planReconcile(await native.payList(), profile.econ, profile.payPending || {});
     for (const j of jobs) { try { await settlePurchase(j); } catch (e) { console.warn("결제 정리 실패", j, e); } }
-    if (manual) say(jobs.length ? "산 상품을 다시 불러왔어요" : "새로 받을 상품이 없어요. 하트 보석은 쓰면 사라지는 상품이라 기기를 바꾸면 복원되지 않아요(저장 내보내기로 옮겨요)", 7000);
+    if (manual) { await walletSync(); say(jobs.length ? "산 상품을 다시 불러왔어요" : "새로 받을 상품이 없어요. 하트 보석은 서버 지갑에 있어요. 기기를 바꾸면 이어하기나 저장 코드로 옮기고, 잃어버렸으면 주문번호와 함께 이메일로 문의해 주세요", 8000); }
   } catch (e) { if (manual) say("구글 결제에 연결하지 못했어요. 잠시 뒤 다시 해 주세요", 5000); console.warn(e); }
 }
 function restorePurchases() { reconcilePurchases({ manual: true }); }
 // 구매 장부: 지급 뒤 서버에 기록(전자상거래법 거래기록 5년 보존). 실패하면 저장해 두고 다음에 다시(지급은 막지 않음)
+// (서버 지갑 이전 결제의 남은 보고만. 새 결제는 /wallet/purchase가 장부까지 적는다)
 let acctCache = null;
 async function payAcct() {
   if (acctCache) return acctCache;
   const d = await crypto.subtle.digest("SHA-256", new TextEncoder().encode("acct:" + profile.deviceId));
   return (acctCache = [...new Uint8Array(d)].map((b) => b.toString(16).padStart(2, "0")).join(""));
-}
-function queueOrderReport(job) {
-  const o = profile.econ.orders[job.token] || {};
-  profile.payReport = [...(profile.payReport || []), { token: job.token, orderId: job.orderId || null, sku: job.pack.sku, gems: job.pack.gems || 0, stars: job.pack.stars || 0, at: o.at || Date.now() }];
-  saveProfile(profile); flushOrderReports();
 }
 let reporting = false;
 async function flushOrderReports() {
@@ -939,9 +1044,9 @@ function renderQuickSettings() {
 function renderHelp() {
   $("help-body").innerHTML = `
     <p class="small"><b>돌보기</b> 밥·놀기·씻기·불 버튼으로 돌봐요. 배고프거나 더러울 때 챙겨 주면 별사탕을 받아요.</p>
-    <p class="small"><b>별사탕·하트 보석</b> 별사탕은 돌봄·놀이·산책·매일 선물로 모으고, 보석은 매일 선물 7일째·비밀 찾기로 받거나 살 수 있어요. 둘 다 꾸미기에만 쓰여요. 펫의 상태는 돈으로 바뀌지 않아요.</p>
+    <p class="small"><b>별사탕·하트 보석</b> 별사탕은 돌봄·놀이·산책·매일 선물로 모으고, 보석은 매일 선물 7일째·비밀 찾기로 받거나 살 수 있어요. 둘 다 꾸미기에만 쓰여요. 펫의 상태는 돈으로 바뀌지 않아요. 하트 보석은 인터넷에 연결됐을 때만 받고 쓸 수 있어요(별사탕은 언제나 돼요).</p>
     <p class="small"><b>꾸미기</b> 아래 꾸미기 버튼 → 칸을 골라 가진 것으로 바꿔요. 상점에서는 사기 전에 방에 미리 놓아 볼 수 있어요.</p>
-    <p class="small"><b>개인정보</b> 이 게임은 이름·연락처 같은 개인정보를 모으지 않아요. 펫과 꾸미기 기록은 이 기기 안에 저장되고, 이어하기를 켜면 서버에도 보관돼요. 창밖 날씨를 보여 주려고 대략적인 위치(시간대 대표 도시)만 날씨 서비스로 보내요(메뉴 → 날씨에서 끌 수 있어요). <a href="https://ggah1911.github.io/pocket-pet/privacy.html" target="_blank" rel="noopener">개인정보 처리방침 전문</a></p>`;
+    <p class="small"><b>개인정보</b> 이 게임은 이름·연락처 같은 개인정보를 모으지 않아요. 펫과 꾸미기 기록은 이 기기 안에 저장되고, 이어하기를 켜면 서버에도 보관돼요. 하트 보석 잔액과 기록은 서버 지갑에 보관돼요. 창밖 날씨를 보여 주려고 대략적인 위치(시간대 대표 도시)만 날씨 서비스로 보내요(메뉴 → 날씨에서 끌 수 있어요). <a href="https://ggah1911.github.io/pocket-pet/privacy.html" target="_blank" rel="noopener">개인정보 처리방침 전문</a></p>`;
 }
 
 // ---------- 매일 선물 ----------
@@ -960,7 +1065,11 @@ function showDaily(force = false) {
   dailyPending = false;
   const card = dailyCard({ status: st, onClose: () => { if (dailyStatus(profile.econ, clock.now()).available) dailyDismissedDay = dayKey(); }, onClaim: () => {
     const r = claimDaily(profile.econ, clock.now());
-    if (r) { gainFx({ star: r.star || 0, gem: r.gem || 0 }); sfx("win"); say(r.gem ? `오늘의 선물: 하트 보석 ${r.gem}개!` : `오늘의 선물: 별사탕 ${r.star}개`, 4000); }
+    if (r) {
+      gainFx({ star: r.star || 0 }); sfx("win");
+      if (r.gem) { earnGem("daily"); say(navigator.onLine ? `오늘의 선물: 하트 보석 ${r.gem}개!` : `오늘의 선물: 하트 보석 ${r.gem}개는 인터넷이 연결되면 들어와요`, 5000); }
+      else say(`오늘의 선물: 별사탕 ${r.star}개`, 4000);
+    }
     $("gift-dot").hidden = true;
   } });
   card.classList.add("daily");
@@ -1129,7 +1238,7 @@ function bootApp() {
       native.minimizeApp();
     },
     pause: () => { profile.lastSeen = Date.now(); persist(); syncNow(); cloudSync({ urgent: true }); },
-    resume: () => { tick(); native.clearDelivered(); syncNow(); reconcilePurchases(); flushOrderReports(); },
+    resume: () => { tick(); native.clearDelivered(); syncNow(); reconcilePurchases(); flushOrderReports(); walletSync(); },
   });
   native.onNotifyTap(() => {
     if (profile.pet && profile.pet.stage !== "egg" && !profile.pet.asleep && !profile.pet.ended) {
@@ -1211,12 +1320,16 @@ function boot() {
     if (leaving) return;
     if (document.visibilityState === "hidden") { profile.lastSeen = Date.now(); persist(); syncNow({ keepalive: true }); cloudSync({ urgent: true, keepalive: true }); return; }
     cloudCheck(); // 다시 보일 때: 다른 기기 기록 확인(5분에 한 번까지)
+    if (!profile.wallet?.at || Date.now() - profile.wallet.at > 5 * 60 * 1000 || profile.wallet?.queue?.length) walletSync();
     if (profile.pet && !profile.pet.ended && !document.querySelector(".dexcard")) showDaily(); // 날짜가 바뀐 뒤 다시 열면 선물
     else { tick(); updateWeather(); navigator.clearAppBadge?.().catch(() => {}); }
   });
   navigator.clearAppBadge?.().catch(() => {});
   const cloudMsg = sessionStorage.getItem("almochi:say"); if (cloudMsg) { sessionStorage.removeItem("almochi:say"); setTimeout(() => say(cloudMsg, 6000), 800); }
   cloudCheck({ atBoot: true });
+  walletSync(); // 하트 보석 지갑: 받아 오기·옛 잔액 이관·대기 중인 적립 보내기
+  window.addEventListener("online", () => walletSync());
+  window.addEventListener("offline", () => { renderWallet(); if (!document.querySelector('[data-sheet="shop"]').hidden) renderShopUI(); });
   setInterval(() => syncNow(), 10 * 60 * 1000);
   setInterval(() => { if (document.visibilityState === "visible") profile.lastSeen = Date.now(); }, 30000);
   // 알림을 눌러서 앱이 앞으로 나오면 크게 반기기(서비스 워커가 알려 줌)
@@ -1237,7 +1350,7 @@ function boot() {
   // 개발 도구(공개 배포에는 없음): ?dev 로 열기
   if (QS.has("dev")) {
     window.__pp = { clock, getProfile: () => profile, tick, anim, playAnim: (n, d) => playAnim(anim, n, performance.now(), d), mg: () => mg, layout: () => layout, forceGame: null, boxes: () => ({ windowBox, petBox, memoBox }), render: () => renderStats() };
-    import("./dev/panel.js?v=9a16dcf-1791264188").then((m) => m.mount({ clock, getProfile: () => profile, tick, renderStats, syncNow, serverStatus })).catch(() => {});
+    import("./dev/panel.js?v=e280776-1791270907").then((m) => m.mount({ clock, getProfile: () => profile, tick, renderStats, syncNow, serverStatus })).catch(() => {});
   }
 }
 

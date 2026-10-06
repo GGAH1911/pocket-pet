@@ -3,6 +3,8 @@
 // - 하트 보석은 산 것(gemPaid)과 받은 것(gemFree)을 따로 세고, 쓸 때는 받은 것부터 쓴다
 //   (미사용 유료분 환불 계산이 쉽고 소비자에게 유리).
 // 상세 근거: docs/plan-v2-release.md 1절
+// 2026-10-06부터 하트 보석은 서버 지갑이 관리한다(docs/wallet.md): 여기서는 보석을 늘리거나 줄이지 않고 "받을 보석 수"만 돌려준다.
+// gemFree/gemPaid는 서버 값의 사본. 보석 상품 사기·무료 보석 적립·결제 지급은 app/wallet.js가 서버를 거쳐 한다.
 
 export const EARN = {
   care: { meal: 5, wash: 5, poop: 3, lightOff: 10, medicine: 5 }, // 필요한 돌봄을 했을 때만(판단은 호출하는 쪽)
@@ -74,7 +76,7 @@ export function earn(e, kind, now, sub = null) {
   } else if (kind in EARN && typeof EARN[kind] === "number") {
     star = EARN[kind];
   } else throw new Error(`earn: 모르는 종류 ${kind}`);
-  e.star += star; e.gemFree += gem;
+  e.star += star; // 보석(gem)은 서버 지갑에 적립 요청(호출하는 쪽)
   return { star, gem, capped };
 }
 
@@ -97,11 +99,12 @@ export function spend(e, price) {
   return true;
 }
 
-// 상품 사기(별사탕·보석 상품). item: catalog의 상품
+// 상품 사기(별사탕 상품만). 보석 상품은 서버 지갑으로(reason "online")
 export function buy(e, item, now) {
   if (!item) return { ok: false, reason: "none" };
   if (e.owned[item.id]) return { ok: false, reason: "owned" };
   if (!item.price) return { ok: false, reason: "not-for-sale" };
+  if (item.price.gem) return { ok: false, reason: "online" };
   if (!spend(e, item.price)) return { ok: false, reason: "poor" };
   e.owned[item.id] = now;
   return { ok: true };
@@ -130,8 +133,7 @@ export function claimDaily(e, now) {
   const st = dailyStatus(e, now);
   if (!st.available) return null;
   const r = DAILY[st.idx];
-  if (r.star) e.star += r.star;
-  if (r.gem) e.gemFree += r.gem;
+  if (r.star) e.star += r.star; // 보석 칸(r.gem)은 서버 지갑에 적립 요청(호출하는 쪽)
   e.daily = { lastDay: dayKey(now), idx: (st.idx + 1) % DAILY.length, total: (e.daily.total || 0) + 1 };
   return { ...r, idx: st.idx };
 }

@@ -1,8 +1,9 @@
 // 상점·꾸미기·매일 선물 화면. 상태와 규칙은 core/economy.js·catalog.js, 여기는 DOM만.
-import { ITEMS, ITEM, SLOTS, TABS, PICKS, PACKS, SOON } from "../core/catalog.js?v=9a16dcf-1791264188";
-import { canAfford, gems, DAILY, purchaseHistory } from "../core/economy.js?v=9a16dcf-1791264188";
-import { drawThumb } from "../render/deco.js?v=9a16dcf-1791264188";
-import { SPRITES, drawSprite, spriteSize } from "../render/sprites.js?v=9a16dcf-1791264188";
+import { ITEMS, ITEM, SLOTS, TABS, PICKS, PACKS, SOON } from "../core/catalog.js?v=e280776-1791270907";
+import { canAfford, gems, DAILY, purchaseHistory } from "../core/economy.js?v=e280776-1791270907";
+import { gemButtonState } from "../core/wallet.js?v=e280776-1791270907";
+import { drawThumb } from "../render/deco.js?v=e280776-1791270907";
+import { SPRITES, drawSprite, spriteSize } from "../render/sprites.js?v=e280776-1791270907";
 
 const el = (tag, attrs = {}, ...kids) => {
   const e = document.createElement(tag);
@@ -41,7 +42,7 @@ const thumb = (item, w = 56, h = 46) => { const cv = el("canvas", { width: w, he
 const won = (n) => `${n.toLocaleString()}원`;
 
 // ---------- 상점 ----------
-// ctx: { econ, state:{tab, sel}, isApp, onSelect(item), onBuy(item), onEquip(item), onPack(pack), onRestore(), onGoGem(), rerender() }
+// ctx: { econ, state:{tab, sel}, isApp, gem:{online, busy, buy, at, pending}, onSelect(item), onBuy(item), onEquip(item), onPack(pack), onRestore(), onGoGem(), rerender() }
 export function renderShop(tabsEl, bodyEl, ctx) {
   const { econ, state } = ctx;
   tabsEl.innerHTML = "";
@@ -72,9 +73,14 @@ export function renderShop(tabsEl, bodyEl, ctx) {
   const owned = !!econ.owned[it.id], on = econ.equipped[it.slot] === it.id;
   bar.append(el("div", { class: "info" }, el("b", { text: it.name }), document.createTextNode(it.desc || (owned ? "가지고 있어요" : it.source ? `${it.source}로 얻어요` : "방에 미리 놓여 있어요"))));
   if (owned) bar.append(el("button", { text: on ? "끼우는 중" : "끼우기", disabled: on, onclick: () => ctx.onEquip(it) }));
-  else if (it.price) {
+  else if (it.price?.gem) { // 하트 보석 상품: 서버 지갑으로만(인터넷이 없으면 잠금, docs/wallet.md 2-7)
+    const g = ctx.gem || {};
+    const st = gemButtonState({ online: !!g.online, busy: !!g.busy, total: gems(econ), price: it.price.gem });
+    if (st.poor) bar.append(el("button", { class: "ghost", text: "하트 보석 사기", onclick: () => ctx.onGoGem() }));
+    bar.append(el("button", { disabled: st.disabled, onclick: () => ctx.onBuy(it) }, priceEl(it.price), document.createTextNode(" " + st.label)));
+    if (st.hint) bar.querySelector(".info").append(el("div", { class: "small warn", text: st.hint }));
+  } else if (it.price) {
     const ok = canAfford(econ, it.price);
-    if (!ok && it.price.gem) bar.append(el("button", { class: "ghost", text: "하트 보석 사기", onclick: () => ctx.onGoGem() }));
     bar.append(el("button", { disabled: !ok, onclick: () => ctx.onBuy(it) }, priceEl(it.price), document.createTextNode(ok ? " 사기" : " 모자라요")));
   }
   bodyEl.append(bar);
@@ -82,18 +88,22 @@ export function renderShop(tabsEl, bodyEl, ctx) {
 
 function renderGemShop(box, ctx) {
   const { econ } = ctx;
+  const g = ctx.gem || {};
+  const closed = ctx.isApp && (g.buy || "off") === "off"; // 서버가 구글 확인(verify)·시험(test) 모드일 때만 원화 결제를 연다
   box.append(el("div", { class: "paynote" }, el("i"), document.createTextNode("초록 버튼은 진짜 돈이 나가요. 구글 결제 화면에서 한 번 더 확인해요")));
   // 청약철회 안내는 결제 버튼보다 먼저 보이게(전자상거래법 제17조②·⑥, 콘텐츠산업 진흥법 제27조①: 알리지 않으면 철회를 막을 수 없음)
   box.append(el("p", { class: "refundnote", text: "산 날부터 7일 안에는 아직 쓰지 않은 하트 보석만큼 청약철회(환불)할 수 있어요. 하트 보석은 받는 즉시 쓸 수 있는 디지털 상품이라, 이미 쓴 만큼과 시작 꾸러미로 받은 꾸미기는 철회가 제한돼요." }));
   if (!econ.bought.starter) {
     const st = PACKS.find((p) => p.once);
     box.append(el("div", { class: "banner" }, el("b", { text: "처음 한 번만! 시작 꾸러미" }), document.createTextNode(st.desc),
-      el("div", { class: "row", style: "margin-top:8px" }, el("span", { class: "small dim", style: "flex:1", text: "한 번만 살 수 있어요" }), el("button", { class: "krw", text: won(st.krw), onclick: () => ctx.onPack(st) }))));
+      el("div", { class: "row", style: "margin-top:8px" }, el("span", { class: "small dim", style: "flex:1", text: "한 번만 살 수 있어요" }), el("button", { class: "krw", text: closed ? "준비 중" : won(st.krw), disabled: closed, onclick: () => ctx.onPack(st) }))));
   }
   for (const p of PACKS.filter((x) => !x.once)) {
-    box.append(el("button", { class: "pack", onclick: () => ctx.onPack(p) }, spriteCanvas("coinGem", 32, 26), el("span", { class: "g" }, document.createTextNode(p.name), el("small", { text: p.bonus || "기본" })), el("span", { class: "krw", text: won(p.krw) })));
+    box.append(el("button", { class: "pack", disabled: closed, onclick: () => ctx.onPack(p) }, spriteCanvas("coinGem", 32, 26), el("span", { class: "g" }, document.createTextNode(p.name), el("small", { text: p.bonus || "기본" })), el("span", { class: "krw", text: closed ? "준비 중" : won(p.krw) })));
   }
-  box.append(el("p", { class: "fine", text: `가진 하트 보석 ${gems(econ)}개 (산 것 ${econ.gemPaid}, 받은 것 ${econ.gemFree}). 받은 것부터 먼저 써요.` }));
+  const dt = g.at ? new Date(g.at) : null;
+  const seen = dt ? `${dt.getMonth() + 1}월 ${dt.getDate()}일 ${String(dt.getHours()).padStart(2, "0")}:${String(dt.getMinutes()).padStart(2, "0")}` : null;
+  box.append(el("p", { class: "fine", text: `가진 하트 보석 ${gems(econ)}개 (산 것 ${econ.gemPaid}, 받은 것 ${econ.gemFree}). 받은 것부터 먼저 써요. 하트 보석은 서버 지갑에 있고, 인터넷에 연결됐을 때만 받고 쓸 수 있어요.${seen ? ` 마지막 확인 ${seen}.` : ""}${g.pending ? ` 받을 보석 ${g.pending}개는 연결되면 들어와요.` : ""}` }));
   box.append(el("p", { class: "fine", text: "꾸미기 상품은 사기 전에 방에 미리 놓아 볼 수 있어요. 랜덤 뽑기는 없어요. 철회·환불 문의는 아래 '산 기록'의 주문번호와 함께 개발자 이메일로 보내 주세요." }));
   if (!ctx.isApp) box.append(el("p", { class: "warn small", text: "하트 보석은 플레이스토어 앱에서 살 수 있어요(준비 중). 지금은 매일 선물과 비밀 찾기로 받을 수 있어요." }));
   box.append(el("button", { class: "big ghost", text: "구매 복원", onclick: () => ctx.onRestore() }));
@@ -106,6 +116,7 @@ function renderGemShop(box, ctx) {
       el("li", {}, el("b", { text: o.sku ? nameOf(o.sku) : "결제" }), el("span", { class: "small dim", text: ` ${day(o.at)}` }), o.orderId ? el("div", { class: "small dim", text: `주문번호 ${o.orderId}` }) : null))));
     box.append(el("p", { class: "fine", text: "환불·문의 때 주문번호를 알려 주세요. 플레이 스토어 앱 → 프로필 아이콘 → 결제 및 정기 결제 → 예산 및 내역에서도 볼 수 있어요." }));
   }
+  if (g.has) box.append(el("button", { class: "big ghost danger", text: "서버 지갑 지우기", onclick: () => ctx.onDeleteWallet?.() })); // 개인정보 처리방침 7번
 }
 
 // ---------- 꾸미기 모드 ----------
