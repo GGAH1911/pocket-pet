@@ -1,8 +1,8 @@
 // 상점·꾸미기·매일 선물 화면. 상태와 규칙은 core/economy.js·catalog.js, 여기는 DOM만.
-import { ITEMS, ITEM, SLOTS, TABS, PICKS, PACKS, SOON } from "../core/catalog.js?v=221a78d-1791250439";
-import { canAfford, gems, DAILY, purchaseHistory } from "../core/economy.js?v=221a78d-1791250439";
-import { drawThumb } from "../render/deco.js?v=221a78d-1791250439";
-import { SPRITES, drawSprite, spriteSize } from "../render/sprites.js?v=221a78d-1791250439";
+import { ITEMS, ITEM, SLOTS, TABS, PICKS, PACKS, SOON } from "../core/catalog.js?v=4036598-1791263909";
+import { canAfford, gems, DAILY, purchaseHistory } from "../core/economy.js?v=4036598-1791263909";
+import { drawThumb } from "../render/deco.js?v=4036598-1791263909";
+import { SPRITES, drawSprite, spriteSize } from "../render/sprites.js?v=4036598-1791263909";
 
 const el = (tag, attrs = {}, ...kids) => {
   const e = document.createElement(tag);
@@ -140,6 +140,6 @@ export function dailyCard({ status, onClaim, onClose }) {
   if (status.available) inner.append(el("button", { class: "big", text: "받기", onclick: () => { onClaim(); card.remove(); } }));
   inner.prepend(el("button", { class: "x", "aria-label": "닫기", text: "✕", onclick: () => { card.remove(); onClose?.(); } }));
   card.append(inner);
-  card.addEventListener("click", (e) => { if (e.target === card) card.remove(); });
+  card.addEventListener("click", (e) => { if (e.target === card) { card.remove(); onClose?.(); } });
   return card;
 }

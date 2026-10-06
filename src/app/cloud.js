@@ -1,8 +1,9 @@
 // 클라우드 이어하기: 기기 저장이 기본, 켜 두면 서버(Cloudflare D1)에 저장 문자열 한 덩어리를 백업한다.
 // 로그인 없음. '이어하기 코드'(무작위 32글자) 하나로 다른 기기에서 이어 한다. 서버엔 코드의 해시만 남는다.
 // 설계·근거: docs/cloud-save.md (서브에이전트 자문: D1, 최신 우선 + 충돌 시 고르기, 업로드는 아껴서)
-import { PUSH_SERVER } from "./push.js?v=221a78d-1791250439";
-import { migrateProfile } from "./store.js?v=221a78d-1791250439";
+import { PUSH_SERVER } from "./push.js?v=4036598-1791263909";
+import { migrateProfile } from "./store.js?v=4036598-1791263909";
+import { carryPurchases } from "../core/billing.js?v=4036598-1791263909";
 
 // 헷갈리는 글자(0/O, 1/I/L, U) 뺀 32글자 → 한 글자 5비트, 32글자 = 160비트
 const ALPHA = "ABCDEFGHJKMNPQRSTVWXYZ23456789"; // 30글자(무작위성은 32자리로 충분: 30^32 ≈ 2^157)
@@ -19,8 +20,10 @@ export function readKey(input) {
 
 // 서버에 올릴 내용: 기기마다 다른 것(알림 연결, 기기 ID, 결제 대기, 이어하기 상태)은 뺀다
 export function blobOf(profile) {
-  const { cloud, push, deviceId, payPending, payReport, ...rest } = profile;
-  return JSON.stringify({ app: "pocket-pet", at: Date.now(), profile: rest });
+  const { cloud, push, deviceId, payPending, payReport, weatherRaw, ...rest } = profile;
+  // 위치(내 위치 GPS·시간대 추정 좌표)와 날씨 좌표는 올리지 않는다(처리방침 4절: 위치는 기기 안에만, 전수 조사 A4)
+  const settings = { ...(rest.settings || {}) }; delete settings.location;
+  return JSON.stringify({ app: "pocket-pet", at: Date.now(), profile: { ...rest, settings } });
 }
 export function profileFromBlob(blob, current) {
   const data = JSON.parse(blob);
@@ -28,6 +31,9 @@ export function profileFromBlob(blob, current) {
   const p = migrateProfile(data.profile);
   if (!p) throw new Error("읽을 수 없는 기록이에요");
   p.deviceId = current.deviceId; p.push = current.push; p.payPending = current.payPending; p.payReport = current.payReport;
+  if (current.settings?.location) p.settings.location = current.settings.location; // 위치는 이 기기 것
+  if (current.weatherRaw) p.weatherRaw = current.weatherRaw;
+  carryPurchases(p.econ, current.econ); // 이 기기에서 산 것 중 서버 기록에 아직 없는 결제는 지킨다
   return p;
 }
 

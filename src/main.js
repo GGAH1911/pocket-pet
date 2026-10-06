@@ -1,29 +1,29 @@
 // 부팅 순서는 이 파일 한 곳에서만 정해요.
 // (지난 게임에서 파일 읽는 순서 때문에 저장 기본값이 빠지는 버그가 있었어요.)
 // 순서: 저장 불러오기 → 꺼져 있던 시간 계산 → 화면 시작 → 서비스 워커·알림 확인 → 알림 일정 올리기
-import { createPet } from "./core/state.js?v=221a78d-1791250439";
-import { advance, feed, play, wash, walk, wakeFromNap, cleanPoop, toggleLight, giveMedicine, patPet, switchEndMode, retirePet } from "./core/sim.js?v=221a78d-1791250439";
-import { predictNotifications } from "./core/notify.js?v=221a78d-1791250439";
-import { josa } from "./core/josa.js?v=221a78d-1791250439";
-import { drawRoom, drawIcon, roomLayout } from "./render/screen.js?v=221a78d-1791250439";
-import { createAnimator, play as playAnim, frame as animFrame, addFx, DUR as ANIM_DUR } from "./render/anim.js?v=221a78d-1791250439";
-import { pickGame, createGame, GAME_NAMES } from "./app/games.js?v=221a78d-1791250439";
-import { EGGS, findEgg, createStreak, specialDay, SPECIAL_KO, HAT_OF, wishTime, MAKER_LETTER } from "./app/eggs.js?v=221a78d-1791250439";
-import { earn, buy, equip, unequip, grant as grantItem, gems, canAfford, dailyStatus, claimDaily, DAILY, grantPurchase } from "./core/economy.js?v=221a78d-1791250439";
-import { ITEMS, ITEM, SLOTS, TABS, PICKS, PACKS, SOON, BASIC_EQUIP } from "./core/catalog.js?v=221a78d-1791250439";
-import { renderShop, renderDeco, dailyCard, spriteCanvas } from "./app/shop-ui.js?v=221a78d-1791250439";
-import { formKey, lookOf, FORMS as FORMS_REF, SPOT_COLORS, eggSpriteFor } from "./render/creature.js?v=221a78d-1791250439";
-import { guessLocation, sunTimes, moonIllumination, moonPosition, moonPhaseName } from "./core/astro.js?v=221a78d-1791250439";
-import { classifyWeather, weatherUrl, parseWeather } from "./core/weather.js?v=221a78d-1791250439";
-import { createFacePicker, pickFace } from "./render/face.js?v=221a78d-1791250439";
-import { SPRITES, drawSprite } from "./render/sprites.js?v=221a78d-1791250439";
-import { loadProfile, saveProfile, freshProfile, exportCode, importCode, SAVE_KEYS, setSaveMirror } from "./app/store.js?v=221a78d-1791250439";
-import * as native from "./app/native.js?v=221a78d-1791250439";
-import * as cloud from "./app/cloud.js?v=221a78d-1791250439";
-import { planReconcile, isPaid } from "./core/billing.js?v=221a78d-1791250439";
-import { sfx, setSoundEnabled } from "./app/sound.js?v=221a78d-1791250439";
-import { markSeen, recordPet, renderCollection, letterText, portrait, currentKey, HOW_KO, unlockedSet, REWARDS, nextGoal, adultsSeen, ADULT_KEYS, formOrder, EGG_COLOR_KO } from "./app/collection.js?v=221a78d-1791250439";
-import { deviceInfo, registerSW, enablePush, ensurePush, uploadSchedule, sendTest, serverStatus, PUSH_SERVER } from "./app/push.js?v=221a78d-1791250439";
+import { createPet } from "./core/state.js?v=4036598-1791263909";
+import { advance, feed, play, wash, walk, wakeFromNap, cleanPoop, toggleLight, giveMedicine, patPet, switchEndMode, retirePet } from "./core/sim.js?v=4036598-1791263909";
+import { predictNotifications } from "./core/notify.js?v=4036598-1791263909";
+import { josa } from "./core/josa.js?v=4036598-1791263909";
+import { drawRoom, drawIcon, roomLayout } from "./render/screen.js?v=4036598-1791263909";
+import { createAnimator, play as playAnim, frame as animFrame, addFx, DUR as ANIM_DUR } from "./render/anim.js?v=4036598-1791263909";
+import { pickGame, createGame, GAME_NAMES } from "./app/games.js?v=4036598-1791263909";
+import { EGGS, findEgg, createStreak, specialDay, SPECIAL_KO, HAT_OF, wishTime, MAKER_LETTER } from "./app/eggs.js?v=4036598-1791263909";
+import { earn, buy, equip, unequip, grant as grantItem, gems, canAfford, dailyStatus, claimDaily, DAILY, grantPurchase } from "./core/economy.js?v=4036598-1791263909";
+import { ITEMS, ITEM, SLOTS, TABS, PICKS, PACKS, SOON, BASIC_EQUIP } from "./core/catalog.js?v=4036598-1791263909";
+import { renderShop, renderDeco, dailyCard, spriteCanvas } from "./app/shop-ui.js?v=4036598-1791263909";
+import { formKey, lookOf, FORMS as FORMS_REF, SPOT_COLORS, eggSpriteFor } from "./render/creature.js?v=4036598-1791263909";
+import { guessLocation, sunTimes, moonIllumination, moonPosition, moonPhaseName } from "./core/astro.js?v=4036598-1791263909";
+import { classifyWeather, weatherUrl, parseWeather } from "./core/weather.js?v=4036598-1791263909";
+import { createFacePicker, pickFace } from "./render/face.js?v=4036598-1791263909";
+import { SPRITES, drawSprite } from "./render/sprites.js?v=4036598-1791263909";
+import { loadProfile, saveProfile, freshProfile, exportCode, importCode, SAVE_KEYS, setSaveMirror, resetProfile } from "./app/store.js?v=4036598-1791263909";
+import * as native from "./app/native.js?v=4036598-1791263909";
+import * as cloud from "./app/cloud.js?v=4036598-1791263909";
+import { planReconcile, isPaid } from "./core/billing.js?v=4036598-1791263909";
+import { sfx, setSoundEnabled } from "./app/sound.js?v=4036598-1791263909";
+import { markSeen, recordPet, renderCollection, letterText, portrait, currentKey, HOW_KO, unlockedSet, REWARDS, nextGoal, adultsSeen, ADULT_KEYS, formOrder, EGG_COLOR_KO } from "./app/collection.js?v=4036598-1791263909";
+import { deviceInfo, registerSW, enablePush, ensurePush, uploadSchedule, sendTest, serverStatus, PUSH_SERVER } from "./app/push.js?v=4036598-1791263909";
 
 const clock = { offset: 0, now() { return Date.now() + this.offset; } }; // offset은 개발 도구만 바꾼다
 
@@ -193,24 +193,27 @@ function reward(kind, sub = null) { const r = earn(profile.econ, kind, clock.now
 let syncTimer = 0;
 function persist() { if (leaving) return; saveProfile(profile); markCloudDirty(); }
 // ---------- 클라우드 이어하기(켜 둔 경우만) ----------
-let cloudBusy = false, cloudTimer = 0, cloudLastCheck = 0, leaving = false;
+let cloudBusy = false, cloudTimer = 0, cloudLastCheck = 0, leaving = false, cloudEdits = 0, cloudAgain = false;
 function markCloudDirty() {
   const c = profile.cloud; if (!c?.key) return;
-  c.dirty = true;
+  c.dirty = true; cloudEdits++;
   clearTimeout(cloudTimer);
   cloudTimer = setTimeout(() => cloudSync(), Math.max(2000, (c.lastUp || 0) + cloud.UPLOAD_GAP_MS - Date.now()));
 }
 async function cloudSync({ urgent = false, keepalive = false } = {}) {
   const c = profile.cloud;
-  if (cloudBusy || !cloud.uploadDue(c, Date.now(), { urgent })) return;
-  cloudBusy = true;
+  if (cloudBusy) { if (urgent) cloudAgain = true; return; } // 올리는 중에 급한 요청이 오면 끝난 뒤 한 번 더(전수 조사 B8)
+  if (!cloud.uploadDue(c, Date.now(), { urgent })) return;
+  cloudBusy = true; cloudAgain = false;
+  const v = cloudEdits;
   try {
     const r = await cloud.cloudPut(c.key, cloud.blobOf(profile), c.rev, { keepalive });
-    if (r.ok) { c.rev = r.rev; c.dirty = false; c.lastUp = Date.now(); c.err = null; }
+    if (r.ok) { c.rev = r.rev; c.dirty = cloudEdits !== v; c.lastUp = Date.now(); c.err = null; } // 올리는 사이 바뀐 게 있으면 표시 유지
     else if (r.conflict) { c.holdUntil = Date.now() + 3600 * 1000; showCloudConflict(); }
     else if (r.wait) { c.holdUntil = Date.now() + r.wait; clearTimeout(cloudTimer); cloudTimer = setTimeout(() => cloudSync({ urgent }), r.wait + 500); }
     saveProfile(profile);
   } catch (e) { c.err = String(e?.message || e); } finally { cloudBusy = false; }
+  if (cloudAgain && profile.cloud?.dirty) { cloudAgain = false; setTimeout(() => cloudSync({ urgent: true }), 0); }
 }
 // 켤 때·다시 열 때: 다른 기기가 더 최근에 저장했으면 가져온다(이 기기에 안 올린 변경이 있으면 고르게)
 async function cloudCheck({ atBoot = false } = {}) {
@@ -332,6 +335,11 @@ async function syncNow({ keepalive = false } = {}) {
   } catch (e) { console.warn("알림 일정 올리기 실패", e); }
 }
 
+// 펫이 없어졌을 때 예약된 알림 지우기: 앱은 기기 안 예약 취소, 웹은 서버 일정 비우기(앱은 서버로 아무것도 안 보냄, B6·B7)
+function clearSchedule() {
+  if (IS_APP) native.cancelLocal().catch(() => {});
+  else if (profile.push?.subscribed) uploadSchedule(profile.deviceId, []).catch(() => {});
+}
 // ---------- 돌봄 행동 ----------
 const REFUSE = {
   egg: "아직 알이에요", asleep: "자고 있어요. 깨면 해 주세요", ended: "이제 여기 없어요", full: "배불러서 안 먹는대요",
@@ -350,10 +358,15 @@ function careReward(name, before, p, r) {
 // (사용자 지적: 씻는 도중 재우기를 누르면 욕조 속에서 잠들었음. 반대로 자는 중 씻기는 먼저 깨움 → 둘 다 '하던 걸 끝내고' 규칙으로 맞춤)
 const BUSY_KO = { meal: "밥 먹는", snack: "간식 먹는", play: "노는", wash: "씻는", medicine: "약 먹는" };
 let actBusy = { until: 0, name: "" };
+// 다른 돌봄을 지금 받을 수 없으면 이유를 말하고 true(동작 중·산책 중). 놀이·산책·밥 창·약에도 같은 규칙(전수 조사 A2·B3)
+function refuseIfBusy() {
+  if (walking()) { say("산책 중이에요. 다녀와서 해 주세요", 2500); sfx("refuse"); return true; }
+  if (performance.now() < actBusy.until) { say(`${BUSY_KO[actBusy.name] || "하던"} 중이에요. 끝나면 해 주세요`, 2500); sfx("refuse"); return true; }
+  return false;
+}
 function act(fn, okText, anims) {
   const p = profile.pet; if (!p) return;
-  if (walking()) return; // 산책 중엔 다른 행동 안 함
-  if (performance.now() < actBusy.until) { say(`${BUSY_KO[actBusy.name] || "하던"} 중이에요. 끝나면 해 주세요`, 2500); sfx("refuse"); return; }
+  if (refuseIfBusy()) return; // 산책 중·다른 동작 중엔 안내하고 안 함
   const before = { poops: p.poops, lightOn: p.lightOn, sick: p.sick, hunger: p.stats.hunger, clean: p.stats.clean, asleep: p.asleep };
   const r = fn(p, clock.now());
   handleEvents(r.events);
@@ -362,7 +375,7 @@ function act(fn, okText, anims) {
     const [name, data] = anims(r, before);
     if (BUSY_KO[name]) actBusy = { until: performance.now() + (r.woke ? 1300 : 0) + (ANIM_DUR[name] || 1000), name };
     if (r.woke) { // 낮잠 중이었으면 먼저 깨고(기지개) 그다음 행동
-      say(`${josa(p.name, "을", "를")} 깨웠어요. ${okText(p, r)}`);
+      say(name === "untuck" ? okText(p, r) : `${josa(p.name, "을", "를")} 깨웠어요. ${okText(p, r)}`); // 깨우기 자체면 '깨웠어요'를 겹쳐 쓰지 않음
       // 깨우기(불 켜기)는 깨는 것 자체가 행동이라 기지개(untuck)를 두 번 틀지 않는다(쿠션이 두 번 생겼다 사라지던 원인)
       if (name && name !== "untuck") setTimeout(() => { playAnim(anim, name, performance.now(), data); sfx(SFX_OF[name] || "tap"); }, 1300);
     } else {
@@ -383,16 +396,16 @@ function act(fn, okText, anims) {
 const SFX_OF = { meal: "eat", snack: "snack", play: "happy", wash: "wash", lightOn: "light", lightOff: "light", medicine: "medicine" };
 const S = () => profile.settings;
 const ACTIONS = {
-  food: () => openSheet("food"),
+  food: () => { const p = profile.pet; if (!p || refuseIfBusy()) return; if (p.stage === "egg") { say(REFUSE.egg); sfx("refuse"); return; } openSheet("food"); },
   meal: () => { closeSheet(); act((p, t) => feed(p, "meal", t, S()), (p) => `${I(p.name)} 냠냠 먹었어요`, () => ["meal"]); },
   snack: () => { closeSheet(); act((p, t) => feed(p, "snack", t, S()), (p) => `${I(p.name)} 간식을 좋아해요`, () => ["snack"]); },
-  play: () => { if (!walking()) openSheet("play"); },
+  play: () => { const p = profile.pet; if (!p || refuseIfBusy()) return; if (p.stage === "egg") { say(REFUSE.egg); sfx("refuse"); return; } openSheet("play"); },
   playHome: () => { closeSheet(); startMinigame(); },
   walk: () => { closeSheet(); startWalk(); },
   deco: () => openDeco(),
   wash: () => act((p, t) => wash(p, t, S()), (p) => (p.poops ? "뽀득뽀득 깨끗해졌어요. 바닥의 똥은 톡 눌러 치워요" : "뽀득뽀득 깨끗해졌어요"), () => ["wash"]),
   light: () => act((p, t) => toggleLight(p, t, S()), (p, r) => (r.napped ? `불을 껐어요. ${I(p.name)} 낮잠을 자요 (1시간 뒤 깨요)` : r.woke ? `불을 켰어요. ${I(p.name)} 낮잠에서 깼어요` : r.notSleepy ? `불을 껐어요. ${I(p.name)} 아직 안 졸린대요` : p.lightOn ? "불을 켰어요" : "불을 껐어요"), (r) => (r.napped ? ["tuckIn", { night: false }] : r.woke ? ["untuck", { night: false }] : [r.lightOn ? "lightOn" : "lightOff"])),
-  medicine: () => (profile.pet && !profile.pet.sick && !profile.pet.ended && profile.pet.stage !== "egg" ? (say("지금은 안 아파요", 2000), sfx("tap")) : act((p, t) => giveMedicine(p, t, S()), (p) => (p.sick ? "약을 먹었어요. 한 번 더 필요해요" : "다 나았어요"), () => ["medicine"])),
+  medicine: () => (profile.pet && !profile.pet.sick && !profile.pet.ended && profile.pet.stage !== "egg" && !profile.pet.asleep && !walking() && performance.now() >= actBusy.until ? (say("지금은 안 아파요", 2000), sfx("tap")) : act((p, t) => giveMedicine(p, t, S()), (p) => (p.sick ? "약을 먹었어요. 한 번 더 필요해요" : "다 나았어요"), () => ["medicine"])),
 };
 
 const PREV_STAGE = { baby: "egg", child: "baby", teen: "child", adult: "teen" };
@@ -536,7 +549,7 @@ const walking = () => !!(anim.cur && anim.cur.type === "walk" && performance.now
 const WALK_KINDS = ["butterfly", "flower", "puddle", "friend"];
 const WALK_KO = { butterfly: "나비를 만났어요", flower: "꽃 냄새를 맡았어요", puddle: "웅덩이에서 첨벙했어요", friend: "친구를 만났어요" };
 function startWalk() {
-  const p = profile.pet; if (!p || walking()) return;
+  const p = profile.pet; if (!p || refuseIfBusy()) return;
   const reason = p.ended ? "ended" : p.stage === "egg" ? "egg" : p.asleep ? "asleep" : p.stats.energy < 15 ? "tired" : null;
   if (reason) { advance(p, clock.now(), S()); say(REFUSE[reason]); sfx("refuse"); playAnim(anim, reason === "asleep" ? "sleepyRefuse" : "refuse", performance.now()); return; }
   if (napWakeFirst(p, startWalk)) return;
@@ -568,7 +581,7 @@ let lastGame = null;
 let layout = null; // 마지막으로 그린 방 배치(놀이 물체 좌표용)
 let mgUiKey = "";
 function startMinigame() {
-  const p = profile.pet; if (!p) return;
+  const p = profile.pet; if (!p || refuseIfBusy()) return;
   // 놀 수 없는 상태면 놀기와 같은 거절 반응
   const reason = p.ended ? "ended" : p.stage === "egg" ? "egg" : p.asleep ? "asleep" : p.stats.energy < 10 ? "tired" : null;
   if (reason) { advance(p, clock.now(), S()); say(REFUSE[reason]); sfx("refuse"); playAnim(anim, reason === "asleep" ? "sleepyRefuse" : "refuse", performance.now()); return; }
@@ -659,7 +672,7 @@ function startFarewell() {
   farewellShown = true;
   closeSheet(); if (mg) endMinigame(true);
   see(p); persist();
-  uploadSchedule(profile.deviceId, []).catch(() => {});
+  clearSchedule();
   playAnim(anim, "farewell", performance.now(), { how: p.ended.type });
   sfx("farewell");
   say(statusLine(), 0);
@@ -779,7 +792,6 @@ function openSheet(name) {
   for (const el of document.querySelectorAll(".sheet")) el.hidden = el.dataset.sheet !== name;
   $("backdrop").hidden = name === "shop" || name === "deco"; // 상점·꾸미기는 방이 보이게
   if (name === "notify") renderNotify();
-  if (name === "settings") renderSettings();
   if (name === "dex") renderDex();
   if (name === "save") renderSave();
   if (name === "shop") renderShopUI();
@@ -804,12 +816,12 @@ function renderShopUI() {
     econ: profile.econ, state: shopState, isApp: IS_APP,
     rerender: renderShopUI,
     onSelect: (it) => { previewDeco = it ? { [it.slot]: it.id } : null; },
-    onEquip: (it) => { equip(profile.econ, it); persist(); sfx("tap"); say(`${it.name}을(를) 끼웠어요`, 2500); renderShopUI(); },
+    onEquip: (it) => { equip(profile.econ, it); persist(); sfx("tap"); say(`${josa(it.name, "을", "를")} 끼웠어요`, 2500); renderShopUI(); },
     onBuy: (it) => {
       const r = buy(profile.econ, it, clock.now());
       if (!r.ok) { sfx("refuse"); say(r.reason === "poor" ? (it.price.gem ? "하트 보석이 모자라요" : "별사탕이 모자라요. 돌봄·놀이·산책으로 모아요") : "살 수 없어요"); return; }
       equip(profile.econ, it); persist(); sfx("win"); renderWallet();
-      say(`${it.name}을(를) 샀어요! 방에 놓았어요`, 4000); renderShopUI();
+      say(`${josa(it.name, "을", "를")} 샀어요! 방에 놓았어요`, 4000); renderShopUI();
     },
     onGoGem: () => { shopState.tab = "gem"; shopState.sel = null; previewDeco = null; renderShopUI(); },
     onPack: (pack) => buyPack(pack),
@@ -821,7 +833,7 @@ const IS_APP = native.IS_APP;
 let paying = false;
 async function buyPack(pack) {
   sfx("tap");
-  if (!IS_APP) { say(`${pack.name}은(는) 플레이스토어 앱에서 살 수 있어요(준비 중)`, 5000); return; }
+  if (!IS_APP) { say(`${josa(pack.name, "은", "는")} 플레이스토어 앱에서 살 수 있어요(준비 중)`, 5000); return; }
   if (paying) return;
   if (pack.once && profile.econ.bought[pack.id]) { say("이미 산 상품이에요", 3000); return; }
   paying = true;
@@ -834,6 +846,7 @@ async function buyPack(pack) {
   } catch (e) {
     const msg = String(e?.message || e);
     if (/cancel/i.test(msg)) say("결제를 취소했어요", 3000);
+    else if (/pending/i.test(msg)) say("결제가 확인되면 다음에 앱을 열 때 받아요", 6000); // 편의점 결제 등 대기 결제(전수 조사 C4)
     else if (/BILLING_UNAVAILABLE|unavailable/i.test(msg)) say("이 기기에서는 구글 결제를 쓸 수 없어요(플레이 스토어 로그인·제한 설정을 확인해 주세요)", 7000);
     else say("결제를 마치지 못했어요. 돈이 나갔다면 앱을 다시 열면 받아요", 7000);
     console.warn("결제 실패", e);
@@ -846,7 +859,7 @@ async function settlePurchase(job) {
   if (job.do !== "consumeOnly") {
     const r = grantPurchase(profile.econ, job.pack, job.token, Date.now(), { orderId: job.orderId });
     if (r.ok) queueOrderReport(job);
-    if (r.ok) { gainFx({ gem: job.pack.gems || 0, star: job.pack.stars || 0 }); sfx("win"); say(`${job.pack.name}을(를) 받았어요!`, 5000); }
+    if (r.ok) { gainFx({ gem: job.pack.gems || 0, star: job.pack.stars || 0 }); sfx("win"); say(`${josa(job.pack.name, "을", "를")} 받았어요!`, 5000); }
   }
   if (profile.payPending) delete profile.payPending[job.token];
   persist(); renderWallet(); cloudSync({ urgent: true });
@@ -905,12 +918,15 @@ function renderQuickSettings() {
   const notifyOn = profile.push.subscribed && s.notify.enabled;
   box.innerHTML = `
     <div class="set">소리<button class="tg ${s.sound ? "on" : ""}" id="q-sound" aria-label="소리"></button></div>
+    <div class="set">날씨<button class="tg ${s.weather !== false ? "on" : ""}" id="q-weather" aria-label="창밖 실제 날씨"></button></div>
     <div class="set">알림<button class="goarrow" id="q-notify">${notifyOn ? "켜짐" : "꺼짐"} ›</button></div>
     <div class="set">이어하기<button class="goarrow" id="q-cloud">${profile.cloud?.key ? "켜짐" : "꺼짐"} ›</button></div>
     <div class="set">잠자는 시간<span class="r">${SLEEP_PRESETS.map(([a, , l]) => `<button class="seg ${s.sleep.start === a ? "on" : ""}" data-sleep="${a}">${l}</button>`).join("")}</span></div>
     <p class="fine">자는 시간은 8시간이에요 (${s.sleep.start} → ${s.sleep.end}). 자는 동안엔 알림이 조용해요.</p>`;
   $("q-sound").addEventListener("click", () => { s.sound = !s.sound; setSoundEnabled(s.sound); if (s.sound) sfx("happy"); persist(); renderQuickSettings(); });
   $("q-notify").addEventListener("click", () => openSheet("notify"));
+  // 날씨: 끄면 날씨 서비스로 아무것도 보내지 않음(처리방침 4절 약속, 디자인 자문 B2)
+  $("q-weather").addEventListener("click", () => { s.weather = s.weather === false; persist(); updateWeather(true); sfx("tap"); say(s.weather ? "창밖에 실제 날씨를 보여 줘요" : "날씨를 껐어요. 날씨 서비스로 아무것도 보내지 않아요", 3000); renderQuickSettings(); });
   $("q-cloud").addEventListener("click", () => openSheet("cloud"));
   for (const b of box.querySelectorAll("[data-sleep]")) b.addEventListener("click", () => {
     const pr = SLEEP_PRESETS.find((x) => x[0] === b.dataset.sleep); s.sleep = { start: pr[0], end: pr[1] };
@@ -925,24 +941,37 @@ function renderHelp() {
     <p class="small"><b>돌보기</b> 밥·놀기·씻기·불 버튼으로 돌봐요. 배고프거나 더러울 때 챙겨 주면 별사탕을 받아요.</p>
     <p class="small"><b>별사탕·하트 보석</b> 별사탕은 돌봄·놀이·산책·매일 선물로 모으고, 보석은 매일 선물 7일째·비밀 찾기로 받거나 살 수 있어요. 둘 다 꾸미기에만 쓰여요. 펫의 상태는 돈으로 바뀌지 않아요.</p>
     <p class="small"><b>꾸미기</b> 아래 꾸미기 버튼 → 칸을 골라 가진 것으로 바꿔요. 상점에서는 사기 전에 방에 미리 놓아 볼 수 있어요.</p>
-    <p class="small"><b>개인정보</b> 이 게임은 이름·연락처 같은 개인정보를 모으지 않아요. 펫과 꾸미기 기록은 이 기기 안에만 저장돼요. <a href="https://ggah1911.github.io/pocket-pet/privacy.html" target="_blank" rel="noopener">개인정보 처리방침 전문</a></p>`;
+    <p class="small"><b>개인정보</b> 이 게임은 이름·연락처 같은 개인정보를 모으지 않아요. 펫과 꾸미기 기록은 이 기기 안에 저장되고, 이어하기를 켜면 서버에도 보관돼요. 창밖 날씨를 보여 주려고 대략적인 위치(시간대 대표 도시)만 날씨 서비스로 보내요(메뉴 → 날씨에서 끌 수 있어요). <a href="https://ggah1911.github.io/pocket-pet/privacy.html" target="_blank" rel="noopener">개인정보 처리방침 전문</a></p>`;
 }
 
 // ---------- 매일 선물 ----------
+// 매일 선물(전수 조사 B1): 이미 떠 있으면 또 안 띄움, 다른 창·카드가 열려 있으면 닫힌 뒤로 미룸, 받지 않고 닫으면 그날은 저절로 다시 안 띄움
+let dailyPending = false, dailyDismissedDay = null;
+const dayKey = () => new Date(clock.now()).toDateString();
 function showDaily(force = false) {
+  if (document.querySelector(".dexcard.daily")) return;
   const st = dailyStatus(profile.econ, clock.now());
   if (!st.available && !force) return;
-  document.body.append(dailyCard({ status: st, onClaim: () => {
+  if (!force) {
+    if (dailyDismissedDay === dayKey()) return;
+    const busy = [...document.querySelectorAll(".sheet")].some((x) => !x.hidden) || [...document.querySelectorAll(".dexcard")].some((c) => !c.hidden) || mg || walking();
+    if (busy) { dailyPending = true; return; }
+  }
+  dailyPending = false;
+  const card = dailyCard({ status: st, onClose: () => { if (dailyStatus(profile.econ, clock.now()).available) dailyDismissedDay = dayKey(); }, onClaim: () => {
     const r = claimDaily(profile.econ, clock.now());
     if (r) { gainFx({ star: r.star || 0, gem: r.gem || 0 }); sfx("win"); say(r.gem ? `오늘의 선물: 하트 보석 ${r.gem}개!` : `오늘의 선물: 별사탕 ${r.star}개`, 4000); }
     $("gift-dot").hidden = true;
-  } }));
+  } });
+  card.classList.add("daily");
+  document.body.append(card);
 }
 function closeSheet() {
   if (previewDeco) previewDeco = null;
   for (const el of document.querySelectorAll(".sheet")) el.hidden = true;
   $("backdrop").hidden = true;
   fitCanvas();
+  if (dailyPending) setTimeout(() => showDaily(), 400); // 창 때문에 미뤘던 선물
 }
 
 async function renderNotifyApp() {
@@ -1015,68 +1044,13 @@ function renderNotify() {
   });
 }
 
-function renderSettings() {
-  const s = profile.settings, p = profile.pet;
-  const box = $("settings-body");
-  box.innerHTML = `
-    <label>속도 <select id="set-speed">
-      <option value="slow">느긋 (어른까지 약 6일, 하루 1~2번)</option>
-      <option value="normal">보통 (약 3일, 하루 3~4번)</option>
-      <option value="fast">빠름 (약 1일, 2시간마다)</option></select></label>
-    <label>잠자는 시간 <span class="row"><input type="time" id="set-sleep-start" value="${s.sleep.start}"> ~ <input type="time" id="set-sleep-end" value="${s.sleep.end}"></span></label>
-    <label class="check"><input type="checkbox" id="set-busy" ${s.busy.enabled ? "checked" : ""}> 바쁜 시간 (평일, 수치가 절반 속도로 줄어요)</label>
-    <label>바쁜 시간 <span class="row"><input type="time" id="set-busy-start" value="${s.busy.start}"> ~ <input type="time" id="set-busy-end" value="${s.busy.end}"></span></label>
-    <label class="check"><input type="checkbox" id="set-urgent" ${s.notify.busyOnlyUrgent ? "checked" : ""}> 바쁜 시간에는 급한 알림만</label>
-    <label class="check"><input type="checkbox" id="set-notify" ${s.notify.enabled ? "checked" : ""}> 알림 보내기</label>
-    <label>끝 방식 <select id="set-end">
-      <option value="journey">여행 떠나기 (어른 7일 뒤 편지를 남기고 여행)</option>
-      <option value="forever">계속 살기 (끝 없이 함께, 원하면 도감에서 작별)</option>
-      <option value="classic">원작 (어른 10~16일 사이 별이 됨)</option></select></label>
-    <p class="small dim">끝 방식을 바꾸면 지금부터 적용되고, 적어도 하루는 더 함께해요.</p>
-    <label class="check"><input type="checkbox" id="set-sound" ${s.sound ? "checked" : ""}> 소리 켜기</label>
-    <label>창밖 하늘 위치</label>
-    <p class="small" id="loc-info">${skyText()}</p>
-    <button class="big ghost" id="btn-loc">내 위치로 일출·일몰·날씨 맞추기</button>
-    <label class="check"><input type="checkbox" id="set-weather" ${s.weather === false ? "" : "checked"}> 창밖에 실제 날씨 보여 주기 (Open-Meteo에서 20분마다 받아옴)</label>
-    <button class="big ghost danger" id="btn-reset">처음부터 다시</button>`;
-  if (p) $("set-speed").value = p.speed;
-  $("set-end").value = s.endMode || "journey";
-  const save = () => {
-    if (profile.pet) advance(profile.pet, clock.now(), s); // 바꾸기 전 설정으로 지금까지 계산
-    s.sleep.start = $("set-sleep-start").value || s.sleep.start;
-    s.sleep.end = $("set-sleep-end").value || s.sleep.end;
-    s.busy.enabled = $("set-busy").checked;
-    s.busy.start = $("set-busy-start").value || s.busy.start;
-    s.busy.end = $("set-busy-end").value || s.busy.end;
-    s.notify.busyOnlyUrgent = $("set-urgent").checked;
-    s.notify.enabled = $("set-notify").checked;
-    const newEnd = $("set-end").value;
-    if (newEnd !== (s.endMode || "journey")) { if (profile.pet && !profile.pet.ended) switchEndMode(profile.pet, newEnd, clock.now(), s); s.endMode = newEnd; }
-    s.sound = $("set-sound").checked; setSoundEnabled(s.sound); if (s.sound) sfx("happy");
-    const wxOn = $("set-weather").checked; if (wxOn !== (s.weather !== false)) { s.weather = wxOn; updateWeather(true); }
-    if (profile.pet) profile.pet.speed = $("set-speed").value;
-    persist(); renderStats(); scheduleSync(300);
-  };
-  for (const el of box.querySelectorAll("input,select")) el.addEventListener("change", save);
-  $("btn-loc").addEventListener("click", () => {
-    if (!navigator.geolocation) { $("loc-info").textContent = "이 기기는 위치를 알려 주지 않아요"; return; }
-    $("loc-info").textContent = "위치 확인 중...";
-    navigator.geolocation.getCurrentPosition((pos) => {
-      // 일출·일몰에는 대략적인 위치면 충분: 소수 둘째 자리(약 1km)로 줄여 저장
-      s.location = { lat: Math.round(pos.coords.latitude * 100) / 100, lon: Math.round(pos.coords.longitude * 100) / 100, label: "내 위치", source: "gps" };
-      persist(); renderSettings(); updateWeather(true); say("창밖 하늘과 날씨를 지금 있는 곳에 맞췄어요");
-    }, () => { $("loc-info").textContent = "위치 권한이 없어서 시간대 기준으로 둘게요"; }, { enableHighAccuracy: false, timeout: 10000, maximumAge: 3600000 });
-  });
-  $("btn-reset").addEventListener("click", resetPet);
-}
 
 // 처음부터 다시: 펫만 지운다. 도감·화폐·산 꾸미기·찾은 비밀은 남긴다(산 것이 사라지면 안 됨)
 function resetPet() {
   if (!confirm("지금 펫을 지우고 처음부터 시작할까요? (도감, 별사탕, 하트 보석, 꾸미기는 남아요)")) return;
-  const keep = { deviceId: profile.deviceId, push: profile.push, settings: profile.settings, seenGuide: true, collection: profile.collection, seen: profile.seen, econ: profile.econ, eggs: profile.eggs };
-  profile = { ...freshProfile(), ...keep };
+  profile = resetProfile(profile); // 펫만 새로(store.js RESET_KEEP)
   persist(); closeSheet(); showStart(); renderStats();
-  uploadSchedule(profile.deviceId, []).catch(() => {});
+  clearSchedule();
 }
 
 // ---------- 방 꾸밈: 장착한 꾸미기 + 상점 미리 보기 + 도감 보상(추억 액자) ----------
@@ -1263,7 +1237,7 @@ function boot() {
   // 개발 도구(공개 배포에는 없음): ?dev 로 열기
   if (QS.has("dev")) {
     window.__pp = { clock, getProfile: () => profile, tick, anim, playAnim: (n, d) => playAnim(anim, n, performance.now(), d), mg: () => mg, layout: () => layout, forceGame: null, boxes: () => ({ windowBox, petBox, memoBox }), render: () => renderStats() };
-    import("./dev/panel.js?v=221a78d-1791250439").then((m) => m.mount({ clock, getProfile: () => profile, tick, renderStats, syncNow, serverStatus })).catch(() => {});
+    import("./dev/panel.js?v=4036598-1791263909").then((m) => m.mount({ clock, getProfile: () => profile, tick, renderStats, syncNow, serverStatus })).catch(() => {});
   }
 }
 

@@ -1,11 +1,11 @@
 // 방 화면 그리기. 게임 규칙은 모르고 받은 상태만 그린다.
 // 캔버스는 "도트 해상도"로 그리고 CSS가 정수배로 키운다.
-import { PALETTE } from "./palette.js?v=221a78d-1791250439";
-import { SPRITES, drawSprite, spriteSize } from "./sprites.js?v=221a78d-1791250439";
-import { buildCreature, paintGrid, formKey, eggSpriteFor } from "./creature.js?v=221a78d-1791250439";
-import { drawFace, POOLS } from "./face.js?v=221a78d-1791250439";
-import { drawSky } from "./sky.js?v=221a78d-1791250439";
-import { drawWall, drawFloor, drawRug, drawCurtain, drawFurniture, drawLampGlow, HAT_SPRITE, FURN_HALF } from "./deco.js?v=221a78d-1791250439";
+import { PALETTE } from "./palette.js?v=4036598-1791263909";
+import { SPRITES, drawSprite, spriteSize } from "./sprites.js?v=4036598-1791263909";
+import { buildCreature, paintGrid, formKey, eggSpriteFor } from "./creature.js?v=4036598-1791263909";
+import { drawFace, POOLS } from "./face.js?v=4036598-1791263909";
+import { drawSky } from "./sky.js?v=4036598-1791263909";
+import { drawWall, drawFloor, drawRug, drawCurtain, drawFurniture, drawLampGlow, HAT_SPRITE, FURN_HALF } from "./deco.js?v=4036598-1791263909";
 
 // 방 배치(그리기와 동작이 같은 좌표를 쓰게 한 곳에서 계산)
 export function roomLayout(w, h, deco = {}) {
@@ -16,7 +16,7 @@ export function roomLayout(w, h, deco = {}) {
   const furnPos = { furnL: Math.max(half(deco.furnL) + 2, Math.round(w * 0.13)), furnR: Math.min(w - half(deco.furnR) - 2, Math.round(w * 0.87)) };
   return { floorY, cx: Math.round(w / 2), rugY, baseY: rugY + 4, furnBase, furnPos };
 }
-import { WALK_STOPS as WALK_STOPS_REF, walkDist as walkDistRef } from "./anim.js?v=221a78d-1791250439";
+import { WALK_STOPS as WALK_STOPS_REF, walkDist as walkDistRef } from "./anim.js?v=4036598-1791263909";
 const clamp01 = (x) => Math.max(0, Math.min(1, x));
 
 const FLOOR = "#f5b98c";
@@ -431,7 +431,8 @@ function headTop(g, P, c0 = Math.round(faceCx(P))) {
   return top < 0 ? Math.round(P.cy - P.ry) : top;
 }
 const HAT_SINK = { hatStraw: 3, hatCrown: 2, hatFlower: 3, santaHat: 3, pumpkinHat: 3, partyHat: 2 }; // 머리에 파묻히는 칸 수(쓴 것처럼)
-const NO_DODGE = new Set(["fantasy.baby", "fantasy.child"]); // 말랑이·뿔말랑이: 뾰족한 물방울 머리 끝이 곧 머리라 그 위에 씌움
+const NO_DODGE = new Set(["fantasy.baby", "fantasy.child"]);
+const OPEN_TOP = new Set(["hatCrown", "hatFlower"]); // 위가 뚫린 머리 장식 // 말랑이·뿔말랑이: 뾰족한 물방울 머리 끝이 곧 머리라 그 위에 씌움
 function drawHat(ctx, box, hat, built, faceInfo, facing, key = "") {
   const sp = SPRITES[hat]; if (!sp) return;
   const { g, P } = built;
@@ -476,7 +477,10 @@ function drawHat(ctx, box, hat, built, faceInfo, facing, key = "") {
     const half = sw / 2; // 모자 반폭(격자 칸)
     c = Math.round(side < 0 ? Math.min(...prot) - half * 0.75 - 1 : Math.max(...prot) + half * 0.75 + 1); // 챙 끝만 살짝 겹치게
   }
-  const top = headTop(g, P, c), sink = HAT_SINK[hat] ?? 2;
+  let top = headTop(g, P, c), sink = HAT_SINK[hat] ?? 2;
+  // 비켜 씌우지 않는 물방울 머리(뿔말랑이 등)는 모자가 작은 뿔 끝까지 덮게 높이를 뿔 끝에 맞춘다(전수 조사 B4: 뿔이 모자 위로 삐져나옴)
+  // 단, 위가 뚫린 장식(왕관·꽃 머리띠)은 원래 뿔이 사이로 나와 보이는 게 자연스러워서 그대로 둔다(사용자 지적)
+  if (prot.length && NO_DODGE.has(key) && !OPEN_TOP.has(hat)) { const tip = Math.min(...prot.map((k) => colTop(g, k))); if (tip < top) { top = tip; sink = 1; } }
   drawSprite(ctx, sp, Math.round(gx(c + 0.5) - sw), Math.round(gy(top + sink) - sh * 2), 2);
 }
 

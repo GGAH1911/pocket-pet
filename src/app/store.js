@@ -1,8 +1,8 @@
 // 저장: 휴대폰 브라우저 저장소(localStorage). 직전 저장본을 백업으로 하나 더 둔다.
-import { DEFAULT_SETTINGS } from "../core/rules.js?v=221a78d-1791250439";
-import { SAVE_VERSION, migratePet } from "../core/state.js?v=221a78d-1791250439";
-import { newEcon, normalizeEcon, grant, equip } from "../core/economy.js?v=221a78d-1791250439";
-import { ensureBasics, ITEM } from "../core/catalog.js?v=221a78d-1791250439";
+import { DEFAULT_SETTINGS } from "../core/rules.js?v=4036598-1791263909";
+import { SAVE_VERSION, migratePet } from "../core/state.js?v=4036598-1791263909";
+import { newEcon, normalizeEcon, grant, equip } from "../core/economy.js?v=4036598-1791263909";
+import { ensureBasics, ITEM } from "../core/catalog.js?v=4036598-1791263909";
 
 const KEY = "pocket-pet:save";
 const BACKUP = "pocket-pet:save:backup";
@@ -22,6 +22,14 @@ export function freshProfile() {
 }
 
 export function migrateProfile(p) { return migrate(p); }
+
+// '처음부터 다시': 펫만 새로. 기기·설정·도감·화폐·꾸미기·비밀과 이어하기 연결·결제 지급 대기·거래기록 보고 대기열은 지킨다(전수 조사 A1)
+export const RESET_KEEP = ["deviceId", "push", "settings", "collection", "seen", "econ", "eggs", "cloud", "payPending", "payReport"];
+export function resetProfile(p) {
+  const out = { ...freshProfile(), seenGuide: true };
+  for (const k of RESET_KEEP) if (p[k] !== undefined) out[k] = p[k];
+  return out;
+}
 
 function migrate(p) {
   // 버전이 오르면 여기서 옛 저장을 새 모양으로 바꾼다
@@ -61,7 +69,9 @@ export function saveProfile(p) {
 
 // 저장 내보내기/불러오기: 글자 코드(기기 변경, 사파리 → 홈 화면 앱 옮기기, 저장소 삭제 대비)
 export function exportCode(p) {
-  const json = JSON.stringify({ app: "pocket-pet", v: SAVE_VERSION, at: Date.now(), profile: { ...p, push: { subscribed: false } } });
+  // 기기마다 다른 것(알림 연결·이어하기 코드·결제 지급 대기·거래기록 보고 대기열)은 코드에 넣지 않는다(코드를 남에게 줘도 서버 기록에 닿지 않게, 전수 조사 B10)
+  const { cloud, payPending, payReport, ...rest } = p;
+  const json = JSON.stringify({ app: "pocket-pet", v: SAVE_VERSION, at: Date.now(), profile: { ...rest, push: { subscribed: false } } });
   const bytes = new TextEncoder().encode(json);
   let bin = ""; for (const b of bytes) bin += String.fromCharCode(b);
   return "PP1." + btoa(bin);
@@ -80,5 +90,6 @@ export function importCode(code, current) {
   if (!p) throw new Error("읽을 수 없는 저장이에요");
   // 이 기기의 알림 연결은 그대로 둔다
   p.deviceId = current.deviceId; p.push = current.push;
+  p.cloud = current.cloud; p.payPending = current.payPending; p.payReport = current.payReport;
   return p;
 }
