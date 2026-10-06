@@ -1,9 +1,9 @@
 // 상점·꾸미기·매일 선물 화면. 상태와 규칙은 core/economy.js·catalog.js, 여기는 DOM만.
-import { ITEMS, ITEM, SLOTS, TABS, PICKS, PACKS, SOON, UNLOCK } from "../core/catalog.js?v=b27e75e-1791277839";
-import { canAfford, gems, DAILY, purchaseHistory, themeOpen } from "../core/economy.js?v=b27e75e-1791277839";
-import { gemButtonState } from "../core/wallet.js?v=b27e75e-1791277839";
-import { drawThumb } from "../render/deco.js?v=b27e75e-1791277839";
-import { SPRITES, drawSprite, spriteSize } from "../render/sprites.js?v=b27e75e-1791277839";
+import { ITEMS, ITEM, SLOTS, TABS, PICKS, PACKS, SOON, UNLOCK } from "../core/catalog.js?v=449b286-1791279022";
+import { canAfford, gems, DAILY, purchaseHistory, themeOpen } from "../core/economy.js?v=449b286-1791279022";
+import { gemButtonState } from "../core/wallet.js?v=449b286-1791279022";
+import { drawThumb } from "../render/deco.js?v=449b286-1791279022";
+import { SPRITES, drawSprite, spriteSize } from "../render/sprites.js?v=449b286-1791279022";
 
 const el = (tag, attrs = {}, ...kids) => {
   const e = document.createElement(tag);
@@ -99,6 +99,7 @@ function renderGemShop(box, ctx) {
   const g = ctx.gem || {};
   const closed = ctx.isApp && (g.buy || "off") === "off"; // 서버가 구글 확인(verify)·시험(test) 모드일 때만 원화 결제를 연다
   box.append(el("div", { class: "paynote" }, el("i"), document.createTextNode("초록 버튼은 진짜 돈이 나가요. 구글 결제 화면에서 한 번 더 확인해요")));
+  if (ctx.isApp && g.buy === "test") box.append(el("p", { class: "warn small", text: "지금은 시험 결제 기간이에요. 테스터 계정은 구글 결제 화면에서 '테스트 카드'로 결제해 돈이 나가지 않아요. 시험으로 받은 하트 보석은 정식 출시 때 정리돼요." }));
   // 청약철회 안내는 결제 버튼보다 먼저 보이게(전자상거래법 제17조②·⑥, 콘텐츠산업 진흥법 제27조①: 알리지 않으면 철회를 막을 수 없음)
   box.append(el("p", { class: "refundnote", text: "산 날부터 7일 안에는 아직 쓰지 않은 하트 보석만큼 청약철회(환불)할 수 있어요. 하트 보석은 받는 즉시 쓸 수 있는 디지털 상품이라, 이미 쓴 만큼과 시작 꾸러미로 받은 꾸미기는 철회가 제한돼요." }));
   if (!econ.bought.starter) {

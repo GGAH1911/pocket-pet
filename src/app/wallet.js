@@ -1,7 +1,7 @@
 // 하트 보석 서버 지갑: 기기 쪽 네트워크(서버 /wallet…). 규칙은 core/wallet.js, 설계 docs/wallet.md
 // 지갑 열쇠는 기기가 만든 무작위 32바이트. 서버엔 해시만 간다. 보석은 서버에 닿을 때만 받고 쓸 수 있다.
-import { PUSH_SERVER } from "./push.js?v=b27e75e-1791277839";
-import { walletOf, applyServerWallet, migratePayload } from "../core/wallet.js?v=b27e75e-1791277839";
+import { PUSH_SERVER } from "./push.js?v=449b286-1791279022";
+import { walletOf, applyServerWallet, migratePayload } from "../core/wallet.js?v=449b286-1791279022";
 
 const b64u = (bytes) => btoa(String.fromCharCode(...bytes)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 export const newWalletKey = () => b64u(crypto.getRandomValues(new Uint8Array(32)));
@@ -78,10 +78,18 @@ export async function flushEarn(profile, save) {
   return got;
 }
 
+// 내부 테스트 앱에만 들어 있는 시험 결제 열쇠(tools/build-www.mjs). 웹판에는 파일이 없다
+let testPay;
+async function testPayKey() {
+  if (testPay !== undefined) return testPay;
+  try { const r = await fetch("test-pay.json", { cache: "no-store" }); testPay = r.ok ? (await r.json()).k || null : null; } catch { testPay = null; }
+  return testPay;
+}
 // 결제 적립(서버가 결제 모드에 따라 확인). 돌려줌: { ok, first, already, stars, pending, off, error }
 export async function creditPurchase(profile, save, { token, sku, orderId }) {
   const wl = walletOf(profile);
-  const r = await call("POST", "/wallet/purchase", wl.key, { token, sku, orderId }, { timeout: 20_000 });
+  const tp = await testPayKey();
+  const r = await call("POST", "/wallet/purchase", wl.key, { token, sku, orderId }, { timeout: 20_000, extraHeaders: tp ? { "x-test-pay": tp } : {} });
   if (r.data?.w) { applyServerWallet(profile, r.data); save(); }
   if (r.status === 200) return { ok: true, first: !!r.data.first, already: !!r.data.already, stars: r.data.stars || 0 };
   return { ok: false, status: r.status, reason: r.data?.reason, pending: r.status === 202, voided: r.status === 410, error: r.data?.error };
