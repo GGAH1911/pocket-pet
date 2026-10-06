@@ -1,29 +1,29 @@
 // 부팅 순서는 이 파일 한 곳에서만 정해요.
 // (지난 게임에서 파일 읽는 순서 때문에 저장 기본값이 빠지는 버그가 있었어요.)
 // 순서: 저장 불러오기 → 꺼져 있던 시간 계산 → 화면 시작 → 서비스 워커·알림 확인 → 알림 일정 올리기
-import { createPet } from "./core/state.js?v=8a3ec3a-1791249456";
-import { advance, feed, play, wash, walk, wakeFromNap, cleanPoop, toggleLight, giveMedicine, patPet, switchEndMode, retirePet } from "./core/sim.js?v=8a3ec3a-1791249456";
-import { predictNotifications } from "./core/notify.js?v=8a3ec3a-1791249456";
-import { josa } from "./core/josa.js?v=8a3ec3a-1791249456";
-import { drawRoom, drawIcon, roomLayout } from "./render/screen.js?v=8a3ec3a-1791249456";
-import { createAnimator, play as playAnim, frame as animFrame, addFx, DUR as ANIM_DUR } from "./render/anim.js?v=8a3ec3a-1791249456";
-import { pickGame, createGame, GAME_NAMES } from "./app/games.js?v=8a3ec3a-1791249456";
-import { EGGS, findEgg, createStreak, specialDay, SPECIAL_KO, HAT_OF, wishTime, MAKER_LETTER } from "./app/eggs.js?v=8a3ec3a-1791249456";
-import { earn, buy, equip, unequip, grant as grantItem, gems, canAfford, dailyStatus, claimDaily, DAILY, grantPurchase } from "./core/economy.js?v=8a3ec3a-1791249456";
-import { ITEMS, ITEM, SLOTS, TABS, PICKS, PACKS, SOON, BASIC_EQUIP } from "./core/catalog.js?v=8a3ec3a-1791249456";
-import { renderShop, renderDeco, dailyCard, spriteCanvas } from "./app/shop-ui.js?v=8a3ec3a-1791249456";
-import { formKey, lookOf, FORMS as FORMS_REF, SPOT_COLORS, eggSpriteFor } from "./render/creature.js?v=8a3ec3a-1791249456";
-import { guessLocation, sunTimes, moonIllumination, moonPosition, moonPhaseName } from "./core/astro.js?v=8a3ec3a-1791249456";
-import { classifyWeather, weatherUrl, parseWeather } from "./core/weather.js?v=8a3ec3a-1791249456";
-import { createFacePicker, pickFace } from "./render/face.js?v=8a3ec3a-1791249456";
-import { SPRITES, drawSprite } from "./render/sprites.js?v=8a3ec3a-1791249456";
-import { loadProfile, saveProfile, freshProfile, exportCode, importCode, SAVE_KEYS, setSaveMirror } from "./app/store.js?v=8a3ec3a-1791249456";
-import * as native from "./app/native.js?v=8a3ec3a-1791249456";
-import * as cloud from "./app/cloud.js?v=8a3ec3a-1791249456";
-import { planReconcile, isPaid } from "./core/billing.js?v=8a3ec3a-1791249456";
-import { sfx, setSoundEnabled } from "./app/sound.js?v=8a3ec3a-1791249456";
-import { markSeen, recordPet, renderCollection, letterText, portrait, currentKey, HOW_KO, unlockedSet, REWARDS, nextGoal, adultsSeen, ADULT_KEYS, formOrder, EGG_COLOR_KO } from "./app/collection.js?v=8a3ec3a-1791249456";
-import { deviceInfo, registerSW, enablePush, ensurePush, uploadSchedule, sendTest, serverStatus } from "./app/push.js?v=8a3ec3a-1791249456";
+import { createPet } from "./core/state.js?v=f0c1ae9-1791249907";
+import { advance, feed, play, wash, walk, wakeFromNap, cleanPoop, toggleLight, giveMedicine, patPet, switchEndMode, retirePet } from "./core/sim.js?v=f0c1ae9-1791249907";
+import { predictNotifications } from "./core/notify.js?v=f0c1ae9-1791249907";
+import { josa } from "./core/josa.js?v=f0c1ae9-1791249907";
+import { drawRoom, drawIcon, roomLayout } from "./render/screen.js?v=f0c1ae9-1791249907";
+import { createAnimator, play as playAnim, frame as animFrame, addFx, DUR as ANIM_DUR } from "./render/anim.js?v=f0c1ae9-1791249907";
+import { pickGame, createGame, GAME_NAMES } from "./app/games.js?v=f0c1ae9-1791249907";
+import { EGGS, findEgg, createStreak, specialDay, SPECIAL_KO, HAT_OF, wishTime, MAKER_LETTER } from "./app/eggs.js?v=f0c1ae9-1791249907";
+import { earn, buy, equip, unequip, grant as grantItem, gems, canAfford, dailyStatus, claimDaily, DAILY, grantPurchase } from "./core/economy.js?v=f0c1ae9-1791249907";
+import { ITEMS, ITEM, SLOTS, TABS, PICKS, PACKS, SOON, BASIC_EQUIP } from "./core/catalog.js?v=f0c1ae9-1791249907";
+import { renderShop, renderDeco, dailyCard, spriteCanvas } from "./app/shop-ui.js?v=f0c1ae9-1791249907";
+import { formKey, lookOf, FORMS as FORMS_REF, SPOT_COLORS, eggSpriteFor } from "./render/creature.js?v=f0c1ae9-1791249907";
+import { guessLocation, sunTimes, moonIllumination, moonPosition, moonPhaseName } from "./core/astro.js?v=f0c1ae9-1791249907";
+import { classifyWeather, weatherUrl, parseWeather } from "./core/weather.js?v=f0c1ae9-1791249907";
+import { createFacePicker, pickFace } from "./render/face.js?v=f0c1ae9-1791249907";
+import { SPRITES, drawSprite } from "./render/sprites.js?v=f0c1ae9-1791249907";
+import { loadProfile, saveProfile, freshProfile, exportCode, importCode, SAVE_KEYS, setSaveMirror } from "./app/store.js?v=f0c1ae9-1791249907";
+import * as native from "./app/native.js?v=f0c1ae9-1791249907";
+import * as cloud from "./app/cloud.js?v=f0c1ae9-1791249907";
+import { planReconcile, isPaid } from "./core/billing.js?v=f0c1ae9-1791249907";
+import { sfx, setSoundEnabled } from "./app/sound.js?v=f0c1ae9-1791249907";
+import { markSeen, recordPet, renderCollection, letterText, portrait, currentKey, HOW_KO, unlockedSet, REWARDS, nextGoal, adultsSeen, ADULT_KEYS, formOrder, EGG_COLOR_KO } from "./app/collection.js?v=f0c1ae9-1791249907";
+import { deviceInfo, registerSW, enablePush, ensurePush, uploadSchedule, sendTest, serverStatus, PUSH_SERVER } from "./app/push.js?v=f0c1ae9-1791249907";
 
 const clock = { offset: 0, now() { return Date.now() + this.offset; } }; // offset은 개발 도구만 바꾼다
 
@@ -807,7 +807,7 @@ async function buyPack(pack) {
   if (pack.once && profile.econ.bought[pack.id]) { say("이미 산 상품이에요", 3000); return; }
   paying = true;
   try {
-    const t = await native.payBuy(pack);
+    const t = await native.payBuy(pack, await payAcct());
     if (!t?.purchaseToken) { say("결제가 끝나지 않았어요", 4000); return; }
     if (!isPaid(t)) { say("결제가 확인되면 다음에 앱을 열 때 받아요", 6000); return; }
     profile.payPending = { ...(profile.payPending || {}), [t.purchaseToken]: { sku: pack.sku, at: Date.now(), orderId: t.orderId || null } }; persist(); // 지급 대기 먼저 저장
@@ -826,6 +826,7 @@ async function settlePurchase(job) {
   if (job.do === "ack" && !job.acknowledged) { try { await native.payAck(job.token); } catch (e) { if (!/already/i.test(String(e?.message))) throw e; } }
   if (job.do !== "consumeOnly") {
     const r = grantPurchase(profile.econ, job.pack, job.token, Date.now(), { orderId: job.orderId });
+    if (r.ok) queueOrderReport(job);
     if (r.ok) { gainFx({ gem: job.pack.gems || 0, star: job.pack.stars || 0 }); sfx("win"); say(`${job.pack.name}을(를) 받았어요!`, 5000); }
   }
   if (profile.payPending) delete profile.payPending[job.token];
@@ -840,6 +841,32 @@ async function reconcilePurchases({ manual = false } = {}) {
   } catch (e) { if (manual) say("구글 결제에 연결하지 못했어요. 잠시 뒤 다시 해 주세요", 5000); console.warn(e); }
 }
 function restorePurchases() { reconcilePurchases({ manual: true }); }
+// 구매 장부: 지급 뒤 서버에 기록(전자상거래법 거래기록 5년 보존). 실패하면 저장해 두고 다음에 다시(지급은 막지 않음)
+let acctCache = null;
+async function payAcct() {
+  if (acctCache) return acctCache;
+  const d = await crypto.subtle.digest("SHA-256", new TextEncoder().encode("acct:" + profile.deviceId));
+  return (acctCache = [...new Uint8Array(d)].map((b) => b.toString(16).padStart(2, "0")).join(""));
+}
+function queueOrderReport(job) {
+  const o = profile.econ.orders[job.token] || {};
+  profile.payReport = [...(profile.payReport || []), { token: job.token, orderId: job.orderId || null, sku: job.pack.sku, gems: job.pack.gems || 0, stars: job.pack.stars || 0, at: o.at || Date.now() }];
+  saveProfile(profile); flushOrderReports();
+}
+let reporting = false;
+async function flushOrderReports() {
+  if (reporting || !profile.payReport?.length || !navigator.onLine) return;
+  reporting = true;
+  try {
+    const acct = await payAcct();
+    while (profile.payReport.length) {
+      const r = profile.payReport[0];
+      const res = await fetch(PUSH_SERVER + "/billing/report", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ ...r, acct }) });
+      if (!res.ok && res.status !== 400) break; // 서버 문제면 다음에(400은 버릴 기록)
+      profile.payReport.shift(); saveProfile(profile);
+    }
+  } catch { /* 다음에 다시 */ } finally { reporting = false; }
+}
 
 // ---------- 꾸미기 모드 ----------
 const decoState = { slot: "wall" };
@@ -1108,7 +1135,7 @@ function bootApp() {
       native.minimizeApp();
     },
     pause: () => { profile.lastSeen = Date.now(); persist(); syncNow(); cloudSync({ urgent: true }); },
-    resume: () => { tick(); native.clearDelivered(); syncNow(); reconcilePurchases(); },
+    resume: () => { tick(); native.clearDelivered(); syncNow(); reconcilePurchases(); flushOrderReports(); },
   });
   native.onNotifyTap(() => {
     if (profile.pet && profile.pet.stage !== "egg" && !profile.pet.asleep && !profile.pet.ended) {
@@ -1117,7 +1144,7 @@ function bootApp() {
   });
   native.clearDelivered();
   if (profile.push.subscribed) syncNow();
-  reconcilePurchases();
+  reconcilePurchases(); flushOrderReports();
 }
 
 function boot() {
@@ -1216,7 +1243,7 @@ function boot() {
   // 개발 도구(공개 배포에는 없음): ?dev 로 열기
   if (QS.has("dev")) {
     window.__pp = { clock, getProfile: () => profile, tick, anim, playAnim: (n, d) => playAnim(anim, n, performance.now(), d), mg: () => mg, layout: () => layout, forceGame: null, boxes: () => ({ windowBox, petBox, memoBox }), render: () => renderStats() };
-    import("./dev/panel.js?v=8a3ec3a-1791249456").then((m) => m.mount({ clock, getProfile: () => profile, tick, renderStats, syncNow, serverStatus })).catch(() => {});
+    import("./dev/panel.js?v=f0c1ae9-1791249907").then((m) => m.mount({ clock, getProfile: () => profile, tick, renderStats, syncNow, serverStatus })).catch(() => {});
   }
 }
 

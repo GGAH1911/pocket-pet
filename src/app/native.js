@@ -88,9 +88,10 @@ export async function clearDelivered() { if (IS_APP) try { await LN.removeAllDel
 export function onNotifyTap(cb) { if (IS_APP) LN.addListener("localNotificationActionPerformed", cb); }
 
 // ---------- 플레이 결제 ----------
-export async function payBuy(pack) {
+export async function payBuy(pack, acct = null) {
   // 소모성도 isConsumable:false로 사고, 지급 대기 저장 → consumePurchase 성공 → 지급 순서는 부르는 쪽(main.js)이 지킨다
-  return Pay.purchaseProduct({ productIdentifier: pack.sku, productType: "inapp", isConsumable: false, autoAcknowledgePurchases: false });
+  // acct: 기기 ID 해시(구글 obfuscatedAccountId, 개인정보 아님. 구글 부정 결제 탐지·서버 장부 대조용)
+  return Pay.purchaseProduct({ productIdentifier: pack.sku, productType: "inapp", isConsumable: false, autoAcknowledgePurchases: false, ...(acct ? { appAccountToken: acct } : {}) });
 }
 export const payConsume = (token) => Pay.consumePurchase({ purchaseToken: token });
 export const payAck = (token) => Pay.acknowledgePurchase({ purchaseToken: token });
