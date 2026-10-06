@@ -1,29 +1,29 @@
 // 부팅 순서는 이 파일 한 곳에서만 정해요.
 // (지난 게임에서 파일 읽는 순서 때문에 저장 기본값이 빠지는 버그가 있었어요.)
 // 순서: 저장 불러오기 → 꺼져 있던 시간 계산 → 화면 시작 → 서비스 워커·알림 확인 → 알림 일정 올리기
-import { createPet } from "./core/state.js?v=f0c1ae9-1791249907";
-import { advance, feed, play, wash, walk, wakeFromNap, cleanPoop, toggleLight, giveMedicine, patPet, switchEndMode, retirePet } from "./core/sim.js?v=f0c1ae9-1791249907";
-import { predictNotifications } from "./core/notify.js?v=f0c1ae9-1791249907";
-import { josa } from "./core/josa.js?v=f0c1ae9-1791249907";
-import { drawRoom, drawIcon, roomLayout } from "./render/screen.js?v=f0c1ae9-1791249907";
-import { createAnimator, play as playAnim, frame as animFrame, addFx, DUR as ANIM_DUR } from "./render/anim.js?v=f0c1ae9-1791249907";
-import { pickGame, createGame, GAME_NAMES } from "./app/games.js?v=f0c1ae9-1791249907";
-import { EGGS, findEgg, createStreak, specialDay, SPECIAL_KO, HAT_OF, wishTime, MAKER_LETTER } from "./app/eggs.js?v=f0c1ae9-1791249907";
-import { earn, buy, equip, unequip, grant as grantItem, gems, canAfford, dailyStatus, claimDaily, DAILY, grantPurchase } from "./core/economy.js?v=f0c1ae9-1791249907";
-import { ITEMS, ITEM, SLOTS, TABS, PICKS, PACKS, SOON, BASIC_EQUIP } from "./core/catalog.js?v=f0c1ae9-1791249907";
-import { renderShop, renderDeco, dailyCard, spriteCanvas } from "./app/shop-ui.js?v=f0c1ae9-1791249907";
-import { formKey, lookOf, FORMS as FORMS_REF, SPOT_COLORS, eggSpriteFor } from "./render/creature.js?v=f0c1ae9-1791249907";
-import { guessLocation, sunTimes, moonIllumination, moonPosition, moonPhaseName } from "./core/astro.js?v=f0c1ae9-1791249907";
-import { classifyWeather, weatherUrl, parseWeather } from "./core/weather.js?v=f0c1ae9-1791249907";
-import { createFacePicker, pickFace } from "./render/face.js?v=f0c1ae9-1791249907";
-import { SPRITES, drawSprite } from "./render/sprites.js?v=f0c1ae9-1791249907";
-import { loadProfile, saveProfile, freshProfile, exportCode, importCode, SAVE_KEYS, setSaveMirror } from "./app/store.js?v=f0c1ae9-1791249907";
-import * as native from "./app/native.js?v=f0c1ae9-1791249907";
-import * as cloud from "./app/cloud.js?v=f0c1ae9-1791249907";
-import { planReconcile, isPaid } from "./core/billing.js?v=f0c1ae9-1791249907";
-import { sfx, setSoundEnabled } from "./app/sound.js?v=f0c1ae9-1791249907";
-import { markSeen, recordPet, renderCollection, letterText, portrait, currentKey, HOW_KO, unlockedSet, REWARDS, nextGoal, adultsSeen, ADULT_KEYS, formOrder, EGG_COLOR_KO } from "./app/collection.js?v=f0c1ae9-1791249907";
-import { deviceInfo, registerSW, enablePush, ensurePush, uploadSchedule, sendTest, serverStatus, PUSH_SERVER } from "./app/push.js?v=f0c1ae9-1791249907";
+import { createPet } from "./core/state.js?v=221a78d-1791250439";
+import { advance, feed, play, wash, walk, wakeFromNap, cleanPoop, toggleLight, giveMedicine, patPet, switchEndMode, retirePet } from "./core/sim.js?v=221a78d-1791250439";
+import { predictNotifications } from "./core/notify.js?v=221a78d-1791250439";
+import { josa } from "./core/josa.js?v=221a78d-1791250439";
+import { drawRoom, drawIcon, roomLayout } from "./render/screen.js?v=221a78d-1791250439";
+import { createAnimator, play as playAnim, frame as animFrame, addFx, DUR as ANIM_DUR } from "./render/anim.js?v=221a78d-1791250439";
+import { pickGame, createGame, GAME_NAMES } from "./app/games.js?v=221a78d-1791250439";
+import { EGGS, findEgg, createStreak, specialDay, SPECIAL_KO, HAT_OF, wishTime, MAKER_LETTER } from "./app/eggs.js?v=221a78d-1791250439";
+import { earn, buy, equip, unequip, grant as grantItem, gems, canAfford, dailyStatus, claimDaily, DAILY, grantPurchase } from "./core/economy.js?v=221a78d-1791250439";
+import { ITEMS, ITEM, SLOTS, TABS, PICKS, PACKS, SOON, BASIC_EQUIP } from "./core/catalog.js?v=221a78d-1791250439";
+import { renderShop, renderDeco, dailyCard, spriteCanvas } from "./app/shop-ui.js?v=221a78d-1791250439";
+import { formKey, lookOf, FORMS as FORMS_REF, SPOT_COLORS, eggSpriteFor } from "./render/creature.js?v=221a78d-1791250439";
+import { guessLocation, sunTimes, moonIllumination, moonPosition, moonPhaseName } from "./core/astro.js?v=221a78d-1791250439";
+import { classifyWeather, weatherUrl, parseWeather } from "./core/weather.js?v=221a78d-1791250439";
+import { createFacePicker, pickFace } from "./render/face.js?v=221a78d-1791250439";
+import { SPRITES, drawSprite } from "./render/sprites.js?v=221a78d-1791250439";
+import { loadProfile, saveProfile, freshProfile, exportCode, importCode, SAVE_KEYS, setSaveMirror } from "./app/store.js?v=221a78d-1791250439";
+import * as native from "./app/native.js?v=221a78d-1791250439";
+import * as cloud from "./app/cloud.js?v=221a78d-1791250439";
+import { planReconcile, isPaid } from "./core/billing.js?v=221a78d-1791250439";
+import { sfx, setSoundEnabled } from "./app/sound.js?v=221a78d-1791250439";
+import { markSeen, recordPet, renderCollection, letterText, portrait, currentKey, HOW_KO, unlockedSet, REWARDS, nextGoal, adultsSeen, ADULT_KEYS, formOrder, EGG_COLOR_KO } from "./app/collection.js?v=221a78d-1791250439";
+import { deviceInfo, registerSW, enablePush, ensurePush, uploadSchedule, sendTest, serverStatus, PUSH_SERVER } from "./app/push.js?v=221a78d-1791250439";
 
 const clock = { offset: 0, now() { return Date.now() + this.offset; } }; // offset은 개발 도구만 바꾼다
 
@@ -67,10 +67,28 @@ let lookCache = { key: "", look: null };
 const I = (n) => josa(n, "이", "가");
 
 // ---------- 화면 크기 ----------
+// 상점·꾸미기 창이 방 아래를 덮으면, 방은 평소 크기·배율 그대로 두고 펫(머리 장식 포함)~발밑이 창 위에 오도록 위로 올린다.
+// (디자인 자문 A안의 '모자라면 창문 쪽부터 위를 잘라도 됨'. 줄이거나 눌러 그리면 폰에서 펫이 너무 작거나 방이 찌그러졌음)
+const PET_TOP_ROOM = 70, PET_FOOT_ROOM = 14; // 발 기준선(baseY)에서 위로 펫+모자, 아래로 그림자·러그가 보일 여유(도트)
+function sheetCover() {
+  const sh = [...document.querySelectorAll(".sheet.shop, .sheet.deco")].find((s) => !s.hidden);
+  if (!sh) return 0;
+  return Math.max(0, Math.round(stage.getBoundingClientRect().bottom - sh.getBoundingClientRect().top));
+}
 function fitCanvas() {
   const rect = stage.getBoundingClientRect();
   const scale = Math.max(1, Math.round(rect.width / DOT_WIDTH)); // 정수배라야 도트가 안 뭉개져요
   const w = Math.floor(rect.width / scale), h = Math.floor(rect.height / scale);
+  const cover = sheetCover();
+  let lift = 0;
+  if (cover) {
+    const visRows = Math.floor((rect.height - cover) / scale);
+    const { baseY } = roomLayout(w, h, {});
+    lift = Math.max(0, Math.min(h - visRows, baseY + PET_FOOT_ROOM - visRows)); // 발밑 여유가 창 바로 위에 오게
+    if (baseY - PET_TOP_ROOM < lift) lift = Math.max(0, baseY - PET_TOP_ROOM); // 그래도 머리가 잘리면 머리 쪽을 우선
+  }
+  stage.classList.toggle("covered", cover > 0);
+  canvas.style.transform = lift ? `translateY(${-lift * scale}px)` : "";
   canvas.width = w; canvas.height = h;
   canvas.style.width = `${w * scale}px`; canvas.style.height = `${h * scale}px`;
   view = { w, h };
@@ -769,6 +787,7 @@ function openSheet(name) {
   if (name === "menu") renderQuickSettings();
   if (name === "help") renderHelp();
   if (name === "cloud") renderCloud();
+  if (name === "shop" || name === "deco") fitCanvas(); // 창이 덮는 만큼 방을 다시 맞춤
 }
 
 // ---------- 상점 ----------
@@ -923,6 +942,7 @@ function closeSheet() {
   if (previewDeco) previewDeco = null;
   for (const el of document.querySelectorAll(".sheet")) el.hidden = true;
   $("backdrop").hidden = true;
+  fitCanvas();
 }
 
 async function renderNotifyApp() {
@@ -1243,7 +1263,7 @@ function boot() {
   // 개발 도구(공개 배포에는 없음): ?dev 로 열기
   if (QS.has("dev")) {
     window.__pp = { clock, getProfile: () => profile, tick, anim, playAnim: (n, d) => playAnim(anim, n, performance.now(), d), mg: () => mg, layout: () => layout, forceGame: null, boxes: () => ({ windowBox, petBox, memoBox }), render: () => renderStats() };
-    import("./dev/panel.js?v=f0c1ae9-1791249907").then((m) => m.mount({ clock, getProfile: () => profile, tick, renderStats, syncNow, serverStatus })).catch(() => {});
+    import("./dev/panel.js?v=221a78d-1791250439").then((m) => m.mount({ clock, getProfile: () => profile, tick, renderStats, syncNow, serverStatus })).catch(() => {});
   }
 }
 

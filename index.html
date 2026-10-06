@@ -60,8 +60,11 @@
     .goarrow { margin-left: auto; border: 0; background: none; font-weight: 700; font-size: 13px; opacity: .75; }
     .link { display: block; width: 100%; border: 0; background: none; text-decoration: underline; opacity: .7; font-size: 13px; padding: 10px 0 2px; }
     .sheet.shop, .sheet.deco { max-height: 50%; padding-top: 12px; }
+    .sheet.shop { height: 50%; } /* 탭마다 높이가 달라 방 위치가 흔들리지 않게 고정 */
+    #stage.covered { place-items: start center; } /* 창이 덮으면 방을 위로 올림(fitCanvas) */
+    #room { transition: transform 200ms ease-out; }
     .sheet.deco { max-height: 40%; }
-    .shop-top { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; } .shop-top b { font-size: 17px; } .shop-top .sp { flex: 1; }
+    .shop-top { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; position: sticky; top: -12px; z-index: 3; background: var(--bar); padding: 6px 0 4px; } /* 창 안을 내려도 제목·✕가 보이게 */ .shop-top b { font-size: 17px; } .shop-top .sp { flex: 1; }
     /* 닫기는 어디서나 오른쪽 위 같은 ✕ 하나(시트·카드 공통) */
     .x { flex: none; border: 2px solid var(--ink); background: #fff; width: 36px; height: 36px; border-radius: 6px; box-shadow: 0 2px 0 var(--ink); font-size: 16px; font-weight: 800; color: var(--ink); padding: 0; }
     .sheet > .x { position: sticky; top: -6px; float: right; margin: -6px -4px 0 8px; z-index: 2; }
@@ -327,6 +330,6 @@
       </div>
     </div>
   </div>
-  <script type="module" src="src/main.js?v=f0c1ae9-1791249907"></script>
+  <script type="module" src="src/main.js?v=221a78d-1791250439"></script>
 </body>
 </html>
