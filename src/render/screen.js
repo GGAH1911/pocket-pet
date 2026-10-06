@@ -1,11 +1,11 @@
 // 방 화면 그리기. 게임 규칙은 모르고 받은 상태만 그린다.
 // 캔버스는 "도트 해상도"로 그리고 CSS가 정수배로 키운다.
-import { PALETTE } from "./palette.js?v=4036598-1791263909";
-import { SPRITES, drawSprite, spriteSize } from "./sprites.js?v=4036598-1791263909";
-import { buildCreature, paintGrid, formKey, eggSpriteFor } from "./creature.js?v=4036598-1791263909";
-import { drawFace, POOLS } from "./face.js?v=4036598-1791263909";
-import { drawSky } from "./sky.js?v=4036598-1791263909";
-import { drawWall, drawFloor, drawRug, drawCurtain, drawFurniture, drawLampGlow, HAT_SPRITE, FURN_HALF } from "./deco.js?v=4036598-1791263909";
+import { PALETTE } from "./palette.js?v=9a16dcf-1791264188";
+import { SPRITES, drawSprite, spriteSize } from "./sprites.js?v=9a16dcf-1791264188";
+import { buildCreature, paintGrid, formKey, eggSpriteFor } from "./creature.js?v=9a16dcf-1791264188";
+import { drawFace, POOLS } from "./face.js?v=9a16dcf-1791264188";
+import { drawSky } from "./sky.js?v=9a16dcf-1791264188";
+import { drawWall, drawFloor, drawRug, drawCurtain, drawFurniture, drawLampGlow, HAT_SPRITE, FURN_HALF } from "./deco.js?v=9a16dcf-1791264188";
 
 // 방 배치(그리기와 동작이 같은 좌표를 쓰게 한 곳에서 계산)
 export function roomLayout(w, h, deco = {}) {
@@ -16,7 +16,7 @@ export function roomLayout(w, h, deco = {}) {
   const furnPos = { furnL: Math.max(half(deco.furnL) + 2, Math.round(w * 0.13)), furnR: Math.min(w - half(deco.furnR) - 2, Math.round(w * 0.87)) };
   return { floorY, cx: Math.round(w / 2), rugY, baseY: rugY + 4, furnBase, furnPos };
 }
-import { WALK_STOPS as WALK_STOPS_REF, walkDist as walkDistRef } from "./anim.js?v=4036598-1791263909";
+import { WALK_STOPS as WALK_STOPS_REF, walkDist as walkDistRef } from "./anim.js?v=9a16dcf-1791264188";
 const clamp01 = (x) => Math.max(0, Math.min(1, x));
 
 const FLOOR = "#f5b98c";
@@ -432,7 +432,16 @@ function headTop(g, P, c0 = Math.round(faceCx(P))) {
 }
 const HAT_SINK = { hatStraw: 3, hatCrown: 2, hatFlower: 3, santaHat: 3, pumpkinHat: 3, partyHat: 2 }; // 머리에 파묻히는 칸 수(쓴 것처럼)
 const NO_DODGE = new Set(["fantasy.baby", "fantasy.child"]);
-const OPEN_TOP = new Set(["hatCrown", "hatFlower"]); // 위가 뚫린 머리 장식 // 말랑이·뿔말랑이: 뾰족한 물방울 머리 끝이 곧 머리라 그 위에 씌움
+const OPEN_TOP = new Set(["hatCrown", "hatFlower"]); // 위가 뚫린 머리 장식
+const SIDE_HATS = new Set(["hatRibbon", "heartClip", "hatGlasses"]); // 머리 꼭대기에 안 씌우는 장식
+// 뿔말랑이의 작은 뿔(전수 조사 B4 + 사용자 지적): 모자는 늘 원래 머리 자리에 씌우고,
+// 위가 막힌 모자면 모자 밖으로 나올 뿔 칸을 안 그리고, 왕관·꽃 머리띠면 장식 위에 뿔을 다시 그려 사이로 나오게 한다.
+const HORNED = new Set(["fantasy.child"]);
+function hornCells(g, P) {
+  const c = Math.round(faceCx(P)), seat = headTop(g, P, c), out = [];
+  for (let k = c - 3; k <= c + 3; k++) for (let r = 0; r < seat; r++) if (g.c[r * g.w + k]) out.push(r * g.w + k);
+  return out;
+} // 말랑이·뿔말랑이: 뾰족한 물방울 머리 끝이 곧 머리라 그 위에 씌움
 function drawHat(ctx, box, hat, built, faceInfo, facing, key = "") {
   const sp = SPRITES[hat]; if (!sp) return;
   const { g, P } = built;
@@ -477,10 +486,7 @@ function drawHat(ctx, box, hat, built, faceInfo, facing, key = "") {
     const half = sw / 2; // 모자 반폭(격자 칸)
     c = Math.round(side < 0 ? Math.min(...prot) - half * 0.75 - 1 : Math.max(...prot) + half * 0.75 + 1); // 챙 끝만 살짝 겹치게
   }
-  let top = headTop(g, P, c), sink = HAT_SINK[hat] ?? 2;
-  // 비켜 씌우지 않는 물방울 머리(뿔말랑이 등)는 모자가 작은 뿔 끝까지 덮게 높이를 뿔 끝에 맞춘다(전수 조사 B4: 뿔이 모자 위로 삐져나옴)
-  // 단, 위가 뚫린 장식(왕관·꽃 머리띠)은 원래 뿔이 사이로 나와 보이는 게 자연스러워서 그대로 둔다(사용자 지적)
-  if (prot.length && NO_DODGE.has(key) && !OPEN_TOP.has(hat)) { const tip = Math.min(...prot.map((k) => colTop(g, k))); if (tip < top) { top = tip; sink = 1; } }
+  const top = headTop(g, P, c), sink = HAT_SINK[hat] ?? 2;
   drawSprite(ctx, sp, Math.round(gx(c + 0.5) - sw), Math.round(gy(top + sink) - sh * 2), 2);
 }
 
@@ -567,10 +573,17 @@ function drawPet(ctx, scene, fr, { cx, baseY, now }) {
     const shw = Math.round(bodyW * (1 - Math.min(0.5, -pose.dy / 30)));
     ctx.fillRect(Math.round(cx + pose.dx - shw / 2), baseY - 1, shw, 3);
   }
-  const box = paintGrid(ctx, built.g, x, base, CELL, { alpha: fr.petAlpha ?? 1, tint: scene.sick && !fr.silhouette ? "rgba(150,210,150,0.22)" : null });
-  if (fr.back && !fr.silhouette && fr.tailKind !== "own") drawTail(ctx, x, base, built, fr.tailWag || 0); // 엉덩이춤: 꼬리 없는 그림엔 복슬 꼬리, 용처럼 꼬리가 그려진 친구는 그대로
   const hat = fr.hat || HAT_SPRITE[(scene.deco || {}).hat];
-  if (hat && !fr.silhouette && !fr.back && box) drawHat(ctx, box, hat, built, faceInfo, pose.facing, key);
+  const hatOn = hat && !fr.silhouette && !fr.back;
+  const horn = hatOn && HORNED.has(key) && !SIDE_HATS.has(hat) ? hornCells(built.g, built.P) : null;
+  let paintG = built.g;
+  if (horn && horn.length && !OPEN_TOP.has(hat)) { paintG = { ...built.g, c: built.g.c.slice() }; for (const i of horn) paintG.c[i] = null; } // 막힌 모자 속 뿔은 안 보이게
+  const box = paintGrid(ctx, paintG, x, base, CELL, { alpha: fr.petAlpha ?? 1, tint: scene.sick && !fr.silhouette ? "rgba(150,210,150,0.22)" : null });
+  if (fr.back && !fr.silhouette && fr.tailKind !== "own") drawTail(ctx, x, base, built, fr.tailWag || 0); // 엉덩이춤: 꼬리 없는 그림엔 복슬 꼬리, 용처럼 꼬리가 그려진 친구는 그대로
+  if (hatOn && box) drawHat(ctx, box, hat, built, faceInfo, pose.facing, key);
+  if (horn && horn.length && OPEN_TOP.has(hat) && box) { // 왕관·꽃 머리띠: 뿔이 사이로 나옴
+    for (const i of horn) { const col = built.g.c[i]; ctx.fillStyle = PALETTE[col] || col; ctx.fillRect(box.ox + (i % built.g.w) * CELL, box.oy + Math.floor(i / built.g.w) * CELL, CELL, CELL); }
+  }
   const blanketK = fr.silhouette ? 0 : fr.blanket || 0; // 밤잠 이불(0 → 1): 아래에서 올라와 몸 아래쪽을 덮음
   if (blanketK > 0) drawBlanket(ctx, x, base, box, built.P, bodyW, blanketK, now, scene.theme, built);
   if (!fr.silhouette && (fr.foam || 0) > 0) drawFoam(ctx, box, fr.foam, now); // 머리 위 거품

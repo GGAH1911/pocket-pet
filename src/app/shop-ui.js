@@ -1,8 +1,8 @@
 // 상점·꾸미기·매일 선물 화면. 상태와 규칙은 core/economy.js·catalog.js, 여기는 DOM만.
-import { ITEMS, ITEM, SLOTS, TABS, PICKS, PACKS, SOON } from "../core/catalog.js?v=4036598-1791263909";
-import { canAfford, gems, DAILY, purchaseHistory } from "../core/economy.js?v=4036598-1791263909";
-import { drawThumb } from "../render/deco.js?v=4036598-1791263909";
-import { SPRITES, drawSprite, spriteSize } from "../render/sprites.js?v=4036598-1791263909";
+import { ITEMS, ITEM, SLOTS, TABS, PICKS, PACKS, SOON } from "../core/catalog.js?v=9a16dcf-1791264188";
+import { canAfford, gems, DAILY, purchaseHistory } from "../core/economy.js?v=9a16dcf-1791264188";
+import { drawThumb } from "../render/deco.js?v=9a16dcf-1791264188";
+import { SPRITES, drawSprite, spriteSize } from "../render/sprites.js?v=9a16dcf-1791264188";
 
 const el = (tag, attrs = {}, ...kids) => {
   const e = document.createElement(tag);
