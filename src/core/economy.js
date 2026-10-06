@@ -23,7 +23,7 @@ export function newEcon() {
     daily: { lastDay: null, idx: 0, total: 0 },
     today: { day: null, care: 0, plays: 0 },
     bought: {}, // 1회 한정 상품(시작 꾸러미 등) id → 시각
-    orders: {}, // 처리한 결제 토큰(같은 결제를 두 번 지급하지 않게)
+    orders: {}, // 처리한 결제: 토큰 → { at, sku, gems, stars, orderId }(두 번 지급 방지 + 환불 문의 때 구글 주문번호와 대조). 옛 저장은 토큰 → 시각(숫자)
   };
 }
 
@@ -137,7 +137,7 @@ export function claimDaily(e, now) {
 }
 
 // 돈 결제 지급(앱에서 구글이 "소모 완료"를 알린 뒤 부른다). pack: catalog의 보석 상품
-export function grantPurchase(e, pack, token, now) {
+export function grantPurchase(e, pack, token, now, { orderId = null } = {}) {
   if (!pack) return { ok: false, reason: "none" };
   if (token && e.orders[token]) return { ok: false, reason: "duplicate" };
   if (pack.once && e.bought[pack.id]) return { ok: false, reason: "once" };
@@ -145,6 +145,12 @@ export function grantPurchase(e, pack, token, now) {
   e.star += pack.stars || 0;
   for (const id of pack.items || []) grant(e, id, now);
   if (pack.once) e.bought[pack.id] = now;
-  if (token) e.orders[token] = now;
+  if (token) e.orders[token] = { at: now, sku: pack.sku, gems: pack.gems || 0, stars: pack.stars || 0, ...(orderId ? { orderId: String(orderId).slice(0, 64) } : {}) };
   return { ok: true };
+}
+
+// 구매 기록 목록(최근 순). 옛 저장(토큰 → 시각 숫자)은 상품을 모르므로 시각만
+export function purchaseHistory(e, limit = 20) {
+  return Object.entries(e.orders || {}).map(([token, v]) => (typeof v === "number" ? { token, at: v } : { token, ...v }))
+    .sort((a, b) => (b.at || 0) - (a.at || 0)).slice(0, limit);
 }

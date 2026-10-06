@@ -2,7 +2,7 @@
 // 규칙(docs/m8-plan.md): 하트 보석 묶음(소모성)은 구글이 소비(consume)를 확인한 뒤에만 지급.
 // 시작 꾸러미(비소모성, 한 번)는 확인(acknowledge) 후 지급. 돈은 냈는데 앱이 꺼진 경우를 위해
 // 결제 직후 토큰을 '지급 대기'(profile.payPending)에 먼저 저장하고, 앱을 켤 때·복원 때 다시 맞춘다.
-import { PACKS } from "./catalog.js?v=00acee1-1791211084";
+import { PACKS } from "./catalog.js?v=8a3ec3a-1791249456";
 
 const BY_SKU = Object.fromEntries(PACKS.map((p) => [p.sku, p]));
 export const packBySku = (sku) => BY_SKU[sku] || null;
@@ -19,13 +19,13 @@ export function planReconcile(purchases, econ, pending = {}) {
     seen.add(t.purchaseToken);
     if (!isPaid(t)) continue;
     if (econ.orders?.[t.purchaseToken]) { if (!pack.once) jobs.push({ do: "consumeOnly", token: t.purchaseToken, pack }); continue; } // 지급은 했는데 소비가 안 끝난 것
-    jobs.push({ do: pack.once ? "ack" : "consume", token: t.purchaseToken, pack, acknowledged: !!t.isAcknowledged });
+    jobs.push({ do: pack.once ? "ack" : "consume", token: t.purchaseToken, pack, acknowledged: !!t.isAcknowledged, orderId: t.orderId || null });
   }
   // 지급 대기에 있는데 목록에서 사라진 것 = 소비가 이미 끝났다(앱이 지급 직전에 꺼짐) → 지급만
   for (const [token, rec] of Object.entries(pending || {})) {
     if (seen.has(token) || econ.orders?.[token]) continue;
     const pack = packBySku(rec?.sku);
-    if (pack && !pack.once) jobs.push({ do: "grant", token, pack });
+    if (pack && !pack.once) jobs.push({ do: "grant", token, pack, orderId: rec?.orderId || null });
   }
   return jobs;
 }

@@ -1,8 +1,8 @@
 // 상점·꾸미기·매일 선물 화면. 상태와 규칙은 core/economy.js·catalog.js, 여기는 DOM만.
-import { ITEMS, ITEM, SLOTS, TABS, PICKS, PACKS, SOON } from "../core/catalog.js?v=00acee1-1791211084";
-import { canAfford, gems, DAILY } from "../core/economy.js?v=00acee1-1791211084";
-import { drawThumb } from "../render/deco.js?v=00acee1-1791211084";
-import { SPRITES, drawSprite, spriteSize } from "../render/sprites.js?v=00acee1-1791211084";
+import { ITEMS, ITEM, SLOTS, TABS, PICKS, PACKS, SOON } from "../core/catalog.js?v=8a3ec3a-1791249456";
+import { canAfford, gems, DAILY, purchaseHistory } from "../core/economy.js?v=8a3ec3a-1791249456";
+import { drawThumb } from "../render/deco.js?v=8a3ec3a-1791249456";
+import { SPRITES, drawSprite, spriteSize } from "../render/sprites.js?v=8a3ec3a-1791249456";
 
 const el = (tag, attrs = {}, ...kids) => {
   const e = document.createElement(tag);
@@ -95,6 +95,15 @@ function renderGemShop(box, ctx) {
   box.append(el("p", { class: "fine", text: "쓰지 않은 산 하트 보석은 산 날부터 7일 안에 환불을 요청할 수 있어요. 이미 쓴 하트 보석과 꾸미기 상품은 사기 전에 방에 미리 놓아 볼 수 있어서 환불이 어려워요. 랜덤 뽑기는 없어요." }));
   if (!ctx.isApp) box.append(el("p", { class: "warn small", text: "하트 보석은 플레이스토어 앱에서 살 수 있어요(준비 중). 지금은 매일 선물과 비밀 찾기로 받을 수 있어요." }));
   box.append(el("button", { class: "big ghost", text: "구매 복원", onclick: () => ctx.onRestore() }));
+  // 산 기록: 환불·문의 때 구글 주문번호(GPA.…)로 대조
+  const hist = purchaseHistory(econ, 20);
+  if (hist.length) {
+    const nameOf = (sku) => PACKS.find((p) => p.sku === sku)?.name || "결제";
+    const day = (t) => (t ? new Date(t).toLocaleString("ko-KR", { year: "numeric", month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "");
+    box.append(el("h3", { class: "sec", text: "산 기록" }), el("ul", { class: "orders" }, ...hist.map((o) =>
+      el("li", {}, el("b", { text: o.sku ? nameOf(o.sku) : "결제" }), el("span", { class: "small dim", text: ` ${day(o.at)}` }), o.orderId ? el("div", { class: "small dim", text: `주문번호 ${o.orderId}` }) : null))));
+    box.append(el("p", { class: "fine", text: "환불·문의 때 주문번호를 알려 주세요. 플레이 스토어 앱 → 프로필 아이콘 → 결제 및 정기 결제 → 예산 및 내역에서도 볼 수 있어요." }));
+  }
 }
 
 // ---------- 꾸미기 모드 ----------
