@@ -75,6 +75,10 @@ export const PACKS = [
 ];
 export const PACK = Object.fromEntries(PACKS.map((p) => [p.id, p]));
 
+// 알 해금(서버 지갑이 소유를 관리, 꾸미기 칸 없음). 무지개 알은 하트 보석으로 한 번 열면 계속(2026-10-06 사용자 결정, 경제 자문 가격 150 = 바다 알의 절반)
+export const UNLOCKS = [{ id: "theme_fantasy", theme: "fantasy", name: "무지개 알", price: { gem: 150 } }];
+export const UNLOCK = Object.fromEntries(UNLOCKS.map((u) => [u.id, u]));
+
 // 곧 나올 상품(알·산책 탭에 미리 보여 주기만)
 export const SOON = [
   { id: "egg_sea", name: "바다 친구들 알", desc: "새 계통 9종 + 숨은 친구", price: { gem: 300 } },

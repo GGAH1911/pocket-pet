@@ -1,10 +1,10 @@
 // 하트 보석 서버 지갑: 기기 쪽 순수 규칙(네트워크 없음). 설계 docs/wallet.md
 // 보석 잔액과 보석·결제로 얻은 꾸미기는 서버가 정한다. 기기의 econ.gemFree/gemPaid는 서버 값의 사본(마지막으로 받은 값)일 뿐이다.
-import { ITEM, ITEMS, PACKS, BASIC_EQUIP } from "./catalog.js?v=1e8b618-1791275895";
+import { ITEM, ITEMS, PACKS, BASIC_EQUIP, UNLOCK, UNLOCKS } from "./catalog.js?v=b27e75e-1791277839";
 
-export const gemPriceOf = (id) => { const it = ITEM[id]; return it?.price?.gem > 0 ? it.price.gem : null; };
+export const gemPriceOf = (id) => { const it = ITEM[id] || UNLOCK[id]; return it?.price?.gem > 0 ? it.price.gem : null; };
 // 서버가 소유를 관리하는 상품: 보석 가격 상품 + 꾸러미로만 얻는 상품
-export const SERVER_ITEMS = new Set([...ITEMS.filter((it) => gemPriceOf(it.id)).map((it) => it.id), ...PACKS.flatMap((p) => p.items || [])]);
+export const SERVER_ITEMS = new Set([...ITEMS.filter((it) => gemPriceOf(it.id)).map((it) => it.id), ...UNLOCKS.map((u) => u.id), ...PACKS.flatMap((p) => p.items || [])]);
 export const FRESH_MS = 10 * 60 * 1000; // 이만큼 지나면 숫자를 '확인 전'으로 흐리게
 
 export function walletOf(profile) {

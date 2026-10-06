@@ -47,18 +47,11 @@ export function normalizeEcon(e) {
   };
 }
 
-// ---- 알(테마) 해금: 처음엔 점박이 알(동물)만, 무지개 알(상상)은 별사탕 500으로 한 번 열면 계속(뽑기·세대마다 재구매 없음) ----
-// 500 = 평범한 하루 약 160개 기준 3일쯤 = 첫 어른을 만날 즈음. 무료 화폐라 "본편은 플레이로, 새 알(바다 등)은 보석"으로 나뉨
-export const THEME_PRICE = { fantasy: { star: 500 } };
-export const themeOpen = (e, theme) => !THEME_PRICE[theme] || !!e.unlocks?.[theme];
-export function unlockTheme(e, theme, now) {
-  const price = THEME_PRICE[theme];
-  if (!price || themeOpen(e, theme)) return { ok: false, reason: "owned" };
-  if (e.star < price.star) return { ok: false, reason: "poor", need: price.star - e.star };
-  e.star -= price.star;
-  e.unlocks = { ...(e.unlocks || {}), [theme]: now };
-  return { ok: true };
-}
+// ---- 알(테마) 해금: 처음엔 점박이 알(동물)만, 무지개 알(상상)은 하트 보석으로 한 번 열면 계속(뽑기·세대마다 재구매 없음) ----
+// 사용자 결정(2026-10-06): 유료 화폐. 사기는 서버 지갑(catalog UNLOCKS 'theme_fantasy', 보석 150)이 하고, 산 것은 econ.owned에 서버 목록으로 맞춰진다.
+// econ.unlocks[테마]는 잠금 전부터 그 테마를 키운 사람의 소급 해금(기기 기록)
+export const THEME_UNLOCK = { fantasy: "theme_fantasy" };
+export const themeOpen = (e, theme) => !THEME_UNLOCK[theme] || !!e.unlocks?.[theme] || !!e.owned?.[THEME_UNLOCK[theme]];
 
 // 현지 날짜 키(하루 경계는 기기 시각 자정)
 export function dayKey(ts) {

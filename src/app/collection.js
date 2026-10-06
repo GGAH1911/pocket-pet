@@ -1,9 +1,9 @@
 // 도감: 본 적 있는 모습 표시, 지금까지 키운 펫 기록, 초상화 그리기
-import { FORMS, buildCreature, paintGrid, formKey, lookOf } from "../render/creature.js?v=1e8b618-1791275895";
-import { drawFace, POOLS } from "../render/face.js?v=1e8b618-1791275895";
-import { SPRITES, drawSprite } from "../render/sprites.js?v=1e8b618-1791275895";
-import { BRANCH, SECRET } from "../core/rules.js?v=1e8b618-1791275895";
-import { EGGS, foundCount } from "./eggs.js?v=1e8b618-1791275895";
+import { FORMS, buildCreature, paintGrid, formKey, lookOf } from "../render/creature.js?v=b27e75e-1791277839";
+import { drawFace, POOLS } from "../render/face.js?v=b27e75e-1791277839";
+import { SPRITES, drawSprite } from "../render/sprites.js?v=b27e75e-1791277839";
+import { BRANCH, SECRET } from "../core/rules.js?v=b27e75e-1791277839";
+import { EGGS, foundCount } from "./eggs.js?v=b27e75e-1791277839";
 
 export const THEME_KO = { animal: "동물", fantasy: "상상 속 생물" };
 export const HOW_KO = { journey: "여행을 떠남", runaway: "삐져서 떠남", star: "별이 됨", retired: "새 알에게 자리를 물려줌" };

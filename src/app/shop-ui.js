@@ -1,9 +1,9 @@
 // 상점·꾸미기·매일 선물 화면. 상태와 규칙은 core/economy.js·catalog.js, 여기는 DOM만.
-import { ITEMS, ITEM, SLOTS, TABS, PICKS, PACKS, SOON } from "../core/catalog.js?v=1e8b618-1791275895";
-import { canAfford, gems, DAILY, purchaseHistory, THEME_PRICE, themeOpen } from "../core/economy.js?v=1e8b618-1791275895";
-import { gemButtonState } from "../core/wallet.js?v=1e8b618-1791275895";
-import { drawThumb } from "../render/deco.js?v=1e8b618-1791275895";
-import { SPRITES, drawSprite, spriteSize } from "../render/sprites.js?v=1e8b618-1791275895";
+import { ITEMS, ITEM, SLOTS, TABS, PICKS, PACKS, SOON, UNLOCK } from "../core/catalog.js?v=b27e75e-1791277839";
+import { canAfford, gems, DAILY, purchaseHistory, themeOpen } from "../core/economy.js?v=b27e75e-1791277839";
+import { gemButtonState } from "../core/wallet.js?v=b27e75e-1791277839";
+import { drawThumb } from "../render/deco.js?v=b27e75e-1791277839";
+import { SPRITES, drawSprite, spriteSize } from "../render/sprites.js?v=b27e75e-1791277839";
 
 const el = (tag, attrs = {}, ...kids) => {
   const e = document.createElement(tag);
@@ -50,12 +50,14 @@ export function renderShop(tabsEl, bodyEl, ctx) {
   bodyEl.innerHTML = "";
   if (state.tab === "gem") return renderGemShop(bodyEl, ctx);
   if (state.tab === "soon") {
-    // 알 열기: 무지개 알(상상 속 생물)은 별사탕으로 한 번 열면 다음 알부터 계속 고를 수 있음
-    const open = themeOpen(econ, "fantasy"), price = THEME_PRICE.fantasy;
-    const okStar = econ.star >= price.star;
+    // 알 열기: 무지개 알(상상 속 생물)은 하트 보석으로 한 번 열면 다음 알부터 계속 고를 수 있음(서버 지갑, 인터넷 필요)
+    const open = themeOpen(econ, "fantasy"), price = UNLOCK.theme_fantasy.price;
+    const g = ctx.gem || {};
+    const st = gemButtonState({ online: !!g.online, busy: !!g.busy, total: gems(econ), price: price.gem });
     bodyEl.append(el("div", { class: "banner" }, el("b", { text: "무지개 알 · 상상 속 생물" }), document.createTextNode("말랑이 → 아기 용·꼬마 구름 → 무지개 용, 구름 고래… 새 친구 8종과 숨은 친구"),
       el("div", { class: "row", style: "margin-top:8px" }, el("span", { class: "small dim", style: "flex:1", text: open ? "열렸어요. 새 알을 받을 때 고를 수 있어요" : "한 번 열면 계속 고를 수 있어요" }),
-        open ? null : el("button", { disabled: !okStar, onclick: () => ctx.onUnlockTheme?.("fantasy") }, priceEl(price), document.createTextNode(okStar ? " 열기" : " 모자라요")))));
+        open ? null : st.poor ? el("button", { class: "ghost", text: "하트 보석 사기", onclick: () => ctx.onGoGem() }) : null,
+        open ? null : el("button", { disabled: st.disabled, onclick: () => ctx.onUnlockTheme?.("fantasy") }, priceEl(price), document.createTextNode(st.label === "사기" ? " 열기" : " " + st.label)))));
     const cards = el("div", { class: "cards" });
     for (const s of SOON) cards.append(el("div", { class: "card" }, el("canvas", { width: 56, height: 46 }), el("span", { class: "nm", text: s.name }), el("span", { class: "small dim", text: "곧 나와요" })));
     bodyEl.append(el("p", { class: "fine", text: "새 알(새 친구 9종)과 산책 장소를 만들고 있어요." }), cards);
