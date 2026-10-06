@@ -1,8 +1,8 @@
 // 저장: 휴대폰 브라우저 저장소(localStorage). 직전 저장본을 백업으로 하나 더 둔다.
-import { DEFAULT_SETTINGS } from "../core/rules.js?v=e280776-1791270907";
-import { SAVE_VERSION, migratePet } from "../core/state.js?v=e280776-1791270907";
-import { newEcon, normalizeEcon, grant, equip } from "../core/economy.js?v=e280776-1791270907";
-import { ensureBasics, ITEM } from "../core/catalog.js?v=e280776-1791270907";
+import { DEFAULT_SETTINGS } from "../core/rules.js?v=1e8b618-1791275895";
+import { SAVE_VERSION, migratePet } from "../core/state.js?v=1e8b618-1791275895";
+import { newEcon, normalizeEcon, grant, equip } from "../core/economy.js?v=1e8b618-1791275895";
+import { ensureBasics, ITEM } from "../core/catalog.js?v=1e8b618-1791275895";
 
 const KEY = "pocket-pet:save";
 const BACKUP = "pocket-pet:save:backup";
@@ -47,6 +47,9 @@ function migrate(p) {
   // 화폐·꾸미기(2026-10-05 M7): 없으면 새로, 있으면 손상 값 정리. 기본 상품은 늘 가짐
   p.econ = normalizeEcon(p.econ);
   ensureBasics(p.econ, Date.now());
+  // 무지개 알 잠금(2026-10-06) 전부터 상상 테마를 키운 적 있으면 공짜로 열어 둔다(이미 받은 걸 뺏지 않게)
+  if (!p.econ.unlocks.fantasy && (p.pet?.theme === "fantasy" || Object.keys(p.seen || {}).some((k) => k.startsWith("fantasy.")) || (p.collection || []).some((c) => c?.theme === "fantasy")))
+    p.econ.unlocks.fantasy = Date.now();
   if (p.settings.rug === "star") { grant(p.econ, "rug_star", Date.now()); equip(p.econ, ITEM.rug_star); delete p.settings.rug; } // 옛 '별 러그 깔기' 설정 → 상품으로
   p.version = SAVE_VERSION;
   return p;

@@ -25,6 +25,7 @@ export function newEcon() {
     daily: { lastDay: null, idx: 0, total: 0 },
     today: { day: null, care: 0, plays: 0 },
     bought: {}, // 1회 한정 상품(시작 꾸러미 등) id → 시각
+    unlocks: {}, // 테마(알) 해금: 테마 → 시각. 동물은 늘 열림, 무지개 알(상상)은 별사탕으로 영구 해금(2026-10-06 사용자 제안·경제 자문)
     orders: {}, // 처리한 결제: 토큰 → { at, sku, gems, stars, orderId }(두 번 지급 방지 + 환불 문의 때 구글 주문번호와 대조). 옛 저장은 토큰 → 시각(숫자)
   };
 }
@@ -42,7 +43,21 @@ export function normalizeEcon(e) {
     today: { ...base.today, ...(e.today || {}) },
     bought: e.bought && typeof e.bought === "object" ? { ...e.bought } : {},
     orders: e.orders && typeof e.orders === "object" ? { ...e.orders } : {},
+    unlocks: e.unlocks && typeof e.unlocks === "object" ? { ...e.unlocks } : {},
   };
+}
+
+// ---- 알(테마) 해금: 처음엔 점박이 알(동물)만, 무지개 알(상상)은 별사탕 500으로 한 번 열면 계속(뽑기·세대마다 재구매 없음) ----
+// 500 = 평범한 하루 약 160개 기준 3일쯤 = 첫 어른을 만날 즈음. 무료 화폐라 "본편은 플레이로, 새 알(바다 등)은 보석"으로 나뉨
+export const THEME_PRICE = { fantasy: { star: 500 } };
+export const themeOpen = (e, theme) => !THEME_PRICE[theme] || !!e.unlocks?.[theme];
+export function unlockTheme(e, theme, now) {
+  const price = THEME_PRICE[theme];
+  if (!price || themeOpen(e, theme)) return { ok: false, reason: "owned" };
+  if (e.star < price.star) return { ok: false, reason: "poor", need: price.star - e.star };
+  e.star -= price.star;
+  e.unlocks = { ...(e.unlocks || {}), [theme]: now };
+  return { ok: true };
 }
 
 // 현지 날짜 키(하루 경계는 기기 시각 자정)

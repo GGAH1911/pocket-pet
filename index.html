@@ -137,6 +137,8 @@
     .choices { display: grid; gap: 12px; }
     .choice { border: 0; border-radius: 18px; background: var(--cream); box-shadow: 0 3px 0 var(--line); padding: 16px; text-align: left; }
     .choice b { display: block; font-size: 17px; margin-bottom: 2px; } .choice span { font-size: 13px; opacity: .75; }
+    .choice.locked { background: #f3ebe4; } .choice.locked b, .choice.locked span { opacity: .7; }
+    .choice .lockline { display: block; margin-top: 6px; font-style: normal; font-size: 13px; font-weight: 800; color: var(--deep); }
     #name-input { width: 100%; font-size: 18px; text-align: center; margin-bottom: 8px; }
     #mg { position: absolute; left: 0; right: 0; bottom: 0; background: linear-gradient(transparent, rgba(255,241,228,.96) 30%); padding: 40px 16px calc(var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)) + 16px); text-align: center; }
     #mg-title { font-size: 13px; font-weight: 800; opacity: .6; margin-bottom: 2px; }
@@ -302,7 +304,7 @@
         <p>알에 따라 자라는 친구들이 달라요</p>
         <div class="choices">
           <button class="choice" data-theme="animal"><b>점박이 알 · 동물</b><span>털뭉치 → 강아지·고양이 → 시바, 코기, 여우 고양이…</span></button>
-          <button class="choice" data-theme="fantasy"><b>무지개 알 · 상상 속 생물</b><span>말랑이 → 아기 용·꼬마 구름 → 무지개 용, 구름 고래…</span></button>
+          <button class="choice" data-theme="fantasy"><b>무지개 알 · 상상 속 생물</b><span>말랑이 → 아기 용·꼬마 구름 → 무지개 용, 구름 고래…</span><em class="lockline" hidden></em></button>
         </div>
       </div>
       <div class="step" data-step="egg" hidden>
@@ -327,6 +329,6 @@
       </div>
     </div>
   </div>
-  <script type="module" src="src/main.js?v=e280776-1791270907"></script>
+  <script type="module" src="src/main.js?v=1e8b618-1791275895"></script>
 </body>
 </html>
