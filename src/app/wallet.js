@@ -1,7 +1,7 @@
 // 하트 보석 서버 지갑: 기기 쪽 네트워크(서버 /wallet…). 규칙은 core/wallet.js, 설계 docs/wallet.md
 // 지갑 열쇠는 기기가 만든 무작위 32바이트. 서버엔 해시만 간다. 보석은 서버에 닿을 때만 받고 쓸 수 있다.
-import { PUSH_SERVER } from "./push.js?v=8f075bf-1791370499";
-import { walletOf, applyServerWallet, migratePayload } from "../core/wallet.js?v=8f075bf-1791370499";
+import { PUSH_SERVER } from "./push.js?v=6aa8a01-1791371139";
+import { walletOf, applyServerWallet, migratePayload } from "../core/wallet.js?v=6aa8a01-1791371139";
 
 const b64u = (bytes) => btoa(String.fromCharCode(...bytes)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 export const newWalletKey = () => b64u(crypto.getRandomValues(new Uint8Array(32)));
@@ -11,7 +11,7 @@ export const acctOf = async (key) => hex(await crypto.subtle.digest("SHA-256", n
 
 // 연결 상태: navigator.onLine만 믿지 않고 실제 요청 결과로 판단(capacitor-offline-first)
 export const net = { ok: false, at: 0 };
-export const APP_VER = "1.0.5"; // android/app/build.gradle versionName과 맞춤(결제 진단용)
+export const APP_VER = "1.0.6"; // android/app/build.gradle versionName과 맞춤(결제 진단용)
 const TIMEOUT_MS = 10_000;
 
 async function call(method, path, key, body, { extraHeaders = {}, timeout = TIMEOUT_MS } = {}) {
@@ -96,6 +96,10 @@ export async function creditPurchase(profile, save, { token, sku, orderId }) {
   return { ok: false, status: r.status, reason: r.data?.reason, pending: r.status === 202, voided: r.status === 410, error: r.data?.error };
 }
 
+// 결제 모드(off|test|verify): 지갑이 없어도 알 수 있게. 실패하면 null(모름)
+export async function fetchBuyMode() {
+  try { const r = await fetch(PUSH_SERVER + "/billing/mode"); net.ok = r.ok; net.at = Date.now(); return r.ok ? (await r.json()).buy || null : null; } catch { net.ok = false; net.at = Date.now(); return null; }
+}
 // 다른 기기 기록을 불러와 지갑이 바뀔 때: 옛 지갑의 산 보석·산 꾸미기를 새 지갑으로(받은 보석은 안 옮김)
 export async function mergeInto(newKey, oldKey) {
   const r = await call("POST", "/wallet/merge", newKey, { op: newOp(), from: oldKey });
