@@ -1,9 +1,9 @@
 // 클라우드 이어하기: 기기 저장이 기본, 켜 두면 서버(Cloudflare D1)에 저장 문자열 한 덩어리를 백업한다.
 // 로그인 없음. '이어하기 코드'(무작위 32글자) 하나로 다른 기기에서 이어 한다. 서버엔 코드의 해시만 남는다.
 // 설계·근거: docs/cloud-save.md (서브에이전트 자문: D1, 최신 우선 + 충돌 시 고르기, 업로드는 아껴서)
-import { PUSH_SERVER } from "./push.js?v=449b286-1791279022";
-import { migrateProfile } from "./store.js?v=449b286-1791279022";
-import { carryPurchases } from "../core/billing.js?v=449b286-1791279022";
+import { PUSH_SERVER } from "./push.js?v=90736be-1791370074";
+import { migrateProfile } from "./store.js?v=90736be-1791370074";
+import { carryPurchases } from "../core/billing.js?v=90736be-1791370074";
 
 // 헷갈리는 글자(0/O, 1/I/L, U) 뺀 32글자 → 한 글자 5비트, 32글자 = 160비트
 const ALPHA = "ABCDEFGHJKMNPQRSTVWXYZ23456789"; // 30글자(무작위성은 32자리로 충분: 30^32 ≈ 2^157)

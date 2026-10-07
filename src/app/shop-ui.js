@@ -1,9 +1,9 @@
 // 상점·꾸미기·매일 선물 화면. 상태와 규칙은 core/economy.js·catalog.js, 여기는 DOM만.
-import { ITEMS, ITEM, SLOTS, TABS, PICKS, PACKS, SOON, UNLOCK } from "../core/catalog.js?v=449b286-1791279022";
-import { canAfford, gems, DAILY, purchaseHistory, themeOpen } from "../core/economy.js?v=449b286-1791279022";
-import { gemButtonState } from "../core/wallet.js?v=449b286-1791279022";
-import { drawThumb } from "../render/deco.js?v=449b286-1791279022";
-import { SPRITES, drawSprite, spriteSize } from "../render/sprites.js?v=449b286-1791279022";
+import { ITEMS, ITEM, SLOTS, TABS, PICKS, PACKS, SOON, UNLOCK } from "../core/catalog.js?v=90736be-1791370074";
+import { canAfford, gems, DAILY, purchaseHistory, themeOpen } from "../core/economy.js?v=90736be-1791370074";
+import { gemButtonState } from "../core/wallet.js?v=90736be-1791370074";
+import { drawThumb } from "../render/deco.js?v=90736be-1791370074";
+import { SPRITES, drawSprite, spriteSize } from "../render/sprites.js?v=90736be-1791370074";
 
 const el = (tag, attrs = {}, ...kids) => {
   const e = document.createElement(tag);
@@ -100,8 +100,6 @@ function renderGemShop(box, ctx) {
   const closed = ctx.isApp && (g.buy || "off") === "off"; // 서버가 구글 확인(verify)·시험(test) 모드일 때만 원화 결제를 연다
   box.append(el("div", { class: "paynote" }, el("i"), document.createTextNode("초록 버튼은 진짜 돈이 나가요. 구글 결제 화면에서 한 번 더 확인해요")));
   if (ctx.isApp && g.buy === "test") box.append(el("p", { class: "warn small", text: "지금은 시험 결제 기간이에요. 테스터 계정은 구글 결제 화면에서 '테스트 카드'로 결제해 돈이 나가지 않아요. 시험으로 받은 하트 보석은 정식 출시 때 정리돼요." }));
-  // 청약철회 안내는 결제 버튼보다 먼저 보이게(전자상거래법 제17조②·⑥, 콘텐츠산업 진흥법 제27조①: 알리지 않으면 철회를 막을 수 없음)
-  box.append(el("p", { class: "refundnote", text: "산 날부터 7일 안에는 아직 쓰지 않은 하트 보석만큼 청약철회(환불)할 수 있어요. 하트 보석은 받는 즉시 쓸 수 있는 디지털 상품이라, 이미 쓴 만큼과 시작 꾸러미로 받은 꾸미기는 철회가 제한돼요." }));
   if (!econ.bought.starter) {
     const st = PACKS.find((p) => p.once);
     box.append(el("div", { class: "banner" }, el("b", { text: "처음 한 번만! 시작 꾸러미" }), document.createTextNode(st.desc),
@@ -113,7 +111,7 @@ function renderGemShop(box, ctx) {
   const dt = g.at ? new Date(g.at) : null;
   const seen = dt ? `${dt.getMonth() + 1}월 ${dt.getDate()}일 ${String(dt.getHours()).padStart(2, "0")}:${String(dt.getMinutes()).padStart(2, "0")}` : null;
   box.append(el("p", { class: "fine", text: `가진 하트 보석 ${gems(econ)}개 (산 것 ${econ.gemPaid}, 받은 것 ${econ.gemFree}). 받은 것부터 먼저 써요. 하트 보석은 서버 지갑에 있고, 인터넷에 연결됐을 때만 받고 쓸 수 있어요.${seen ? ` 마지막 확인 ${seen}.` : ""}${g.pending ? ` 받을 보석 ${g.pending}개는 연결되면 들어와요.` : ""}` }));
-  box.append(el("p", { class: "fine", text: "꾸미기 상품은 사기 전에 방에 미리 놓아 볼 수 있어요. 랜덤 뽑기는 없어요. 철회·환불 문의는 아래 '산 기록'의 주문번호와 함께 개발자 이메일로 보내 주세요." }));
+  box.append(el("p", { class: "fine", text: "꾸미기 상품은 사기 전에 방에 미리 놓아 볼 수 있어요. 랜덤 뽑기는 없어요." }));
   if (!ctx.isApp) box.append(el("p", { class: "warn small", text: "하트 보석은 플레이스토어 앱에서 살 수 있어요(준비 중). 지금은 매일 선물과 비밀 찾기로 받을 수 있어요." }));
   box.append(el("button", { class: "big ghost", text: "구매 복원", onclick: () => ctx.onRestore() }));
   // 산 기록: 환불·문의 때 구글 주문번호(GPA.…)로 대조
@@ -126,6 +124,9 @@ function renderGemShop(box, ctx) {
     box.append(el("p", { class: "fine", text: "환불·문의 때 주문번호를 알려 주세요. 플레이 스토어 앱 → 프로필 아이콘 → 결제 및 정기 결제 → 예산 및 내역에서도 볼 수 있어요." }));
   }
   if (g.has) box.append(el("button", { class: "big ghost danger", text: "서버 지갑 지우기", onclick: () => ctx.onDeleteWallet?.() })); // 개인정보 처리방침 7번
+  // 청약철회·환불 안내: 사용자 결정(2026-10-06)으로 맨 아래 접어 두고 눌러서 펼침(전자상거래법 제17조②·⑥, 콘텐츠산업 진흥법 제27조①)
+  box.append(el("details", { class: "refundbox" }, el("summary", { text: "청약철회·환불 안내" }),
+    el("p", { class: "small", text: "산 날부터 7일 안에는 아직 쓰지 않은 하트 보석만큼 청약철회(환불)할 수 있어요. 하트 보석은 받는 즉시 쓸 수 있는 디지털 상품이라, 이미 쓴 만큼과 시작 꾸러미로 받은 꾸미기는 철회가 제한돼요. 철회·환불 문의는 '산 기록'의 주문번호와 함께 개발자 이메일로 보내 주세요." })));
 }
 
 // ---------- 꾸미기 모드 ----------
