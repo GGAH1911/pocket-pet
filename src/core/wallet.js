@@ -1,6 +1,6 @@
 // 하트 보석 서버 지갑: 기기 쪽 순수 규칙(네트워크 없음). 설계 docs/wallet.md
 // 보석 잔액과 보석·결제로 얻은 꾸미기는 서버가 정한다. 기기의 econ.gemFree/gemPaid는 서버 값의 사본(마지막으로 받은 값)일 뿐이다.
-import { ITEM, ITEMS, PACKS, BASIC_EQUIP, UNLOCK, UNLOCKS } from "./catalog.js?v=6aa8a01-1791371139";
+import { ITEM, ITEMS, PACKS, BASIC_EQUIP, UNLOCK, UNLOCKS } from "./catalog.js?v=bf34df8-1791372957";
 
 export const gemPriceOf = (id) => { const it = ITEM[id] || UNLOCK[id]; return it?.price?.gem > 0 ? it.price.gem : null; };
 // 서버가 소유를 관리하는 상품: 보석 가격 상품 + 꾸러미로만 얻는 상품
@@ -19,6 +19,7 @@ export function applyServerWallet(profile, resp, now = Date.now()) {
   const wl = walletOf(profile), e = profile.econ;
   wl.free = resp.w.free; wl.paid = resp.w.paid; wl.rev = resp.w.rev; wl.at = now; wl.created = true;
   if (resp.buy) wl.buy = resp.buy;
+  wl.closed = !!resp.closed; // 다른 지갑으로 합쳐져 닫힘 → 이 기기에서 보석·결제 막음(결제 감사 B-06)
   if (Array.isArray(resp.owned)) wl.owned = resp.owned;
   e.gemFree = Math.max(0, resp.w.free); e.gemPaid = resp.w.paid; // 사본(환불로 산 보석이 음수일 수 있음)
   if (Array.isArray(resp.owned)) reconcileOwned(e, resp.owned, resp.bought || []);

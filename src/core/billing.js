@@ -2,7 +2,7 @@
 // 규칙(docs/wallet.md 2-4): 결제 직후 토큰을 '지급 대기'(profile.payPending)에 먼저 저장 → 서버 지갑이 적립(econ.orders에 기록)
 // → 그 뒤 구글 소비(consume, 보석 묶음)·확인(acknowledge, 시작 꾸러미). 앱이 중간에 꺼지면 켤 때·복원 때 이어서 한다.
 // econ.orders[토큰]이 있으면 "서버 적립 끝, 소비만 남음"(consumeOnly).
-import { PACKS } from "./catalog.js?v=6aa8a01-1791371139";
+import { PACKS } from "./catalog.js?v=bf34df8-1791372957";
 
 const BY_SKU = Object.fromEntries(PACKS.map((p) => [p.sku, p]));
 export const packBySku = (sku) => BY_SKU[sku] || null;
@@ -42,11 +42,11 @@ export function planReconcile(purchases, econ, pending = {}) {
     }
     jobs.push({ do: pack.once ? "ack" : "consume", token: t.purchaseToken, pack, acknowledged: !!t.isAcknowledged, orderId: t.orderId || null });
   }
-  // 지급 대기에 있는데 목록에서 사라진 것 = 소비가 이미 끝났다(앱이 지급 직전에 꺼짐) → 지급만
+  // 지급 대기에 있는데 구글 목록에서 사라진 것: 서버 적립 → 소비 순서라, 적립 기록(econ.orders)이 없는데 사라졌다면 환불·취소된 것(결제 감사 B-01).
+  // 지급하지 않고 대기에서 지운다. 적립은 됐는데(orders 있음) 사라진 것 = 소비까지 끝난 것 → 대기만 지운다
   for (const [token, rec] of Object.entries(pending || {})) {
-    if (seen.has(token) || econ.orders?.[token]) continue;
-    const pack = packBySku(rec?.sku);
-    if (pack && !pack.once) jobs.push({ do: "grant", token, pack, orderId: rec?.orderId || null });
+    if (seen.has(token)) continue;
+    jobs.push({ do: econ.orders?.[token] ? "clear" : "gone", token, pack: packBySku(rec?.sku), orderId: rec?.orderId || null });
   }
   return jobs;
 }

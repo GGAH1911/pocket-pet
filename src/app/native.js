@@ -88,14 +88,29 @@ export async function clearDelivered() { if (IS_APP) try { await LN.removeAllDel
 export function onNotifyTap(cb) { if (IS_APP) LN.addListener("localNotificationActionPerformed", cb); }
 
 // ---------- 플레이 결제 ----------
+// 플러그인(@capgo/native-purchases 8.8.1)은 호출마다 결제 연결을 닫고 새로 열어서, 두 호출이 겹치면 서로의 연결을 닫는다(결제 감사 B-02).
+// 그래서 모든 결제 호출을 한 줄로 세운다.
+let payChain = Promise.resolve();
+const serial = (fn) => { const p = payChain.then(fn, fn); payChain = p.catch(() => {}); return p; };
 export async function payBuy(pack, acct = null) {
-  // 소모성도 isConsumable:false로 사고, 지급 대기 저장 → consumePurchase 성공 → 지급 순서는 부르는 쪽(main.js)이 지킨다
-  // acct: 기기 ID 해시(구글 obfuscatedAccountId, 개인정보 아님. 구글 부정 결제 탐지·서버 장부 대조용)
-  return Pay.purchaseProduct({ productIdentifier: pack.sku, productType: "inapp", isConsumable: false, autoAcknowledgePurchases: false, ...(acct ? { appAccountToken: acct } : {}) });
+  // 소모성도 isConsumable:false로 사고, 지급 대기 저장 → 서버 적립 → 소비 순서는 부르는 쪽(main.js)이 지킨다
+  // acct: 지갑 열쇠 해시(구글 obfuscatedAccountId, 개인정보 아님)
+  return serial(() => Pay.purchaseProduct({ productIdentifier: pack.sku, productType: "inapp", isConsumable: false, autoAcknowledgePurchases: false, ...(acct ? { appAccountToken: acct } : {}) }));
 }
-export const payConsume = (token) => Pay.consumePurchase({ purchaseToken: token });
-export const payAck = (token) => Pay.acknowledgePurchase({ purchaseToken: token });
-export async function payList() { return (await Pay.getPurchases({ productType: "inapp" })).purchases || []; }
+export const payConsume = (token) => serial(() => Pay.consumePurchase({ purchaseToken: token }));
+export const payAck = (token) => serial(() => Pay.acknowledgePurchase({ purchaseToken: token }));
+export async function payList() { return (await serial(() => Pay.getPurchases({ productType: "inapp" }))).purchases || []; }
+// 플러그인 오류 종류: 실제 플러그인은 message가 아니라 code에 넣는다(취소 = code USER_CANCELED, message "Purchase is not purchased", 결제 감사 B-03)
+export function payErrorKind(e) {
+  const code = String(e?.code || ""), msg = String(e?.message || e || "");
+  if (code === "USER_CANCELED") return "cancel";
+  if (code === "ITEM_ALREADY_OWNED") return "owned";
+  if (/pending/i.test(msg)) return "pending"; // 대기 결제(편의점 등)는 reject("Purchase is pending")
+  if (code === "BILLING_UNAVAILABLE" || /^BILLING_SETUP/.test(code) || /Billing is not available/i.test(msg)) return "unavailable";
+  if (/SERVICE_UNAVAILABLE|NETWORK_ERROR|SERVICE_DISCONNECTED|SERVICE_TIMEOUT/.test(code)) return "network";
+  if (code === "ITEM_UNAVAILABLE") return "item";
+  return "other";
+}
 export async function payAvailable() { if (!IS_APP) return false; try { return !!(await Pay.isBillingSupported()).isBillingSupported; } catch { return false; } }
 
 // ---------- 앱 생명주기·뒤로 가기 ----------

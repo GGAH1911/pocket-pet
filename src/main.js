@@ -1,31 +1,31 @@
 // 부팅 순서는 이 파일 한 곳에서만 정해요.
 // (지난 게임에서 파일 읽는 순서 때문에 저장 기본값이 빠지는 버그가 있었어요.)
 // 순서: 저장 불러오기 → 꺼져 있던 시간 계산 → 화면 시작 → 서비스 워커·알림 확인 → 알림 일정 올리기
-import { createPet } from "./core/state.js?v=6aa8a01-1791371139";
-import { advance, feed, play, wash, walk, wakeFromNap, cleanPoop, toggleLight, giveMedicine, patPet, switchEndMode, retirePet } from "./core/sim.js?v=6aa8a01-1791371139";
-import { predictNotifications } from "./core/notify.js?v=6aa8a01-1791371139";
-import { josa } from "./core/josa.js?v=6aa8a01-1791371139";
-import { drawRoom, drawIcon, roomLayout } from "./render/screen.js?v=6aa8a01-1791371139";
-import { createAnimator, play as playAnim, frame as animFrame, addFx, DUR as ANIM_DUR } from "./render/anim.js?v=6aa8a01-1791371139";
-import { pickGame, createGame, GAME_NAMES } from "./app/games.js?v=6aa8a01-1791371139";
-import { EGGS, findEgg, createStreak, specialDay, SPECIAL_KO, HAT_OF, wishTime, MAKER_LETTER } from "./app/eggs.js?v=6aa8a01-1791371139";
-import { earn, buy, equip, unequip, grant as grantItem, gems, canAfford, dailyStatus, claimDaily, DAILY, THEME_UNLOCK, themeOpen } from "./core/economy.js?v=6aa8a01-1791371139";
-import { ITEMS, ITEM, SLOTS, TABS, PICKS, PACKS, SOON, BASIC_EQUIP, UNLOCK } from "./core/catalog.js?v=6aa8a01-1791371139";
-import { renderShop, renderDeco, dailyCard, spriteCanvas } from "./app/shop-ui.js?v=6aa8a01-1791371139";
-import { formKey, lookOf, FORMS as FORMS_REF, SPOT_COLORS, eggSpriteFor } from "./render/creature.js?v=6aa8a01-1791371139";
-import { guessLocation, sunTimes, moonIllumination, moonPosition, moonPhaseName } from "./core/astro.js?v=6aa8a01-1791371139";
-import { classifyWeather, weatherUrl, parseWeather } from "./core/weather.js?v=6aa8a01-1791371139";
-import { createFacePicker, pickFace } from "./render/face.js?v=6aa8a01-1791371139";
-import { SPRITES, drawSprite } from "./render/sprites.js?v=6aa8a01-1791371139";
-import { loadProfile, saveProfile, freshProfile, exportCode, importCode, SAVE_KEYS, setSaveMirror, resetProfile } from "./app/store.js?v=6aa8a01-1791371139";
-import * as native from "./app/native.js?v=6aa8a01-1791371139";
-import * as cloud from "./app/cloud.js?v=6aa8a01-1791371139";
-import { planReconcile, isPaid } from "./core/billing.js?v=6aa8a01-1791371139";
-import { queueEarn, needsWallet, pendingGems, reconcileOwned } from "./core/wallet.js?v=6aa8a01-1791371139";
-import * as wallet from "./app/wallet.js?v=6aa8a01-1791371139";
-import { sfx, setSoundEnabled } from "./app/sound.js?v=6aa8a01-1791371139";
-import { markSeen, recordPet, renderCollection, letterText, portrait, currentKey, HOW_KO, unlockedSet, REWARDS, nextGoal, adultsSeen, ADULT_KEYS, formOrder, EGG_COLOR_KO } from "./app/collection.js?v=6aa8a01-1791371139";
-import { deviceInfo, registerSW, enablePush, ensurePush, uploadSchedule, sendTest, serverStatus, PUSH_SERVER } from "./app/push.js?v=6aa8a01-1791371139";
+import { createPet } from "./core/state.js?v=bf34df8-1791372957";
+import { advance, feed, play, wash, walk, wakeFromNap, cleanPoop, toggleLight, giveMedicine, patPet, switchEndMode, retirePet } from "./core/sim.js?v=bf34df8-1791372957";
+import { predictNotifications } from "./core/notify.js?v=bf34df8-1791372957";
+import { josa } from "./core/josa.js?v=bf34df8-1791372957";
+import { drawRoom, drawIcon, roomLayout } from "./render/screen.js?v=bf34df8-1791372957";
+import { createAnimator, play as playAnim, frame as animFrame, addFx, DUR as ANIM_DUR } from "./render/anim.js?v=bf34df8-1791372957";
+import { pickGame, createGame, GAME_NAMES } from "./app/games.js?v=bf34df8-1791372957";
+import { EGGS, findEgg, createStreak, specialDay, SPECIAL_KO, HAT_OF, wishTime, MAKER_LETTER } from "./app/eggs.js?v=bf34df8-1791372957";
+import { earn, buy, equip, unequip, grant as grantItem, gems, canAfford, dailyStatus, claimDaily, DAILY, THEME_UNLOCK, themeOpen } from "./core/economy.js?v=bf34df8-1791372957";
+import { ITEMS, ITEM, SLOTS, TABS, PICKS, PACKS, SOON, BASIC_EQUIP, UNLOCK } from "./core/catalog.js?v=bf34df8-1791372957";
+import { renderShop, renderDeco, dailyCard, spriteCanvas } from "./app/shop-ui.js?v=bf34df8-1791372957";
+import { formKey, lookOf, FORMS as FORMS_REF, SPOT_COLORS, eggSpriteFor } from "./render/creature.js?v=bf34df8-1791372957";
+import { guessLocation, sunTimes, moonIllumination, moonPosition, moonPhaseName } from "./core/astro.js?v=bf34df8-1791372957";
+import { classifyWeather, weatherUrl, parseWeather } from "./core/weather.js?v=bf34df8-1791372957";
+import { createFacePicker, pickFace } from "./render/face.js?v=bf34df8-1791372957";
+import { SPRITES, drawSprite } from "./render/sprites.js?v=bf34df8-1791372957";
+import { loadProfile, saveProfile, freshProfile, exportCode, importCode, SAVE_KEYS, setSaveMirror, resetProfile } from "./app/store.js?v=bf34df8-1791372957";
+import * as native from "./app/native.js?v=bf34df8-1791372957";
+import * as cloud from "./app/cloud.js?v=bf34df8-1791372957";
+import { planReconcile, isPaid } from "./core/billing.js?v=bf34df8-1791372957";
+import { queueEarn, needsWallet, pendingGems, reconcileOwned } from "./core/wallet.js?v=bf34df8-1791372957";
+import * as wallet from "./app/wallet.js?v=bf34df8-1791372957";
+import { sfx, setSoundEnabled } from "./app/sound.js?v=bf34df8-1791372957";
+import { markSeen, recordPet, renderCollection, letterText, portrait, currentKey, HOW_KO, unlockedSet, REWARDS, nextGoal, adultsSeen, ADULT_KEYS, formOrder, EGG_COLOR_KO } from "./app/collection.js?v=bf34df8-1791372957";
+import { deviceInfo, registerSW, enablePush, ensurePush, uploadSchedule, sendTest, serverStatus, PUSH_SERVER } from "./app/push.js?v=bf34df8-1791372957";
 
 const clock = { offset: 0, now() { return Date.now() + this.offset; } }; // offset은 개발 도구만 바꾼다
 
@@ -969,7 +969,8 @@ let paying = false;
 async function buyPack(pack) {
   sfx("tap");
   if (!IS_APP) { say(`${josa(pack.name, "은", "는")} 플레이스토어 앱에서 살 수 있어요(준비 중)`, 5000); return; }
-  if (paying) return;
+  if (paying || reconciling) { say("앞 결제를 정리하는 중이에요. 잠시 뒤 다시 눌러 주세요", 3000); return; }
+  if (profile.wallet?.closed) { say("이 기기의 하트 보석 지갑이 다른 기기로 옮겨졌어요. 메뉴 → 이어하기로 그 기기 기록을 불러와 주세요", 7000); return; }
   if (pack.once && profile.econ.bought[pack.id]) { say("이미 산 상품이에요", 3000); return; }
   if (!navigator.onLine) { say("결제하려면 인터넷 연결이 필요해요", 4000); return; }
   paying = true;
@@ -977,6 +978,8 @@ async function buyPack(pack) {
     const c = await wallet.ensureWallet(profile, wsave); // 결제 전에 지갑이 있어야 함(구글에 지갑 대조값을 함께 보냄)
     if (!c.ok) { say("서버에 닿지 않아요. 인터넷 연결 뒤 다시 해 주세요", 5000); return; }
     if ((profile.wallet.buy || "off") === "off") { say("하트 보석 결제는 준비 중이에요", 4000); return; }
+    if (profile.wallet.closed) { say("이 기기의 하트 보석 지갑이 다른 기기로 옮겨졌어요. 메뉴 → 이어하기로 그 기기 기록을 불러와 주세요", 7000); return; }
+    if (pack.once && profile.econ.bought[pack.id]) { say("이미 산 상품이에요", 3000); return; } // 서버 목록으로 다시 확인(결제 감사 B-14)
     const t = await native.payBuy(pack, await wallet.acctOf(profile.wallet.key));
     if (!t?.purchaseToken) { say("결제가 끝나지 않았어요", 4000); return; }
     if (!isPaid(t)) { say("결제가 확인되면 다음에 앱을 열 때 받아요", 6000); return; }
@@ -984,46 +987,79 @@ async function buyPack(pack) {
     await settlePurchase({ do: pack.once ? "ack" : "consume", token: t.purchaseToken, pack, orderId: t.orderId || null });
   } catch (e) {
     const msg = String(e?.message || e);
-    if (/cancel/i.test(msg)) say("결제를 취소했어요", 3000);
-    else if (/pending/i.test(msg)) say("결제가 확인되면 다음에 앱을 열 때 받아요", 6000); // 편의점 결제 등 대기 결제(전수 조사 C4)
-    else if (/^credit:(not_allowed|invalid|off|not_ready)/.test(msg)) say("결제는 됐지만 서버가 아직 받을 수 없는 결제예요. 앱을 최신 버전으로 업데이트해 주세요. 받지 못한 결제는 구글이 자동으로 환불해요", 9000);
-    else if (/^credit:pending/.test(msg)) say("결제가 확인되면 다음에 앱을 열 때 받아요", 6000);
-    else if (/^credit:/.test(msg)) say("결제는 끝났어요. 인터넷이 연결되면 하트 보석이 들어와요", 7000);
-    else if (/BILLING_UNAVAILABLE|unavailable/i.test(msg)) say("이 기기에서는 구글 결제를 쓸 수 없어요(플레이 스토어 로그인·제한 설정을 확인해 주세요)", 7000);
-    else say("결제를 마치지 못했어요. 돈이 나갔다면 앱을 다시 열면 받아요", 7000);
-    console.warn("결제 실패", e);
-  } finally { paying = false; renderShopUI(); }
+    if (/^credit:/.test(msg)) say(creditFailText(msg.slice(7)), 9000);
+    else {
+      const kind = native.payErrorKind(e);
+      if (kind === "cancel") say("결제를 취소했어요", 3000);
+      else if (kind === "pending") say("결제가 확인되면 다음에 앱을 열 때 받아요", 6000); // 편의점 결제 등 대기 결제
+      else if (kind === "owned") { say("앞 결제가 아직 정리되지 않았어요. 지금 정리할게요", 5000); setTimeout(() => reconcilePurchases({ manual: true }), 300); } // 결제 감사 B-04
+      else if (kind === "unavailable") say("이 기기에서는 구글 결제를 쓸 수 없어요(플레이 스토어 로그인·제한 설정을 확인해 주세요)", 7000);
+      else if (kind === "network") say("구글 결제에 연결하지 못했어요. 인터넷 연결 뒤 다시 해 주세요", 5000);
+      else if (kind === "item") say("지금은 살 수 없는 상품이에요", 4000);
+      else say("결제를 마치지 못했어요. 돈이 나갔다면 앱을 다시 열면 받아요", 7000);
+    }
+    console.warn("결제 실패", String(e?.code || ""), msg.slice(0, 80));
+  } finally { paying = false; renderShopUI(); if (reconcileAgain) { reconcileAgain = false; setTimeout(() => reconcilePurchases(), 500); } }
 }
+// 서버 적립 실패 이유별 문구(결제 감사 B-13)
+function creditFailText(reason) {
+  if (/^(not_allowed|off|not_ready)/.test(reason)) return "결제는 됐지만 서버가 아직 받을 수 없는 결제예요. 앱을 최신 버전으로 업데이트해 주세요. 받지 못한 결제는 구글이 자동으로 환불해요";
+  if (/^once/.test(reason)) return "이미 산 상품이라 이 결제는 받을 수 없어요. 구글이 며칠 안에 자동으로 환불해요";
+  if (/^(other_wallet|invalid)/.test(reason)) return "이 결제는 다른 하트 보석 지갑에 들어갔어요. 주문번호와 함께 이메일로 문의해 주세요";
+  if (/^closed|^404/.test(reason)) return "이 기기의 하트 보석 지갑이 다른 기기로 옮겨졌어요. 메뉴 → 이어하기로 그 기기 기록을 불러와 주세요. 받지 못한 결제는 구글이 자동으로 환불해요";
+  if (/^pending/.test(reason)) return "결제가 확인되면 다음에 앱을 열 때 받아요";
+  return "결제는 끝났어요. 인터넷이 연결되면 하트 보석이 들어와요";
+}
+const CREDIT_PERMANENT = /^(not_allowed|once|other_wallet|invalid|closed|404|400)/; // 다시 보내도 안 되는 이유(결제 감사 B-12)
 // 서버 지갑 적립 → 그 뒤 구글 소비(보석 묶음)·확인(시작 꾸러미). 어디서 끊겨도 지급 대기에 남아 다음에 앱을 열 때 이어서 한다
 async function settlePurchase(job) {
+  const dropPending = () => { if (profile.payPending) delete profile.payPending[job.token]; persist(); };
+  if (job.do === "clear") { dropPending(); return; } // 적립·소비 끝, 대기 표시만 남았던 것
+  if (job.do === "gone") { dropPending(); say("받지 못한 결제는 구글이 환불했어요", 6000); return; } // 결제 감사 B-01
   if (job.do !== "consumeOnly" && job.do !== "ackOnly") {
     const r = await wallet.creditPurchase(profile, wsave, { token: job.token, sku: job.pack.sku, orderId: job.orderId });
-    if (!r.ok) {
-      if (r.voided) { if (profile.payPending) delete profile.payPending[job.token]; persist(); say("결제가 취소되어 환불됐어요", 6000); return; }
-      throw new Error("credit:" + (r.pending ? "pending" : r.reason || r.status)); // 지급 대기 유지
+    if (!r.ok && r.reason === "other_wallet" && profile.econ.orders[job.token]) { /* 이미 이 기기에서 적립한 결제(지갑이 바뀜) → 소비만(결제 감사 B-05) */ }
+    else if (!r.ok) {
+      if (r.voided) { dropPending(); say("결제가 취소되어 환불됐어요", 6000); return; }
+      const reason = r.pending ? "pending" : String(r.reason || r.status);
+      if (profile.payPending?.[job.token]) { profile.payPending[job.token].fail = reason; profile.payPending[job.token].failAt = Date.now(); persist(); }
+      throw new Error("credit:" + reason); // 지급 대기 유지(구글이 환불하면 목록에서 사라져 'gone'으로 정리)
     }
-    const first = !profile.econ.orders[job.token]; // 별사탕(꾸러미)은 기기 화폐라 이 기기 기록으로 한 번만
-    if (first) {
-      profile.econ.orders[job.token] = { at: Date.now(), sku: job.pack.sku, gems: job.pack.gems || 0, stars: job.pack.stars || 0, ...(job.orderId ? { orderId: String(job.orderId).slice(0, 64) } : {}) };
-      profile.econ.star += job.pack.stars || 0;
+    if (r.ok) {
+      const first = !profile.econ.orders[job.token]; // 별사탕(꾸러미)은 기기 화폐라 이 기기 기록으로 한 번만
+      if (first) {
+        profile.econ.orders[job.token] = { at: Date.now(), sku: job.pack.sku, gems: job.pack.gems || 0, stars: job.pack.stars || 0, ...(job.orderId ? { orderId: String(job.orderId).slice(0, 64) } : {}) };
+        profile.econ.star += job.pack.stars || 0;
+      }
+      if (r.first || first) { gainFx({ gem: r.first ? job.pack.gems || 0 : 0, star: first ? job.pack.stars || 0 : 0 }); sfx("win"); say(`${josa(job.pack.name, "을", "를")} 받았어요!`, 5000); }
+      persist();
     }
-    if (r.first || first) { gainFx({ gem: r.first ? job.pack.gems || 0 : 0, star: first ? job.pack.stars || 0 : 0 }); sfx("win"); say(`${josa(job.pack.name, "을", "를")} 받았어요!`, 5000); }
-    persist();
   }
-  if (job.do === "grant") { /* 구글 소비는 이미 끝남 */ }
-  else if (job.pack.once) { if (!job.acknowledged) { try { await native.payAck(job.token); } catch (e) { if (!/already/i.test(String(e?.message))) throw e; } } }
+  if (job.pack.once) { if (!job.acknowledged) { try { await native.payAck(job.token); } catch (e) { if (!/already/i.test(String(e?.message))) throw e; } } }
   else await native.payConsume(job.token);
   if (profile.payPending) delete profile.payPending[job.token];
   persist(); renderWallet(); cloudSync({ urgent: true });
 }
+// 결제 정리: 앱을 켤 때·다시 열 때·연결이 돌아올 때·구매 복원. 결제 중이면 끝난 뒤 한 번(결제 감사 B-02)
+let reconciling = false, reconcileAgain = false;
 async function reconcilePurchases({ manual = false } = {}) {
   if (!IS_APP) { if (manual) say("앱에서 산 상품을 다시 불러오는 기능이에요. 웹에서는 산 것이 없어요", 4000); return; }
+  if (paying || reconciling) { reconcileAgain = true; return; }
+  reconciling = true;
   try {
-    if (Object.keys(profile.payPending || {}).length && !(await wallet.ensureWallet(profile, wsave)).ok) { if (manual) say("서버에 닿지 않아요. 인터넷 연결 뒤 다시 해 주세요", 5000); return; }
-    const jobs = planReconcile(await native.payList(), profile.econ, profile.payPending || {});
-    for (const j of jobs) { try { await settlePurchase(j); } catch (e) { console.warn("결제 정리 실패", j, e); } }
-    if (manual) { await walletSync(); say(jobs.length ? "산 상품을 다시 불러왔어요" : "새로 받을 상품이 없어요. 하트 보석은 서버 지갑에 있어요. 기기를 바꾸면 이어하기나 저장 코드로 옮기고, 잃어버렸으면 주문번호와 함께 이메일로 문의해 주세요", 8000); }
-  } catch (e) { if (manual) say("구글 결제에 연결하지 못했어요. 잠시 뒤 다시 해 주세요", 5000); console.warn(e); }
+    let jobs = planReconcile(await native.payList(), profile.econ, profile.payPending || {});
+    // 다시 보내도 안 되는 이유로 막힌 결제는 자동 정리 때 10분에 한 번만(서버 한도를 먹지 않게, B-12). 구매 복원은 바로
+    if (!manual) jobs = jobs.filter((j) => { const p = profile.payPending?.[j.token]; return j.do === "gone" || j.do === "clear" || !(p?.fail && CREDIT_PERMANENT.test(p.fail) && Date.now() - (p.failAt || 0) < 10 * 60 * 1000); });
+    if (jobs.some((j) => j.do === "consume" || j.do === "ack") && !(await wallet.ensureWallet(profile, wsave)).ok) { if (manual) say("서버에 닿지 않아요. 인터넷 연결 뒤 다시 해 주세요", 5000); return; } // B-11
+    let ok = 0; const fails = [];
+    for (const j of jobs) { try { await settlePurchase(j); ok++; } catch (e) { fails.push(String(e?.message || e)); console.warn("결제 정리 실패", j.do, String(e?.message || e).slice(0, 60)); } }
+    if (manual) {
+      await walletSync();
+      if (fails.length) say(/^credit:/.test(fails[0]) ? creditFailText(fails[0].slice(7)) : "구글 결제 정리를 마치지 못했어요. 잠시 뒤 다시 해 주세요", 8000); // B-08
+      else say(ok ? "산 상품을 다시 불러왔어요" : "새로 받을 상품이 없어요. 하트 보석은 서버 지갑에 있어요. 기기를 바꾸면 이어하기나 저장 코드로 옮기고, 잃어버렸으면 주문번호와 함께 이메일로 문의해 주세요", 8000);
+    }
+  } catch (e) { if (manual) say("구글 결제에 연결하지 못했어요. 잠시 뒤 다시 해 주세요", 5000); console.warn(String(e?.message || e)); }
+  finally { reconciling = false; if (reconcileAgain && !paying) { reconcileAgain = false; setTimeout(() => reconcilePurchases(), 500); } }
 }
 function restorePurchases() { reconcilePurchases({ manual: true }); }
 // 구매 장부: 지급 뒤 서버에 기록(전자상거래법 거래기록 5년 보존). 실패하면 저장해 두고 다음에 다시(지급은 막지 않음)
@@ -1043,7 +1079,7 @@ async function flushOrderReports() {
     while (profile.payReport.length) {
       const r = profile.payReport[0];
       const res = await fetch(PUSH_SERVER + "/billing/report", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ ...r, acct }) });
-      if (!res.ok && res.status !== 400) break; // 서버 문제면 다음에(400은 버릴 기록)
+      if (!res.ok && res.status !== 400 && res.status !== 404) break; // 서버 문제면 다음에(400·404는 버림: 옛 경로는 지움, 새 결제는 서버 지갑이 장부를 적음)
       profile.payReport.shift(); saveProfile(profile);
     }
   } catch { /* 다음에 다시 */ } finally { reporting = false; }
@@ -1373,7 +1409,7 @@ function boot() {
   const cloudMsg = sessionStorage.getItem("almochi:say"); if (cloudMsg) { sessionStorage.removeItem("almochi:say"); setTimeout(() => say(cloudMsg, 6000), 800); }
   cloudCheck({ atBoot: true });
   walletSync(); // 하트 보석 지갑: 받아 오기·옛 잔액 이관·대기 중인 적립 보내기
-  window.addEventListener("online", () => walletSync());
+  window.addEventListener("online", () => { walletSync(); if (IS_APP && Object.keys(profile.payPending || {}).length) reconcilePurchases(); }); // B-10
   window.addEventListener("offline", () => { renderWallet(); if (!document.querySelector('[data-sheet="shop"]').hidden) renderShopUI(); });
   setInterval(() => syncNow(), 10 * 60 * 1000);
   setInterval(() => { if (document.visibilityState === "visible") profile.lastSeen = Date.now(); }, 30000);
@@ -1395,7 +1431,7 @@ function boot() {
   // 개발 도구(공개 배포에는 없음): ?dev 로 열기
   if (QS.has("dev")) {
     window.__pp = { clock, getProfile: () => profile, tick, anim, playAnim: (n, d) => playAnim(anim, n, performance.now(), d), mg: () => mg, layout: () => layout, forceGame: null, boxes: () => ({ windowBox, petBox, memoBox }), render: () => renderStats() };
-    import("./dev/panel.js?v=6aa8a01-1791371139").then((m) => m.mount({ clock, getProfile: () => profile, tick, renderStats, syncNow, serverStatus })).catch(() => {});
+    import("./dev/panel.js?v=bf34df8-1791372957").then((m) => m.mount({ clock, getProfile: () => profile, tick, renderStats, syncNow, serverStatus })).catch(() => {});
   }
 }
 
