@@ -1,11 +1,11 @@
 // 상점·꾸미기·매일 선물 화면. 상태와 규칙은 core/economy.js·catalog.js, 여기는 DOM만.
-import { ITEMS, ITEM, SLOTS, TABS, PICKS, PACKS, SOON, UNLOCK, UNLOCKS, STAR_SWAPS, STAR_SWAP_WEEK_GEMS, ROOM, ROOMS } from "../core/catalog.js?v=1543f89-1791552615";
-import { placedElsewhere } from "../core/rooms.js?v=1543f89-1791552615";
-import { drawCourseThumb } from "../render/walk-courses.js?v=1543f89-1791552615";
-import { canAfford, gems, DAILY, purchaseHistory, themeOpen, FORGIVE, forgiveState, candyPrice } from "../core/economy.js?v=1543f89-1791552615";
-import { gemButtonState } from "../core/wallet.js?v=1543f89-1791552615";
-import { drawThumb } from "../render/deco.js?v=1543f89-1791552615";
-import { SPRITES, drawSprite, spriteSize } from "../render/sprites.js?v=1543f89-1791552615";
+import { ITEMS, ITEM, SLOTS, TABS, PICKS, PACKS, SOON, UNLOCK, UNLOCKS, STAR_SWAPS, STAR_SWAP_WEEK_GEMS, ROOM, ROOMS } from "../core/catalog.js?v=8143ed3-1791554505";
+import { placedElsewhere } from "../core/rooms.js?v=8143ed3-1791554505";
+import { drawCourseThumb } from "../render/walk-courses.js?v=8143ed3-1791554505";
+import { canAfford, gems, DAILY, purchaseHistory, themeOpen, FORGIVE, forgiveState, candyPrice } from "../core/economy.js?v=8143ed3-1791554505";
+import { gemButtonState } from "../core/wallet.js?v=8143ed3-1791554505";
+import { drawThumb } from "../render/deco.js?v=8143ed3-1791554505";
+import { SPRITES, drawSprite, spriteSize } from "../render/sprites.js?v=8143ed3-1791554505";
 
 const el = (tag, attrs = {}, ...kids) => {
   const e = document.createElement(tag);

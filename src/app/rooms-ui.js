@@ -1,9 +1,9 @@
 // 방 바꾸기 화면(2026-10-09, 게임·경제·아동 심리 자문 기획): 방 위쪽 [◀ 방 이름 ▶], 이름을 누르면 방 목록.
 // 선물 방: 내 방이 꽉 차면 딱 한 번 "새 방 하나를 선물할게요" 창. 시간 제한·할인·펫이 조르는 말 없음. '나중에'면 메뉴에 점만.
-import { ROOMS, ROOM, UNLOCK } from "../core/catalog.js?v=1543f89-1791552615";
-import { ownedRooms, hasRoom, switchRoom, giftReady, chooseGift, roomFull } from "../core/rooms.js?v=1543f89-1791552615";
-import { drawWall, drawFloor } from "../render/deco.js?v=1543f89-1791552615";
-import { josa } from "../core/josa.js?v=1543f89-1791552615";
+import { ROOMS, ROOM, UNLOCK } from "../core/catalog.js?v=8143ed3-1791554505";
+import { ownedRooms, hasRoom, switchRoom, giftReady, chooseGift, roomFull } from "../core/rooms.js?v=8143ed3-1791554505";
+import { drawWall, drawFloor } from "../render/deco.js?v=8143ed3-1791554505";
+import { josa } from "../core/josa.js?v=8143ed3-1791554505";
 
 const el = (tag, attrs = {}, ...kids) => { const e = document.createElement(tag); for (const [k, v] of Object.entries(attrs)) { if (v == null || v === false) continue; if (k === "class") e.className = v; else if (k === "text") e.textContent = v; else if (k.startsWith("on")) e[k] = v; else e.setAttribute(k, v); } for (const c of kids) if (c != null) e.append(c); return e; };
 export function roomThumb(id, w = 96, h = 64) {
@@ -18,16 +18,22 @@ export function makeRooms(deps) {
   const { persist, say, sfx } = deps;
   const econ = () => deps.getProfile().econ;
   const bar = document.getElementById("roombar");
-  function go(id) {
-    const e = econ(); if (e.room === id) return;
+  let moving = false;
+  // 방 옮기기: 펫이 누른 쪽으로 콩콩 걸어 나가고 → 화면이 바뀌고 → 반대편에서 걸어 들어옴(자는 중·알이면 화면만 서서히)
+  function go(id, dir = 1) {
+    const e = econ(); if (e.room === id || moving) return;
+    moving = true;
     const stage = document.getElementById("stage");
-    stage.classList.add("roomfade");
-    setTimeout(() => {
-      if (switchRoom(e, id)) { persist(); deps.onSwitch?.(); sfx("tap"); say(`${ROOM[id].name}${id === "home" ? "이에요" : "에 왔어요"}`, 2500); }
-      render(); stage.classList.remove("roomfade");
-    }, 220);
+    const swap = () => {
+      stage.classList.add("roomfade");
+      setTimeout(() => {
+        if (switchRoom(e, id)) { persist(); deps.onSwitch?.(); sfx("tap"); say(`${ROOM[id].name}${id === "home" ? "이에요" : "에 왔어요"}`, 2500); }
+        render(); stage.classList.remove("roomfade"); deps.walkIn?.(dir); moving = false;
+      }, 200);
+    };
+    if (deps.walkOut) deps.walkOut(dir, swap); else swap();
   }
-  function step(d) { const list = ownedRooms(econ()); const i = list.indexOf(econ().room); go(list[(i + d + list.length) % list.length]); }
+  function step(d) { const list = ownedRooms(econ()); const i = list.indexOf(econ().room); go(list[(i + d + list.length) % list.length], d); }
   function render() {
     const e = econ(), list = ownedRooms(e);
     bar.innerHTML = "";

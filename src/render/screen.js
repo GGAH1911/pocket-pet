@@ -1,18 +1,25 @@
 // 방 화면 그리기. 게임 규칙은 모르고 받은 상태만 그린다.
 // 캔버스는 "도트 해상도"로 그리고 CSS가 정수배로 키운다.
-import { PALETTE } from "./palette.js?v=1543f89-1791552615";
-import { SPRITES, drawSprite, spriteSize } from "./sprites.js?v=1543f89-1791552615";
-import { buildCreature, paintGrid, formKey, eggSpriteFor } from "./creature.js?v=1543f89-1791552615";
-import { drawFace, POOLS } from "./face.js?v=1543f89-1791552615";
-import { drawSky } from "./sky.js?v=1543f89-1791552615";
-import { drawWall, drawFloor, drawRug, drawCurtain, drawFurniture, drawLampGlow, drawSmall, HAT_SPRITE, FURN_HALF } from "./deco.js?v=1543f89-1791552615";
+import { PALETTE } from "./palette.js?v=8143ed3-1791554505";
+import { SPRITES, drawSprite, spriteSize } from "./sprites.js?v=8143ed3-1791554505";
+import { buildCreature, paintGrid, formKey, eggSpriteFor } from "./creature.js?v=8143ed3-1791554505";
+import { drawFace, POOLS } from "./face.js?v=8143ed3-1791554505";
+import { drawSky } from "./sky.js?v=8143ed3-1791554505";
+import { drawWall, drawFloor, drawRug, drawCurtain, drawFurniture, drawLampGlow, drawSmall, HAT_SPRITE, FURN_HALF } from "./deco.js?v=8143ed3-1791554505";
 
 // 방 배치(그리기와 동작이 같은 좌표를 쓰게 한 곳에서 계산)
+// 침대는 펫과 같은 도트 크기(2배)로 그린다: 1배면 어른 펫보다 작아 누울 수 없어 보였음(2026-10-09)
+export const BIG_FURN = { bed_wood: 2, bed_star: 2 };
+export function drawFurnScaled(ctx, id, x, base, opts) {
+  const k = BIG_FURN[id] || 1;
+  if (k === 1) return drawFurniture(ctx, id, x, base, opts);
+  ctx.save(); ctx.translate(x, base); ctx.scale(k, k); drawFurniture(ctx, id, 0, 0, opts); ctx.restore();
+}
 export function roomLayout(w, h, deco = {}) {
   const floorY = Math.round(h * 0.5);
   const rugY = Math.round(floorY + (h - floorY) * 0.38);
   const furnBase = floorY + Math.round((h - floorY) * 0.24);
-  const half = (id) => FURN_HALF[id] || 12;
+  const half = (id) => (FURN_HALF[id] || 12) * (BIG_FURN[id] || 1);
   const furnPos = { furnL: Math.max(half(deco.furnL) + 2, Math.round(w * 0.13)), furnR: Math.min(w - half(deco.furnR) - 2, Math.round(w * 0.87)) };
   // 작은 칸(2026-10-09): 창가 = 창문 아래 턱 오른쪽, 벽걸이 = 오른쪽 벽 액자 아래, 바닥 소품 = 앞쪽 왼쪽 모서리(똥 자리와 안 겹치게)
   const win = windowRect(w, floorY);
@@ -23,8 +30,8 @@ export function roomLayout(w, h, deco = {}) {
   };
   return { floorY, cx: Math.round(w / 2), rugY, baseY: rugY + 4, furnBase, furnPos, smallPos };
 }
-import { WALK_STOPS as WALK_STOPS_REF, walkDist as walkDistRef } from "./anim.js?v=1543f89-1791552615";
-import { drawCourseBg, drawCourseThing, isSplash } from "./walk-courses.js?v=1543f89-1791552615";
+import { WALK_STOPS as WALK_STOPS_REF, walkDist as walkDistRef } from "./anim.js?v=8143ed3-1791554505";
+import { drawCourseBg, drawCourseThing, isSplash } from "./walk-courses.js?v=8143ed3-1791554505";
 const clamp01 = (x) => Math.max(0, Math.min(1, x));
 
 const FLOOR = "#f5b98c";
@@ -68,7 +75,7 @@ export function drawRoom(ctx, { w, h, now, scene, f, wall = Date.now(), loc = { 
   // 가구(왼쪽·오른쪽, 펫 뒤)
   const { furnBase, furnPos } = roomLayout(w, h, deco); // 가구는 넓이에 맞춰 화면 안에
   const darkNow = (f && f.darkness) || 0;
-  for (const slot of ["furnL", "furnR"]) if (deco[slot]) drawFurniture(ctx, deco[slot], furnPos[slot], furnBase, { now, dark: darkNow });
+  for (const slot of ["furnL", "furnR"]) if (deco[slot]) drawFurnScaled(ctx, deco[slot], furnPos[slot], furnBase, { now, dark: darkNow });
   if (deco.prop) drawSmall(ctx, deco.prop, SP.prop.x, SP.prop.y, { now, wall, dark: darkNow });
 
   const sc = scene || { stage: "egg" };
@@ -77,7 +84,8 @@ export function drawRoom(ctx, { w, h, now, scene, f, wall = Date.now(), loc = { 
   const poopRects = drawPoops(ctx, sc.poopSlots || [], { cx, rugY, w, pop: fr.poopPop || 0 });
   const box = fr.hidePet ? null : drawPet(ctx, sc, fr, { cx, baseY, now });
   if (fr.onSofa && deco.furnR === "sofa") drawFurniture(ctx, "sofa", furnPos.furnR, furnBase, { front: true }); // 소파에 앉은 모습: 좌석 앞면·팔걸이를 펫 앞에
-  if (fr.inBed && (deco.furnR === "bed_wood" || deco.furnR === "bed_star")) drawFurniture(ctx, deco.furnR, furnPos.furnR, furnBase, { front: true, now }); // 침대에서 잘 때: 이불 앞부분·발판을 펫 앞에
+  if (fr.inTub && deco.furnR) drawFurniture(ctx, deco.furnR, furnPos.furnR, furnBase, { now }); // 욕실: 욕조를 펫 앞에 다시 그려 몸이 욕조 안에
+  if (fr.inBed && (deco.furnR === "bed_wood" || deco.furnR === "bed_star")) drawFurnScaled(ctx, deco.furnR, furnPos.furnR, furnBase, { front: true, now }); // 침대에서 잘 때: 이불 앞부분·발판을 펫 앞에
   const px = cx + Math.round(fr.pose.dx);
   for (const pr of fr.props) {
     const sp = SPRITES[pr.sprite]; if (!sp || pr.alpha <= 0) continue;
@@ -568,7 +576,7 @@ function drawPet(ctx, scene, fr, { cx, baseY, now }) {
   const lift = Math.round(5 * Math.min(1, bed * 1.6)); // 쿠션 위에 올라앉음
   const base = baseY + Math.round(pose.dy) - lift;
   // 그림자 (높이 뛸수록 작아짐)
-  if (bed <= 0 && !fr.onSofa) { // 소파 위에선 바닥 그림자 없음
+  if (bed <= 0 && !fr.onSofa && !fr.inBed && !fr.inTub) { // 소파·침대·욕조 위에선 바닥 그림자 없음
     ctx.fillStyle = "rgba(59,44,53,0.18)";
     const shw = Math.round(bodyW * (1 - Math.min(0.5, -pose.dy / 30)));
     ctx.fillRect(Math.round(cx + pose.dx - shw / 2), baseY - 1, shw, 3);
@@ -578,6 +586,8 @@ function drawPet(ctx, scene, fr, { cx, baseY, now }) {
   const horn = hatOn && HORNED.has(key) && !SIDE_HATS.has(hat) ? hornCells(built.g, built.P) : null;
   let paintG = built.g;
   if (horn && horn.length && !OPEN_TOP.has(hat)) { paintG = { ...built.g, c: built.g.c.slice() }; for (const i of horn) paintG.c[i] = null; } // 막힌 모자 속 뿔은 안 보이게
+  // 큰 침대에서 잘 때: 침대 이불(앞부분)이 몸 아래쪽을 덮는다. 90° 눕히기도 해 봤지만 앞모습 도트라 옆으로 누운 얼굴이 어색해 뺐다(2026-10-09)
+  const inBigBed = fr.inBed && !!BIG_FURN[(scene.deco || {}).furnR];
   const box = paintGrid(ctx, paintG, x, base, CELL, { alpha: fr.petAlpha ?? 1, tint: scene.sick && !fr.silhouette ? "rgba(150,210,150,0.22)" : null });
   if (fr.back && !fr.silhouette && fr.tailKind !== "own") drawTail(ctx, x, base, built, fr.tailWag || 0); // 엉덩이춤: 꼬리 없는 그림엔 복슬 꼬리, 용처럼 꼬리가 그려진 친구는 그대로
   if (hatOn && box) drawHat(ctx, box, hat, built, faceInfo, pose.facing, key);
@@ -585,7 +595,7 @@ function drawPet(ctx, scene, fr, { cx, baseY, now }) {
     for (const i of horn) { const col = built.g.c[i]; ctx.fillStyle = PALETTE[col] || col; ctx.fillRect(box.ox + (i % built.g.w) * CELL, box.oy + Math.floor(i / built.g.w) * CELL, CELL, CELL); }
   }
   const blanketK = fr.silhouette ? 0 : fr.blanket || 0; // 밤잠 이불(0 → 1): 아래에서 올라와 몸 아래쪽을 덮음
-  if (blanketK > 0) drawBlanket(ctx, x, base, box, built.P, bodyW, blanketK, now, scene.theme, built);
+  if (blanketK > 0 && !inBigBed) drawBlanket(ctx, x, base, box, built.P, bodyW, blanketK, now, scene.theme, built); // 큰 침대는 침대 이불로
   if (!fr.silhouette && (fr.foam || 0) > 0) drawFoam(ctx, box, fr.foam, now); // 머리 위 거품
   if (!fr.silhouette && (fr.tub || 0) > 0) drawTub(ctx, x, base, box, built.P, bodyW, fr.tub, now); // 욕조(몸 아래쪽 앞)
 

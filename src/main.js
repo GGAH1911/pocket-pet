@@ -1,42 +1,42 @@
 // 부팅 순서는 이 파일 한 곳에서만 정해요.
 // (지난 게임에서 파일 읽는 순서 때문에 저장 기본값이 빠지는 버그가 있었어요.)
 // 순서: 저장 불러오기 → 꺼져 있던 시간 계산 → 화면 시작 → 서비스 워커·알림 확인 → 알림 일정 올리기
-import { createPet } from "./core/state.js?v=1543f89-1791552615";
-import { advance, feed, play, wash, walk, wakeFromNap, cleanPoop, toggleLight, giveMedicine, patPet, switchEndMode, retirePet } from "./core/sim.js?v=1543f89-1791552615";
-import { predictNotifications } from "./core/notify.js?v=1543f89-1791552615";
-import { josa } from "./core/josa.js?v=1543f89-1791552615";
-import { drawRoom, drawIcon, roomLayout } from "./render/screen.js?v=1543f89-1791552615";
-import { createAnimator, play as playAnim, frame as animFrame, addFx, DUR as ANIM_DUR } from "./render/anim.js?v=1543f89-1791552615";
-import { pickGame, createGame, GAME_NAMES } from "./app/games.js?v=1543f89-1791552615";
-import { EGGS, findEgg, createStreak, specialDay, SPECIAL_KO, HAT_OF, wishTime, MAKER_LETTER } from "./app/eggs.js?v=1543f89-1791552615";
-import { earn, buy, equip, unequip, grant as grantItem, gems, canAfford, dailyStatus, claimDaily, DAILY, THEME_UNLOCK, themeOpen, forgiveStage, FORGIVE, candyPrice, CANDY_PRICES } from "./core/economy.js?v=1543f89-1791552615";
-import { ITEMS, ITEM, SLOTS, TABS, PICKS, PACKS, SOON, BASIC_EQUIP, UNLOCK, UNLOCKS, WALK_UNLOCK, REVIVE, reviveItemId, REVIVE_FREE_BEFORE, candyItemId, starSwapId } from "./core/catalog.js?v=1543f89-1791552615";
-import { COURSES, WALK_KO } from "./render/walk-courses.js?v=1543f89-1791552615";
-import { renderShop, renderDeco, dailyCard, spriteCanvas } from "./app/shop-ui.js?v=1543f89-1791552615";
-import { formKey, lookOf, FORMS as FORMS_REF, SPOT_COLORS, eggSpriteFor } from "./render/creature.js?v=1543f89-1791552615";
-import { guessLocation, sunTimes, moonIllumination, moonPosition, moonPhaseName } from "./core/astro.js?v=1543f89-1791552615";
-import { classifyWeather, weatherUrl, parseWeather } from "./core/weather.js?v=1543f89-1791552615";
-import { createFacePicker, pickFace } from "./render/face.js?v=1543f89-1791552615";
-import { SPRITES, drawSprite } from "./render/sprites.js?v=1543f89-1791552615";
-import { loadProfile, saveProfile, freshProfile, exportCode, importCode, SAVE_KEYS, setSaveMirror, resetProfile } from "./app/store.js?v=1543f89-1791552615";
-import * as native from "./app/native.js?v=1543f89-1791552615";
-import * as cloud from "./app/cloud.js?v=1543f89-1791552615";
-import { planReconcile, isPaid } from "./core/billing.js?v=1543f89-1791552615";
-import { queueEarn, needsWallet, pendingGems, reconcileOwned } from "./core/wallet.js?v=1543f89-1791552615";
-import { SLEEP_START_OPTS, SLEEP_END_OPTS, sleepLength, sleepOk } from "./core/daytime.js?v=1543f89-1791552615";
-import { lastRevivable, revivePet, canRevive } from "./core/revive.js?v=1543f89-1791552615";
-import { moveToVillage, swapWithVillage, canSwapToday, villageOf, careBlock } from "./core/village.js?v=1543f89-1791552615";
-import * as wallet from "./app/wallet.js?v=1543f89-1791552615";
-import { initUpdate, checkUpdate } from "./app/update-ui.js?v=1543f89-1791552615";
-import { openPlayroom } from "./app/playroom.js?v=1543f89-1791552615";
-import { makeRooms } from "./app/rooms-ui.js?v=1543f89-1791552615";
-import { BED_TOP } from "./render/deco-rooms.js?v=1543f89-1791552615";
-const BEDS = { ...BED_TOP, cloudbed: 10 }; // 밤잠 자리: 매트리스 윗면이 바닥에서 몇 도트 위
-import { ROOM } from "./core/catalog.js?v=1543f89-1791552615";
+import { createPet } from "./core/state.js?v=8143ed3-1791554505";
+import { advance, feed, play, wash, walk, wakeFromNap, cleanPoop, toggleLight, giveMedicine, patPet, switchEndMode, retirePet } from "./core/sim.js?v=8143ed3-1791554505";
+import { predictNotifications } from "./core/notify.js?v=8143ed3-1791554505";
+import { josa } from "./core/josa.js?v=8143ed3-1791554505";
+import { drawRoom, drawIcon, roomLayout } from "./render/screen.js?v=8143ed3-1791554505";
+import { createAnimator, play as playAnim, frame as animFrame, addFx, DUR as ANIM_DUR } from "./render/anim.js?v=8143ed3-1791554505";
+import { pickGame, createGame, GAME_NAMES } from "./app/games.js?v=8143ed3-1791554505";
+import { EGGS, findEgg, createStreak, specialDay, SPECIAL_KO, HAT_OF, wishTime, MAKER_LETTER } from "./app/eggs.js?v=8143ed3-1791554505";
+import { earn, buy, equip, unequip, grant as grantItem, gems, canAfford, dailyStatus, claimDaily, DAILY, THEME_UNLOCK, themeOpen, forgiveStage, FORGIVE, candyPrice, CANDY_PRICES } from "./core/economy.js?v=8143ed3-1791554505";
+import { ITEMS, ITEM, SLOTS, TABS, PICKS, PACKS, SOON, BASIC_EQUIP, UNLOCK, UNLOCKS, WALK_UNLOCK, REVIVE, reviveItemId, REVIVE_FREE_BEFORE, candyItemId, starSwapId } from "./core/catalog.js?v=8143ed3-1791554505";
+import { COURSES, WALK_KO } from "./render/walk-courses.js?v=8143ed3-1791554505";
+import { renderShop, renderDeco, dailyCard, spriteCanvas } from "./app/shop-ui.js?v=8143ed3-1791554505";
+import { formKey, lookOf, FORMS as FORMS_REF, SPOT_COLORS, eggSpriteFor } from "./render/creature.js?v=8143ed3-1791554505";
+import { guessLocation, sunTimes, moonIllumination, moonPosition, moonPhaseName } from "./core/astro.js?v=8143ed3-1791554505";
+import { classifyWeather, weatherUrl, parseWeather } from "./core/weather.js?v=8143ed3-1791554505";
+import { createFacePicker, pickFace } from "./render/face.js?v=8143ed3-1791554505";
+import { SPRITES, drawSprite } from "./render/sprites.js?v=8143ed3-1791554505";
+import { loadProfile, saveProfile, freshProfile, exportCode, importCode, SAVE_KEYS, setSaveMirror, resetProfile } from "./app/store.js?v=8143ed3-1791554505";
+import * as native from "./app/native.js?v=8143ed3-1791554505";
+import * as cloud from "./app/cloud.js?v=8143ed3-1791554505";
+import { planReconcile, isPaid } from "./core/billing.js?v=8143ed3-1791554505";
+import { queueEarn, needsWallet, pendingGems, reconcileOwned } from "./core/wallet.js?v=8143ed3-1791554505";
+import { SLEEP_START_OPTS, SLEEP_END_OPTS, sleepLength, sleepOk } from "./core/daytime.js?v=8143ed3-1791554505";
+import { lastRevivable, revivePet, canRevive } from "./core/revive.js?v=8143ed3-1791554505";
+import { moveToVillage, swapWithVillage, canSwapToday, villageOf, careBlock } from "./core/village.js?v=8143ed3-1791554505";
+import * as wallet from "./app/wallet.js?v=8143ed3-1791554505";
+import { initUpdate, checkUpdate } from "./app/update-ui.js?v=8143ed3-1791554505";
+import { openPlayroom } from "./app/playroom.js?v=8143ed3-1791554505";
+import { makeRooms } from "./app/rooms-ui.js?v=8143ed3-1791554505";
+import { BED_TOP } from "./render/deco-rooms.js?v=8143ed3-1791554505";
+const BEDS = { bed_wood: BED_TOP.bed_wood * 2, bed_star: BED_TOP.bed_star * 2, cloudbed: 10 }; // 밤잠 자리: 매트리스 윗면이 바닥에서 몇 도트 위(새 침대는 2배로 그림, screen.js BIG_FURN)
+import { ROOM } from "./core/catalog.js?v=8143ed3-1791554505";
 let rooms = null; // 방 바꾸기(app/rooms-ui.js)
-import { sfx, setSoundEnabled } from "./app/sound.js?v=1543f89-1791552615";
-import { markSeen, recordPet, renderCollection, letterText, portrait, currentKey, HOW_KO, unlockedSet, REWARDS, nextGoal, adultsSeen, ADULT_KEYS, formOrder, EGG_COLOR_KO } from "./app/collection.js?v=1543f89-1791552615";
-import { deviceInfo, registerSW, enablePush, ensurePush, uploadSchedule, sendTest, serverStatus, PUSH_SERVER } from "./app/push.js?v=1543f89-1791552615";
+import { sfx, setSoundEnabled } from "./app/sound.js?v=8143ed3-1791554505";
+import { markSeen, recordPet, renderCollection, letterText, portrait, currentKey, HOW_KO, unlockedSet, REWARDS, nextGoal, adultsSeen, ADULT_KEYS, formOrder, EGG_COLOR_KO } from "./app/collection.js?v=8143ed3-1791554505";
+import { deviceInfo, registerSW, enablePush, ensurePush, uploadSchedule, sendTest, serverStatus, PUSH_SERVER } from "./app/push.js?v=8143ed3-1791554505";
 
 const clock = { offset: 0, now() { return Date.now() + this.offset; } }; // offset은 개발 도구만 바꾼다
 
@@ -1466,10 +1466,17 @@ function frame() {
     if (lookCache.key !== lk) lookCache = { key: lk, look: lookOf(p) };
     scene = { stage: p.stage, branch: p.branch, theme: p.theme, poops: p.poops, poopSlots: syncPoopSlots(), asleep: p.asleep, lightOn: p.lightOn, sick: p.sick, mood: p.stats.mood, hunger: p.stats.hunger, napping: p.napLeft > 0, look: lookCache.look, face: pickFace(faces, p, t), ended: p.ended ? p.ended.type : null, ...roomDeco() };
   } else scene = { stage: "egg", theme: "animal", lightOn: true, mood: 100, hunger: 100, poopSlots: [], ...roomDeco() };
+  if (scene.deco) { // 방 가구를 쓰는 행동 자리(부엌 식탁·욕실 욕조·온실 화분), 가운데 기준
+    const L = roomLayout(view.w, view.h, scene.deco), R = scene.deco.furnR, Lf = scene.deco.furnL;
+    if (R === "table") { scene.tableDx = L.furnPos.furnR - 5 - L.cx; scene.tableTop = (L.furnBase - 20) - L.baseY; }
+    if (R === "tub_wood" || R === "tub_bubble") { scene.tubDx = L.furnPos.furnR - L.cx; scene.tubLift = (L.furnBase - 4) - L.baseY; }
+    if (Lf === "plant" || Lf === "lemon_tree" || Lf === "sunflower") scene.plantDx = L.furnPos.furnL - L.cx;
+    if (BEDS[R] != null) { scene.bedX = L.furnPos.furnR + (R === "cloudbed" ? 0 : 6); scene.bedTopY = L.furnBase - BEDS[R]; } // 새 침대: 베개가 왼쪽이라 몸 가운데를 살짝 오른쪽
+  }
   if (scene.deco && BEDS[scene.deco.furnR] != null) { // 침대 자리·매트리스 높이: 밤잠은 침대 위에서
     const L = roomLayout(view.w, view.h, scene.deco);
-    scene.bedDx = Math.min(L.furnPos.furnR, view.w - 30) - L.cx; // 몸이 화면 밖으로 안 나가게
-    scene.bedLift = (L.furnBase - BEDS[scene.deco.furnR] + 6) - L.baseY; // 매트리스에 살짝 파묻혀 이불 앞부분이 몸을 덮게
+    scene.bedDx = Math.min(L.furnPos.furnR + (scene.deco.furnR === "cloudbed" ? 0 : 6), view.w - 30) - L.cx; // 베개(왼쪽) 옆, 화면 밖으로 안 나가게
+    scene.bedLift = (L.furnBase - BEDS[scene.deco.furnR] + (BEDS[scene.deco.furnR] > 20 ? 4 : 6)) - L.baseY; // 매트리스에 파묻혀 침대 이불이 몸 아래쪽을 덮게(큰 침대는 깊게)
   }
   if (scene.deco && scene.deco.furnR === "sofa") { // 소파 자리·좌석 높이(그리기와 같은 배치 함수)
     const L = roomLayout(view.w, view.h, scene.deco);
@@ -1566,7 +1573,11 @@ function boot() {
   });
   $("backdrop").addEventListener("click", closeSheet);
   for (const btn of document.querySelectorAll("[data-open]")) btn.addEventListener("click", () => openSheet(btn.dataset.open));
-  rooms = makeRooms({ getProfile: () => profile, persist, say, sfx, openUnlock: (u) => openUnlock(u), onSwitch: () => { decoCache.key = ""; renderStats(); } });
+  const canWalk = () => profile.pet && !profile.pet.ended && profile.pet.stage !== "egg" && !profile.pet.asleep && !profile.pet.napLeft && !mg && !anim.cur;
+  const edgeX = () => Math.round(view.w / 2 + 34);
+  rooms = makeRooms({ getProfile: () => profile, persist, say, sfx, openUnlock: (u) => openUnlock(u), onSwitch: () => { decoCache.key = ""; renderStats(); },
+    walkOut: (dir, done) => { if (!canWalk()) return done(); const w = anim.wander, now = performance.now(); w.target = dir * edgeX(); w.nextAt = now + 4000; anim.rushUntil = now + 1500; setTimeout(done, 650); },
+    walkIn: (dir) => { if (!canWalk()) return; const w = anim.wander, now = performance.now(); w.x = -dir * edgeX(); w.target = 0; w.nextAt = now + 4000; anim.rushUntil = now + 1500; } });
   $("tile-rooms").addEventListener("click", () => { closeSheet(); rooms.openList(); });
   setTimeout(() => rooms.maybeOffer(updBusyRooms), 6000); // 이미 꽉 찬 사람은 켤 때 한 번
   $("tile-play").addEventListener("click", () => { closeSheet(); openPlayroom({ profile, persist, say, sfx, now: () => clock.now(), onChange: () => { renderStats(); } }); });
@@ -1645,7 +1656,7 @@ function boot() {
   // 개발 도구(공개 배포에는 없음): ?dev 로 열기
   if (QS.has("dev")) {
     window.__pp = { clock, getProfile: () => profile, tick, anim, playAnim: (n, d) => playAnim(anim, n, performance.now(), d), mg: () => mg, layout: () => layout, forceGame: null, boxes: () => ({ windowBox, petBox, memoBox }), render: () => renderStats() };
-    import("./dev/panel.js?v=1543f89-1791552615").then((m) => m.mount({ clock, getProfile: () => profile, tick, renderStats, syncNow, serverStatus })).catch(() => {});
+    import("./dev/panel.js?v=8143ed3-1791554505").then((m) => m.mount({ clock, getProfile: () => profile, tick, renderStats, syncNow, serverStatus })).catch(() => {});
   }
 }
 

@@ -1,4 +1,4 @@
-import { WALK_REACT } from "./walk-courses.js?v=1543f89-1791552615";
+import { WALK_REACT } from "./walk-courses.js?v=8143ed3-1791554505";
 // 애니메이션 엔진. 게임 규칙과는 무관하게 "지금 화면에 어떻게 보일지"만 계산한다.
 // - 한 번 재생(행동 반응, 부화, 진화): play(type, data)
 // - 평소 움직임(깜빡임, 걸어 다니기, 숨쉬기)과 상태 표현(눈물, 어지러움, Zzz)은 매 프레임 계산
@@ -6,6 +6,7 @@ import { WALK_REACT } from "./walk-courses.js?v=1543f89-1791552615";
 
 export const DUR = {
   meal: 1800, snack: 1400, play: 2200, wash: 4400, mgHop: 450, butt: 3400, walk: 11000, tickle: 2000, lookFrame: 2600, eggPeek: 1800, wish: 2400, lightOff: 900, lightOn: 700,
+  water: 3400, // 온실: 화분에 물 주기(2026-10-09 방 기획)
   medicine: 1600, refuse: 900, sleepyRefuse: 1000, hatch: 2600, evolve: 3000, pet: 800, poop: 500,
   greet: 2200, greetBig: 3200, tidy: 700, mgLook: 1100, farewell: 3800, tuckIn: 1600, untuck: 1200,
 };
@@ -102,9 +103,16 @@ export function frame(a, now, scene, { roam = 20 } = {}) {
     if (!busy(a, now) && now > a.sofa.nextAt && now > a.sofa.until) { a.sofa.until = now + 9000; a.sofa.nextAt = now + 50000 + hash(now * 1.7) * 60000; }
     if (now < a.sofa.until) { w.target = scene.sofaDx; w.nextAt = now + 1500; }
   } else if (a.sofa) a.sofa.until = 0;
+  // 방 가구를 쓰는 행동: 부엌 식탁에서 밥, 욕실 욕조에서 씻기, 온실 화분에 물 주기 → 그 자리로 빠르게 이동(2026-10-09 방 기획)
+  if (scene.plantDx != null && calm && !crying && !scene.sick && !a.minigame && !a.inGame && !busy(a, now)) {
+    if (!a.water) a.water = { nextAt: now + 20000 + hash(now * 0.4) * 25000 };
+    if (now > a.water.nextAt) { a.water.nextAt = now + 70000 + hash(now * 1.9) * 50000; play(a, "water", now); }
+  }
+  const goTo = roomSpot(a, now, scene);
+  if (goTo != null) { w.x += (goTo - w.x) * Math.min(1, dt / 110); w.target = w.x; w.nextAt = now + 2500; }
   const diff = w.target - w.x;
   if (Math.abs(diff) > 0.3) {
-    const step = Math.sign(diff) * Math.min(Math.abs(diff), (dt / 1000) * 14);
+    const step = Math.sign(diff) * Math.min(Math.abs(diff), (dt / 1000) * (a.rushUntil > now ? 110 : 14)); // 방을 옮길 때는 빨리
     w.x += step; w.facing = Math.sign(diff);
     p.dy -= Math.abs(Math.sin(now / 90)) * 1.5; // 통통 걷기
   }
@@ -182,6 +190,16 @@ export function danceStyle(scene) {
   return "jelly"; // 말랑이·뿔말랑이·꼬마 구름·번개 구름
 }
 
+// 한 번 재생 중 가구 자리(가운데 기준 x). 없으면 null
+function roomSpot(a, now, scene) {
+  const c = a.cur; if (!c || now - c.start >= c.dur) return null;
+  const t = (now - c.start) / c.dur;
+  if ((c.type === "meal" || c.type === "snack") && scene.tableDx != null) return scene.tableDx - 30; // 식탁 왼쪽에 앉아
+  if (c.type === "wash" && scene.tubDx != null && t < 0.66) return scene.tubDx; // 욕조 안
+  if (c.type === "water" && scene.plantDx != null) return scene.plantDx + 40; // 화분 오른쪽에서(몸이 커서 조금 떨어져)
+  return null;
+}
+
 function applyOneShot(f, c, t, now, scene) {
   const p = f.pose;
   switch (c.type) {
@@ -189,7 +207,8 @@ function applyOneShot(f, c, t, now, scene) {
       // 밥그릇이 톡 나타나고 → 몸을 기울여 냠냠(입 벌렸다 닫았다) → 그릇이 비고 → 하트
       const bowl = t < 0.45 ? "bowlFull" : t < 0.75 ? "bowlHalf" : "bowlEmpty";
       const pop = ease(t / 0.12);
-      f.props.push({ sprite: bowl, edge: 1, x: 8, y: -4 * pop + 4, scale: 2, alpha: t > 0.88 ? (1 - t) / 0.12 : 1 });
+      if (scene.tableDx != null) f.props.push({ sprite: bowl, x: 22, y: scene.tableTop + 1 - 4 * pop + 4, scale: 2, alpha: t > 0.88 ? (1 - t) / 0.12 : 1 }); // 부엌: 식탁 위 그릇
+      else f.props.push({ sprite: bowl, edge: 1, x: 8, y: -4 * pop + 4, scale: 2, alpha: t > 0.88 ? (1 - t) / 0.12 : 1 });
       if (t > 0.15 && t < 0.85) {
         p.facing = 1; p.dx += 3; p.sx *= 1.04;
         p.mouth = Math.floor(now / 160) % 2 ? "open" : "flat";
@@ -200,6 +219,14 @@ function applyOneShot(f, c, t, now, scene) {
         }
       }
       if (t > 0.85) { p.eyes = "happy"; p.mouth = "smile"; f.props.push({ sprite: "heart", x: 0, y: -34 - (t - 0.85) * 60, scale: 2, alpha: 1 }); }
+      break;
+    }
+    case "water": { // 온실: 물뿌리개로 화분에 물 주기 → 반짝 → 하트
+      p.facing = -1;
+      const tilt = t > 0.15 && t < 0.75;
+      f.props.push({ sprite: "wateringCan", edge: -1, x: tilt ? -2 : 2, y: tilt ? -14 : -8, scale: 2, alpha: t > 0.9 ? (1 - t) / 0.1 : 1 });
+      if (tilt) { p.eyes = "happy"; p.mouth = "smile"; for (let i = 0; i < 6; i++) { const ph = ((now / 380) + i / 6) % 1; f.props.push({ sprite: "drop", edge: -1, x: -12 - ph * 6 - (i % 3) * 3, y: -16 + ph * 14, scale: 1, alpha: 1 - ph * 0.6 }); } }
+      if (t > 0.75) { p.eyes = "sparkle"; p.mouth = "bigsmile"; for (let i = 0; i < 2; i++) f.props.push({ sprite: "sparkle", edge: -1, x: -22 + i * 10, y: -30 - (t - 0.75) * 30, scale: 2, alpha: 1 - (t - 0.75) * 3 }); }
       break;
     }
     case "snack": {
@@ -353,6 +380,7 @@ function applyOneShot(f, c, t, now, scene) {
       // 욕조 등장 → 거품 몽글몽글·오리 동동·음표 → 샤워로 헹굼 → 욕조 사라짐 → 부르르 털기 → 반짝 "뽀득!"
       const tubIn = ease(t / 0.1), tubOut = 1 - ease((t - 0.66) / 0.08);
       f.tub = Math.min(tubIn, tubOut);
+      if (scene.tubDx != null && t < 0.66) { f.tub = 0; f.inTub = true; p.dy += (scene.tubLift || 0) * tubIn; } // 욕실: 방에 놓인 욕조에 들어감(욕조는 펫 앞에 다시 그림)
       f.foam = t < 0.12 ? 0 : t < 0.5 ? ease((t - 0.12) / 0.16) : 1 - ease((t - 0.5) / 0.14);
       if (t < 0.66) { // 욕조 안
         p.eyes = t < 0.5 ? (Math.floor(now / 900) % 3 ? "happy" : "closed") : "closed";
