@@ -1,8 +1,8 @@
 // 하트 보석 서버 지갑: 기기 쪽 네트워크(서버 /wallet…). 규칙은 core/wallet.js, 설계 docs/wallet.md
 // 지갑 열쇠는 기기가 만든 무작위 32바이트. 서버엔 해시만 간다. 보석은 서버에 닿을 때만 받고 쓸 수 있다.
-import { PUSH_SERVER } from "./push.js?v=06aede1-1791546909";
-import { walletOf, applyServerWallet, migratePayload } from "../core/wallet.js?v=06aede1-1791546909";
-import { CANDY_MAX } from "../core/economy.js?v=06aede1-1791546909";
+import { PUSH_SERVER } from "./push.js?v=144fec4-1791548246";
+import { walletOf, applyServerWallet, migratePayload } from "../core/wallet.js?v=144fec4-1791548246";
+import { CANDY_MAX } from "../core/economy.js?v=144fec4-1791548246";
 
 const b64u = (bytes) => btoa(String.fromCharCode(...bytes)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 export const newWalletKey = () => b64u(crypto.getRandomValues(new Uint8Array(32)));
@@ -12,7 +12,7 @@ export const acctOf = async (key) => hex(await crypto.subtle.digest("SHA-256", n
 
 // 연결 상태: navigator.onLine만 믿지 않고 실제 요청 결과로 판단(capacitor-offline-first)
 export const net = { ok: false, at: 0 };
-export const APP_VER = "1.0.14"; // android/app/build.gradle versionName과 맞춤(결제 진단용)
+export const APP_VER = "1.0.15"; // android/app/build.gradle versionName과 맞춤(결제 진단용)
 const TIMEOUT_MS = 10_000;
 
 async function call(method, path, key, body, { extraHeaders = {}, timeout = TIMEOUT_MS } = {}) {
@@ -51,6 +51,17 @@ export async function refresh(profile, save) {
 }
 
 // 보석으로 꾸미기 사기. 요청 중 앱이 꺼져도 같은 op로 다시 보내면 두 번 빠지지 않는다
+// 선물 코드 쓰기. 응답을 못 받으면 같은 op로 다시(서버가 again으로 답함, 두 번 안 들어감)
+export async function redeemGift(profile, save, code) {
+  const wl = walletOf(profile);
+  if (!wl.created) { const c = await ensureWallet(profile, save); if (!c.ok) return { ok: false, status: c.status || 0, data: c.data || {} }; }
+  const norm = String(code || "").toUpperCase().replace(/[\s-]/g, "");
+  if (!wl.giftInflight || wl.giftInflight.code !== norm) { wl.giftInflight = { op: newOp(), code: norm }; save(); }
+  const op = wl.giftInflight.op;
+  const r = await call("POST", "/wallet/redeem", wl.key, { op, code: norm }, { extraHeaders: { "x-app-ver": APP_VER } });
+  if (r.status !== 0) { wl.giftInflight = null; if (r.data?.w) applyServerWallet(profile, r.data); save(); }
+  return { ok: r.status === 200, status: r.status, data: r.data, op };
+}
 export async function spendGem(profile, save, item, expect) {
   const wl = walletOf(profile);
   if (!wl.created) { const c = await ensureWallet(profile, save); if (!c.ok) return { ok: false, status: c.status || 0, data: c.data || {} }; }

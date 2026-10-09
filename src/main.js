@@ -1,36 +1,36 @@
 // 부팅 순서는 이 파일 한 곳에서만 정해요.
 // (지난 게임에서 파일 읽는 순서 때문에 저장 기본값이 빠지는 버그가 있었어요.)
 // 순서: 저장 불러오기 → 꺼져 있던 시간 계산 → 화면 시작 → 서비스 워커·알림 확인 → 알림 일정 올리기
-import { createPet } from "./core/state.js?v=06aede1-1791546909";
-import { advance, feed, play, wash, walk, wakeFromNap, cleanPoop, toggleLight, giveMedicine, patPet, switchEndMode, retirePet } from "./core/sim.js?v=06aede1-1791546909";
-import { predictNotifications } from "./core/notify.js?v=06aede1-1791546909";
-import { josa } from "./core/josa.js?v=06aede1-1791546909";
-import { drawRoom, drawIcon, roomLayout } from "./render/screen.js?v=06aede1-1791546909";
-import { createAnimator, play as playAnim, frame as animFrame, addFx, DUR as ANIM_DUR } from "./render/anim.js?v=06aede1-1791546909";
-import { pickGame, createGame, GAME_NAMES } from "./app/games.js?v=06aede1-1791546909";
-import { EGGS, findEgg, createStreak, specialDay, SPECIAL_KO, HAT_OF, wishTime, MAKER_LETTER } from "./app/eggs.js?v=06aede1-1791546909";
-import { earn, buy, equip, unequip, grant as grantItem, gems, canAfford, dailyStatus, claimDaily, DAILY, THEME_UNLOCK, themeOpen, forgiveStage, FORGIVE, candyPrice, CANDY_PRICES } from "./core/economy.js?v=06aede1-1791546909";
-import { ITEMS, ITEM, SLOTS, TABS, PICKS, PACKS, SOON, BASIC_EQUIP, UNLOCK, UNLOCKS, WALK_UNLOCK, REVIVE, reviveItemId, REVIVE_FREE_BEFORE, candyItemId, starSwapId } from "./core/catalog.js?v=06aede1-1791546909";
-import { COURSES, WALK_KO } from "./render/walk-courses.js?v=06aede1-1791546909";
-import { renderShop, renderDeco, dailyCard, spriteCanvas } from "./app/shop-ui.js?v=06aede1-1791546909";
-import { formKey, lookOf, FORMS as FORMS_REF, SPOT_COLORS, eggSpriteFor } from "./render/creature.js?v=06aede1-1791546909";
-import { guessLocation, sunTimes, moonIllumination, moonPosition, moonPhaseName } from "./core/astro.js?v=06aede1-1791546909";
-import { classifyWeather, weatherUrl, parseWeather } from "./core/weather.js?v=06aede1-1791546909";
-import { createFacePicker, pickFace } from "./render/face.js?v=06aede1-1791546909";
-import { SPRITES, drawSprite } from "./render/sprites.js?v=06aede1-1791546909";
-import { loadProfile, saveProfile, freshProfile, exportCode, importCode, SAVE_KEYS, setSaveMirror, resetProfile } from "./app/store.js?v=06aede1-1791546909";
-import * as native from "./app/native.js?v=06aede1-1791546909";
-import * as cloud from "./app/cloud.js?v=06aede1-1791546909";
-import { planReconcile, isPaid } from "./core/billing.js?v=06aede1-1791546909";
-import { queueEarn, needsWallet, pendingGems, reconcileOwned } from "./core/wallet.js?v=06aede1-1791546909";
-import { SLEEP_START_OPTS, SLEEP_END_OPTS, sleepLength, sleepOk } from "./core/daytime.js?v=06aede1-1791546909";
-import { lastRevivable, revivePet, canRevive } from "./core/revive.js?v=06aede1-1791546909";
-import { moveToVillage, swapWithVillage, canSwapToday, villageOf, careBlock } from "./core/village.js?v=06aede1-1791546909";
-import * as wallet from "./app/wallet.js?v=06aede1-1791546909";
-import { initUpdate, checkUpdate } from "./app/update-ui.js?v=06aede1-1791546909";
-import { sfx, setSoundEnabled } from "./app/sound.js?v=06aede1-1791546909";
-import { markSeen, recordPet, renderCollection, letterText, portrait, currentKey, HOW_KO, unlockedSet, REWARDS, nextGoal, adultsSeen, ADULT_KEYS, formOrder, EGG_COLOR_KO } from "./app/collection.js?v=06aede1-1791546909";
-import { deviceInfo, registerSW, enablePush, ensurePush, uploadSchedule, sendTest, serverStatus, PUSH_SERVER } from "./app/push.js?v=06aede1-1791546909";
+import { createPet } from "./core/state.js?v=144fec4-1791548246";
+import { advance, feed, play, wash, walk, wakeFromNap, cleanPoop, toggleLight, giveMedicine, patPet, switchEndMode, retirePet } from "./core/sim.js?v=144fec4-1791548246";
+import { predictNotifications } from "./core/notify.js?v=144fec4-1791548246";
+import { josa } from "./core/josa.js?v=144fec4-1791548246";
+import { drawRoom, drawIcon, roomLayout } from "./render/screen.js?v=144fec4-1791548246";
+import { createAnimator, play as playAnim, frame as animFrame, addFx, DUR as ANIM_DUR } from "./render/anim.js?v=144fec4-1791548246";
+import { pickGame, createGame, GAME_NAMES } from "./app/games.js?v=144fec4-1791548246";
+import { EGGS, findEgg, createStreak, specialDay, SPECIAL_KO, HAT_OF, wishTime, MAKER_LETTER } from "./app/eggs.js?v=144fec4-1791548246";
+import { earn, buy, equip, unequip, grant as grantItem, gems, canAfford, dailyStatus, claimDaily, DAILY, THEME_UNLOCK, themeOpen, forgiveStage, FORGIVE, candyPrice, CANDY_PRICES } from "./core/economy.js?v=144fec4-1791548246";
+import { ITEMS, ITEM, SLOTS, TABS, PICKS, PACKS, SOON, BASIC_EQUIP, UNLOCK, UNLOCKS, WALK_UNLOCK, REVIVE, reviveItemId, REVIVE_FREE_BEFORE, candyItemId, starSwapId } from "./core/catalog.js?v=144fec4-1791548246";
+import { COURSES, WALK_KO } from "./render/walk-courses.js?v=144fec4-1791548246";
+import { renderShop, renderDeco, dailyCard, spriteCanvas } from "./app/shop-ui.js?v=144fec4-1791548246";
+import { formKey, lookOf, FORMS as FORMS_REF, SPOT_COLORS, eggSpriteFor } from "./render/creature.js?v=144fec4-1791548246";
+import { guessLocation, sunTimes, moonIllumination, moonPosition, moonPhaseName } from "./core/astro.js?v=144fec4-1791548246";
+import { classifyWeather, weatherUrl, parseWeather } from "./core/weather.js?v=144fec4-1791548246";
+import { createFacePicker, pickFace } from "./render/face.js?v=144fec4-1791548246";
+import { SPRITES, drawSprite } from "./render/sprites.js?v=144fec4-1791548246";
+import { loadProfile, saveProfile, freshProfile, exportCode, importCode, SAVE_KEYS, setSaveMirror, resetProfile } from "./app/store.js?v=144fec4-1791548246";
+import * as native from "./app/native.js?v=144fec4-1791548246";
+import * as cloud from "./app/cloud.js?v=144fec4-1791548246";
+import { planReconcile, isPaid } from "./core/billing.js?v=144fec4-1791548246";
+import { queueEarn, needsWallet, pendingGems, reconcileOwned } from "./core/wallet.js?v=144fec4-1791548246";
+import { SLEEP_START_OPTS, SLEEP_END_OPTS, sleepLength, sleepOk } from "./core/daytime.js?v=144fec4-1791548246";
+import { lastRevivable, revivePet, canRevive } from "./core/revive.js?v=144fec4-1791548246";
+import { moveToVillage, swapWithVillage, canSwapToday, villageOf, careBlock } from "./core/village.js?v=144fec4-1791548246";
+import * as wallet from "./app/wallet.js?v=144fec4-1791548246";
+import { initUpdate, checkUpdate } from "./app/update-ui.js?v=144fec4-1791548246";
+import { sfx, setSoundEnabled } from "./app/sound.js?v=144fec4-1791548246";
+import { markSeen, recordPet, renderCollection, letterText, portrait, currentKey, HOW_KO, unlockedSet, REWARDS, nextGoal, adultsSeen, ADULT_KEYS, formOrder, EGG_COLOR_KO } from "./app/collection.js?v=144fec4-1791548246";
+import { deviceInfo, registerSW, enablePush, ensurePush, uploadSchedule, sendTest, serverStatus, PUSH_SERVER } from "./app/push.js?v=144fec4-1791548246";
 
 const clock = { offset: 0, now() { return Date.now() + this.offset; } }; // offset은 개발 도구만 바꾼다
 
@@ -1054,6 +1054,21 @@ function renderShopUI() {
     },
     onGoGem: () => { shopState.tab = "gem"; shopState.sel = null; previewDeco = null; renderShopUI(); },
     onPack: (pack) => buyPack(pack),
+    onGift: async (code) => { // 선물 코드(운영자가 tools/gift.mjs로 만든 1회용)
+      if (!String(code || "").trim()) { say("선물 코드를 넣어 주세요", 3000); return; }
+      if (!navigator.onLine) { sfx("refuse"); say("선물 코드는 인터넷에 연결됐을 때만 쓸 수 있어요", 5000); return; }
+      if (gemBusy) return;
+      gemBusy = true;
+      try {
+        const r = await wallet.redeemGift(profile, wsave, code);
+        if (!r.ok) { sfx("refuse"); say(r.status === 0 ? "서버에 닿지 않아요. 다시 누르면 이어서 확인해요(두 번 들어가지 않아요)" : r.data?.error || "지금은 받을 수 없어요", 5000); return; }
+        const done = (profile.giftOps ||= []);
+        const stars = r.data.stars || 0, gemsGot = r.data.gems || 0;
+        if (!done.includes(r.op)) { done.push(r.op); if (done.length > 50) done.shift(); profile.econ.star += stars; } // 별사탕은 기기에, 한 번만
+        persist(); gainFx({ star: stars }); sfx("win");
+        say(`선물을 받았어요! ${[gemsGot ? `하트 보석 ${gemsGot}개` : "", stars ? `별사탕 ${stars.toLocaleString()}개` : ""].filter(Boolean).join(" + ")}`, 6000);
+      } finally { gemBusy = false; renderWallet(); renderShopUI(); }
+    },
     onStarSwap: async (sw) => { // 하트 보석 → 별사탕(서버 지갑에서 보석을 빼고 기기에 별사탕)
       if (!navigator.onLine) { sfx("refuse"); say("하트 보석은 인터넷에 연결됐을 때만 쓸 수 있어요", 5000); return; }
       if (gems(profile.econ) < sw.gem) { sfx("refuse"); say(`하트 보석이 ${sw.gem - gems(profile.econ)}개 더 필요해요`, 4000); return; }
@@ -1613,7 +1628,7 @@ function boot() {
   // 개발 도구(공개 배포에는 없음): ?dev 로 열기
   if (QS.has("dev")) {
     window.__pp = { clock, getProfile: () => profile, tick, anim, playAnim: (n, d) => playAnim(anim, n, performance.now(), d), mg: () => mg, layout: () => layout, forceGame: null, boxes: () => ({ windowBox, petBox, memoBox }), render: () => renderStats() };
-    import("./dev/panel.js?v=06aede1-1791546909").then((m) => m.mount({ clock, getProfile: () => profile, tick, renderStats, syncNow, serverStatus })).catch(() => {});
+    import("./dev/panel.js?v=144fec4-1791548246").then((m) => m.mount({ clock, getProfile: () => profile, tick, renderStats, syncNow, serverStatus })).catch(() => {});
   }
 }
 

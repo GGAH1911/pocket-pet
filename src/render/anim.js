@@ -1,4 +1,4 @@
-import { WALK_REACT } from "./walk-courses.js?v=06aede1-1791546909";
+import { WALK_REACT } from "./walk-courses.js?v=144fec4-1791548246";
 // 애니메이션 엔진. 게임 규칙과는 무관하게 "지금 화면에 어떻게 보일지"만 계산한다.
 // - 한 번 재생(행동 반응, 부화, 진화): play(type, data)
 // - 평소 움직임(깜빡임, 걸어 다니기, 숨쉬기)과 상태 표현(눈물, 어지러움, Zzz)은 매 프레임 계산
