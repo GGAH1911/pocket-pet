@@ -1,10 +1,10 @@
 // 상점·꾸미기·매일 선물 화면. 상태와 규칙은 core/economy.js·catalog.js, 여기는 DOM만.
-import { ITEMS, ITEM, SLOTS, TABS, PICKS, PACKS, SOON, UNLOCK, UNLOCKS, STAR_SWAPS, STAR_SWAP_WEEK_GEMS } from "../core/catalog.js?v=dfce006-1791550024";
-import { drawCourseThumb } from "../render/walk-courses.js?v=dfce006-1791550024";
-import { canAfford, gems, DAILY, purchaseHistory, themeOpen, FORGIVE, forgiveState, candyPrice } from "../core/economy.js?v=dfce006-1791550024";
-import { gemButtonState } from "../core/wallet.js?v=dfce006-1791550024";
-import { drawThumb } from "../render/deco.js?v=dfce006-1791550024";
-import { SPRITES, drawSprite, spriteSize } from "../render/sprites.js?v=dfce006-1791550024";
+import { ITEMS, ITEM, SLOTS, TABS, PICKS, PACKS, SOON, UNLOCK, UNLOCKS, STAR_SWAPS, STAR_SWAP_WEEK_GEMS } from "../core/catalog.js?v=5abef87-1791550150";
+import { drawCourseThumb } from "../render/walk-courses.js?v=5abef87-1791550150";
+import { canAfford, gems, DAILY, purchaseHistory, themeOpen, FORGIVE, forgiveState, candyPrice } from "../core/economy.js?v=5abef87-1791550150";
+import { gemButtonState } from "../core/wallet.js?v=5abef87-1791550150";
+import { drawThumb } from "../render/deco.js?v=5abef87-1791550150";
+import { SPRITES, drawSprite, spriteSize } from "../render/sprites.js?v=5abef87-1791550150";
 
 const el = (tag, attrs = {}, ...kids) => {
   const e = document.createElement(tag);
