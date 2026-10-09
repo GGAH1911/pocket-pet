@@ -1,36 +1,36 @@
 // 부팅 순서는 이 파일 한 곳에서만 정해요.
 // (지난 게임에서 파일 읽는 순서 때문에 저장 기본값이 빠지는 버그가 있었어요.)
 // 순서: 저장 불러오기 → 꺼져 있던 시간 계산 → 화면 시작 → 서비스 워커·알림 확인 → 알림 일정 올리기
-import { createPet } from "./core/state.js?v=7fd5be7-1791541871";
-import { advance, feed, play, wash, walk, wakeFromNap, cleanPoop, toggleLight, giveMedicine, patPet, switchEndMode, retirePet } from "./core/sim.js?v=7fd5be7-1791541871";
-import { predictNotifications } from "./core/notify.js?v=7fd5be7-1791541871";
-import { josa } from "./core/josa.js?v=7fd5be7-1791541871";
-import { drawRoom, drawIcon, roomLayout } from "./render/screen.js?v=7fd5be7-1791541871";
-import { createAnimator, play as playAnim, frame as animFrame, addFx, DUR as ANIM_DUR } from "./render/anim.js?v=7fd5be7-1791541871";
-import { pickGame, createGame, GAME_NAMES } from "./app/games.js?v=7fd5be7-1791541871";
-import { EGGS, findEgg, createStreak, specialDay, SPECIAL_KO, HAT_OF, wishTime, MAKER_LETTER } from "./app/eggs.js?v=7fd5be7-1791541871";
-import { earn, buy, equip, unequip, grant as grantItem, gems, canAfford, dailyStatus, claimDaily, DAILY, THEME_UNLOCK, themeOpen, forgiveStage, FORGIVE, candyPrice, CANDY_PRICES } from "./core/economy.js?v=7fd5be7-1791541871";
-import { ITEMS, ITEM, SLOTS, TABS, PICKS, PACKS, SOON, BASIC_EQUIP, UNLOCK, UNLOCKS, WALK_UNLOCK, REVIVE, reviveItemId, REVIVE_FREE_BEFORE, candyItemId } from "./core/catalog.js?v=7fd5be7-1791541871";
-import { COURSES, WALK_KO } from "./render/walk-courses.js?v=7fd5be7-1791541871";
-import { renderShop, renderDeco, dailyCard, spriteCanvas } from "./app/shop-ui.js?v=7fd5be7-1791541871";
-import { formKey, lookOf, FORMS as FORMS_REF, SPOT_COLORS, eggSpriteFor } from "./render/creature.js?v=7fd5be7-1791541871";
-import { guessLocation, sunTimes, moonIllumination, moonPosition, moonPhaseName } from "./core/astro.js?v=7fd5be7-1791541871";
-import { classifyWeather, weatherUrl, parseWeather } from "./core/weather.js?v=7fd5be7-1791541871";
-import { createFacePicker, pickFace } from "./render/face.js?v=7fd5be7-1791541871";
-import { SPRITES, drawSprite } from "./render/sprites.js?v=7fd5be7-1791541871";
-import { loadProfile, saveProfile, freshProfile, exportCode, importCode, SAVE_KEYS, setSaveMirror, resetProfile } from "./app/store.js?v=7fd5be7-1791541871";
-import * as native from "./app/native.js?v=7fd5be7-1791541871";
-import * as cloud from "./app/cloud.js?v=7fd5be7-1791541871";
-import { planReconcile, isPaid } from "./core/billing.js?v=7fd5be7-1791541871";
-import { queueEarn, needsWallet, pendingGems, reconcileOwned } from "./core/wallet.js?v=7fd5be7-1791541871";
-import { SLEEP_START_OPTS, SLEEP_END_OPTS, sleepLength, sleepOk } from "./core/daytime.js?v=7fd5be7-1791541871";
-import { lastRevivable, revivePet, canRevive } from "./core/revive.js?v=7fd5be7-1791541871";
-import { moveToVillage, swapWithVillage, canSwapToday, villageOf, careBlock } from "./core/village.js?v=7fd5be7-1791541871";
-import * as wallet from "./app/wallet.js?v=7fd5be7-1791541871";
-import { initUpdate, checkUpdate } from "./app/update-ui.js?v=7fd5be7-1791541871";
-import { sfx, setSoundEnabled } from "./app/sound.js?v=7fd5be7-1791541871";
-import { markSeen, recordPet, renderCollection, letterText, portrait, currentKey, HOW_KO, unlockedSet, REWARDS, nextGoal, adultsSeen, ADULT_KEYS, formOrder, EGG_COLOR_KO } from "./app/collection.js?v=7fd5be7-1791541871";
-import { deviceInfo, registerSW, enablePush, ensurePush, uploadSchedule, sendTest, serverStatus, PUSH_SERVER } from "./app/push.js?v=7fd5be7-1791541871";
+import { createPet } from "./core/state.js?v=3e387e6-1791542017";
+import { advance, feed, play, wash, walk, wakeFromNap, cleanPoop, toggleLight, giveMedicine, patPet, switchEndMode, retirePet } from "./core/sim.js?v=3e387e6-1791542017";
+import { predictNotifications } from "./core/notify.js?v=3e387e6-1791542017";
+import { josa } from "./core/josa.js?v=3e387e6-1791542017";
+import { drawRoom, drawIcon, roomLayout } from "./render/screen.js?v=3e387e6-1791542017";
+import { createAnimator, play as playAnim, frame as animFrame, addFx, DUR as ANIM_DUR } from "./render/anim.js?v=3e387e6-1791542017";
+import { pickGame, createGame, GAME_NAMES } from "./app/games.js?v=3e387e6-1791542017";
+import { EGGS, findEgg, createStreak, specialDay, SPECIAL_KO, HAT_OF, wishTime, MAKER_LETTER } from "./app/eggs.js?v=3e387e6-1791542017";
+import { earn, buy, equip, unequip, grant as grantItem, gems, canAfford, dailyStatus, claimDaily, DAILY, THEME_UNLOCK, themeOpen, forgiveStage, FORGIVE, candyPrice, CANDY_PRICES } from "./core/economy.js?v=3e387e6-1791542017";
+import { ITEMS, ITEM, SLOTS, TABS, PICKS, PACKS, SOON, BASIC_EQUIP, UNLOCK, UNLOCKS, WALK_UNLOCK, REVIVE, reviveItemId, REVIVE_FREE_BEFORE, candyItemId } from "./core/catalog.js?v=3e387e6-1791542017";
+import { COURSES, WALK_KO } from "./render/walk-courses.js?v=3e387e6-1791542017";
+import { renderShop, renderDeco, dailyCard, spriteCanvas } from "./app/shop-ui.js?v=3e387e6-1791542017";
+import { formKey, lookOf, FORMS as FORMS_REF, SPOT_COLORS, eggSpriteFor } from "./render/creature.js?v=3e387e6-1791542017";
+import { guessLocation, sunTimes, moonIllumination, moonPosition, moonPhaseName } from "./core/astro.js?v=3e387e6-1791542017";
+import { classifyWeather, weatherUrl, parseWeather } from "./core/weather.js?v=3e387e6-1791542017";
+import { createFacePicker, pickFace } from "./render/face.js?v=3e387e6-1791542017";
+import { SPRITES, drawSprite } from "./render/sprites.js?v=3e387e6-1791542017";
+import { loadProfile, saveProfile, freshProfile, exportCode, importCode, SAVE_KEYS, setSaveMirror, resetProfile } from "./app/store.js?v=3e387e6-1791542017";
+import * as native from "./app/native.js?v=3e387e6-1791542017";
+import * as cloud from "./app/cloud.js?v=3e387e6-1791542017";
+import { planReconcile, isPaid } from "./core/billing.js?v=3e387e6-1791542017";
+import { queueEarn, needsWallet, pendingGems, reconcileOwned } from "./core/wallet.js?v=3e387e6-1791542017";
+import { SLEEP_START_OPTS, SLEEP_END_OPTS, sleepLength, sleepOk } from "./core/daytime.js?v=3e387e6-1791542017";
+import { lastRevivable, revivePet, canRevive } from "./core/revive.js?v=3e387e6-1791542017";
+import { moveToVillage, swapWithVillage, canSwapToday, villageOf, careBlock } from "./core/village.js?v=3e387e6-1791542017";
+import * as wallet from "./app/wallet.js?v=3e387e6-1791542017";
+import { initUpdate, checkUpdate } from "./app/update-ui.js?v=3e387e6-1791542017";
+import { sfx, setSoundEnabled } from "./app/sound.js?v=3e387e6-1791542017";
+import { markSeen, recordPet, renderCollection, letterText, portrait, currentKey, HOW_KO, unlockedSet, REWARDS, nextGoal, adultsSeen, ADULT_KEYS, formOrder, EGG_COLOR_KO } from "./app/collection.js?v=3e387e6-1791542017";
+import { deviceInfo, registerSW, enablePush, ensurePush, uploadSchedule, sendTest, serverStatus, PUSH_SERVER } from "./app/push.js?v=3e387e6-1791542017";
 
 const clock = { offset: 0, now() { return Date.now() + this.offset; } }; // offset은 개발 도구만 바꾼다
 
@@ -1593,7 +1593,7 @@ function boot() {
   // 개발 도구(공개 배포에는 없음): ?dev 로 열기
   if (QS.has("dev")) {
     window.__pp = { clock, getProfile: () => profile, tick, anim, playAnim: (n, d) => playAnim(anim, n, performance.now(), d), mg: () => mg, layout: () => layout, forceGame: null, boxes: () => ({ windowBox, petBox, memoBox }), render: () => renderStats() };
-    import("./dev/panel.js?v=7fd5be7-1791541871").then((m) => m.mount({ clock, getProfile: () => profile, tick, renderStats, syncNow, serverStatus })).catch(() => {});
+    import("./dev/panel.js?v=3e387e6-1791542017").then((m) => m.mount({ clock, getProfile: () => profile, tick, renderStats, syncNow, serverStatus })).catch(() => {});
   }
 }
 
