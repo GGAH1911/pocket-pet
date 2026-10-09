@@ -1,13 +1,13 @@
 // 놀이방(2026-10-09 사용자 요청 "방이 더 있으면, 친구들과 놀 수 있는 방, 친구 초대", 디자인·아동 심리 자문 2·3단계).
 // "함께 사는 건 여럿, 돌보는 건 하나": 돌봄은 내 방에서만. 놀이방엔 마을 친구(시간 멈춘 손님)와 놀러 오기 코드로 온 손님이 놀러 온다.
 // 손님은 쓰다듬기만, 숫자는 안 바뀜. 지금 친구와 '같이 놀기'는 하루 한 번 기분 +10(돌봄이 필요하면 안 됨).
-import { memberCanvas } from "../render/screen.js?v=e97b1c4-1791549514";
-import { drawPlay } from "../render/deco.js?v=e97b1c4-1791549514";
-import { lookOf } from "../render/creature.js?v=e97b1c4-1791549514";
-import { currentKey } from "./collection.js?v=e97b1c4-1791549514";
-import { villageOf, careBlock } from "../core/village.js?v=e97b1c4-1791549514";
-import { visitCode, addVisitor, pruneVisitors, readVisit, showVisit } from "../core/visit.js?v=e97b1c4-1791549514";
-import { josa } from "../core/josa.js?v=e97b1c4-1791549514";
+import { memberCanvas } from "../render/screen.js?v=052c180-1791549664";
+import { drawPlay } from "../render/deco.js?v=052c180-1791549664";
+import { lookOf } from "../render/creature.js?v=052c180-1791549664";
+import { currentKey } from "./collection.js?v=052c180-1791549664";
+import { villageOf, careBlock } from "../core/village.js?v=052c180-1791549664";
+import { visitCode, addVisitor, pruneVisitors, readVisit, showVisit } from "../core/visit.js?v=052c180-1791549664";
+import { josa } from "../core/josa.js?v=052c180-1791549664";
 
 const W = 128, H = 112, FLOOR = 54;
 const dayKey = (ts) => new Date(ts).toDateString();

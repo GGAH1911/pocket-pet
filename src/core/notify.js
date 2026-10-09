@@ -1,10 +1,10 @@
 // 알림 일정 예측. "지금부터 아무도 안 돌보면 언제 무슨 일이 생기나"를 계산해 알림 목록으로 만든다.
 // 휴대폰이 이 목록을 알림 서버에 올리고, 서버는 시각이 되면 보내기만 한다.
 // 규칙은 GDD 7-1절. 공정성 원칙(알림 없이 돌봄 실수가 생기지 않음)은 test/notify.test.mjs 가 지킨다.
-import { advance } from "./sim.js?v=e97b1c4-1791549514";
-import { isBusyTime } from "./daytime.js?v=e97b1c4-1791549514";
-import { DEFAULT_SETTINGS } from "./rules.js?v=e97b1c4-1791549514";
-import { josa } from "./josa.js?v=e97b1c4-1791549514";
+import { advance } from "./sim.js?v=052c180-1791549664";
+import { isBusyTime } from "./daytime.js?v=052c180-1791549664";
+import { DEFAULT_SETTINGS } from "./rules.js?v=052c180-1791549664";
+import { josa } from "./josa.js?v=052c180-1791549664";
 
 const I = (n) => josa(n, "이", "가"); // 주격
 const EUL = (n) => josa(n, "을", "를"); // 목적격

@@ -1,8 +1,8 @@
 // 하트 보석 서버 지갑: 기기 쪽 네트워크(서버 /wallet…). 규칙은 core/wallet.js, 설계 docs/wallet.md
 // 지갑 열쇠는 기기가 만든 무작위 32바이트. 서버엔 해시만 간다. 보석은 서버에 닿을 때만 받고 쓸 수 있다.
-import { PUSH_SERVER } from "./push.js?v=e97b1c4-1791549514";
-import { walletOf, applyServerWallet, migratePayload } from "../core/wallet.js?v=e97b1c4-1791549514";
-import { CANDY_MAX } from "../core/economy.js?v=e97b1c4-1791549514";
+import { PUSH_SERVER } from "./push.js?v=052c180-1791549664";
+import { walletOf, applyServerWallet, migratePayload } from "../core/wallet.js?v=052c180-1791549664";
+import { CANDY_MAX } from "../core/economy.js?v=052c180-1791549664";
 
 const b64u = (bytes) => btoa(String.fromCharCode(...bytes)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 export const newWalletKey = () => b64u(crypto.getRandomValues(new Uint8Array(32)));
