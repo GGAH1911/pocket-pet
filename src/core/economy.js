@@ -5,6 +5,7 @@
 // 상세 근거: docs/plan-v2-release.md 1절
 // 2026-10-06부터 하트 보석은 서버 지갑이 관리한다(docs/wallet.md): 여기서는 보석을 늘리거나 줄이지 않고 "받을 보석 수"만 돌려준다.
 // gemFree/gemPaid는 서버 값의 사본. 보석 상품 사기·무료 보석 적립·결제 지급은 app/wallet.js가 서버를 거쳐 한다.
+import { takeFromOtherRooms, normalizeRooms } from "./rooms.js?v=9326bfc-1791552396";
 
 export const EARN = {
   care: { meal: 5, wash: 5, poop: 3, lightOff: 10, medicine: 5 }, // 필요한 돌봄을 했을 때만(판단은 호출하는 쪽)
@@ -38,7 +39,7 @@ export function normalizeEcon(e) {
   const base = newEcon();
   if (!e || typeof e !== "object") return base;
   const num = (v) => (Number.isFinite(v) && v >= 0 ? Math.floor(v) : 0);
-  return {
+  const out = {
     star: num(e.star), gemPaid: num(e.gemPaid), gemFree: num(e.gemFree), candy: num(e.candy),
     owned: e.owned && typeof e.owned === "object" ? { ...e.owned } : {},
     equipped: e.equipped && typeof e.equipped === "object" ? { ...e.equipped } : {},
@@ -49,6 +50,8 @@ export function normalizeEcon(e) {
     unlocks: e.unlocks && typeof e.unlocks === "object" ? { ...e.unlocks } : {},
     ...(typeof e.starSwapDay === "string" ? { starSwapDay: e.starSwapDay } : {}), // 별사탕 바꾸기 한 날(화면 표시용, 상한은 서버가 셈)
   };
+  return normalizeRooms(out, e);
+
 }
 
 // ---- 새 마음 사탕: 이번 단계 돌봄 실수를 지움. 매일 선물 4일째에 1개, 더 필요하면 하트 보석으로 1개씩(사용자 결정 2026-10-08).
@@ -154,8 +157,9 @@ export function grant(e, id, now) {
 
 export function equip(e, item) {
   if (!item || !e.owned[item.id]) return false;
+  const from = takeFromOtherRooms(e, item); // 한 물건은 한 방에만(rooms.js)
   e.equipped[item.slot] = item.id;
-  return true;
+  return from || true;
 }
 export function unequip(e, slot) { delete e.equipped[slot]; }
 

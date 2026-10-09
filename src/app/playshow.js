@@ -2,9 +2,11 @@
 // 놓인 놀이 기구마다 한 막(약 5초), 기구가 없으면 술래잡기. 마지막은 다 같이 콩콩 + 하트.
 // 주인공 둘(내 친구 + 손님 하나)이 기구를 쓰고, 나머지는 옆에서 응원 콩콩. 순수 계산(그리기 없음) → 시험 가능.
 // 좌표: 놀이방 256×200, 바닥 FLOOR=96. 기구는 2배(K)로 그림 — 1배면 어른 친구가 그네·미끄럼틀보다 커서 탈 수 없어 보였음(첫 시험 캡처).
-// 기구 자리(playroom.js와 같음): 왼쪽 (52, 132), 가운데 (128, 126), 오른쪽 (204, 132)
+// 기구 자리: 일자로 늘어서 보인다는 사용자 지적(2026-10-09) → 앞뒤로 엇갈리게. 왼쪽·오른쪽은 뒷줄, 가운데는 앞줄. 그릴 때 아래(가까운) 것이 앞에 오게 정렬
 export const K = 2, PW = 256, PH = 200;
-export const SPOT = { playL: { x: 52, base: 132 }, playM: { x: 128, base: 126 }, playR: { x: 204, base: 132 } };
+export const SPOT = { playL: { x: 62, base: 124 }, playM: { x: 132, base: 172 }, playR: { x: 196, base: 120 } };
+// 친구들 제자리: 앞뒤로 흩어 서기(0 = 내 친구)
+const HOMES = [{ x: 70, base: 160 }, { x: 196, base: 158 }, { x: 30, base: 190 }, { x: 228, base: 190 }, { x: 108, base: 196 }]; // 앞줄 볼풀(가운데 x 96~168)에 안 가리게
 export const ACT_MS = 5200, FINALE_MS = 2600, INTRO_MS = 900;
 const lerp = (a, b, k) => a + (b - a) * Math.max(0, Math.min(1, k));
 const seg = (u, a, b) => Math.max(0, Math.min(1, (u - a) / (b - a)));
@@ -25,7 +27,7 @@ export function planShow(equipped = {}, round = 0) {
 }
 
 // 친구들 제자리(앞줄)
-export const homeOf = (i, n) => ({ x: Math.round(((i + 0.5) / n) * PW), base: 190 - (i % 2) * 6 });
+export const homeOf = (i) => ({ ...HOMES[i % HOMES.length] });
 
 // 지금 막과 그 안의 진행(u 0~1)
 export function actAt(show, ms) {
@@ -36,7 +38,7 @@ export function actAt(show, ms) {
 // 한 친구의 자세. i = 친구 번호(0 = 내 친구), n = 친구 수, ms = 장면 시작 뒤 시간
 // 돌려줌: { x, base, flip, clip(이 y 아래는 안 보임), hidden, cheer }
 export function poseAt(show, i, n, ms) {
-  const home = homeOf(i, n);
+  const home = homeOf(i);
   const idle = { x: home.x, base: home.base + hop((ms % 700) / 700, ms < INTRO_MS ? 0 : 0), flip: false };
   const { act, u } = actAt(show, ms);
   if (!act) return idle;
@@ -46,8 +48,8 @@ export function poseAt(show, i, n, ms) {
   const sp = SPOT[act.slot] || { x: 128, base: 160 };
   const mine = role === 0 ? seg(u, 0, 0.5) : seg(u, 0.5, 1); // 둘이 번갈아(앞 반·뒤 반)
   const waiting = role === 0 ? u >= 0.5 : u < 0.5;
-  const wx = act.kind === "slide" ? sp.x + 58 + role * 18 : sp.x + (role === 0 ? -34 : 34); // 미끄럼틀은 내려오는 쪽에서 기다림
-  const wait = { x: Math.max(22, Math.min(PW - 22, wx)), base: sp.base + 40 + hop(((ms + role * 300) % 800) / 800, 2), flip: role === 1 }; // 차례 기다리며 옆에서 콩콩
+  const wx = act.kind === "slide" ? sp.x + 46 + role * 16 : sp.x + (role === 0 ? -34 : 34); // 미끄럼틀은 내려오는 쪽에서 기다림
+  const wait = { x: Math.max(22, Math.min(PW - 22, wx)), base: sp.base + (act.kind === "slide" ? 12 : 40) + hop(((ms + role * 300) % 800) / 800, 2), flip: role === 1 }; // 차례 기다리며 옆에서 콩콩
   switch (act.kind) {
     case "slide": { // 사다리 오르기 → 꼭대기 → 미끄러져 내려오기
       if (waiting) return wait;
@@ -61,9 +63,10 @@ export function poseAt(show, i, n, ms) {
     case "pool": { // 둘이 차례로 풍덩 → 머리만 보이며 흔들 → 같이 나옴
       const jin = role === 0 ? seg(u, 0.05, 0.25) : seg(u, 0.25, 0.45), out = seg(u, 0.8, 1);
       const px = sp.x + (role === 0 ? -8 : 8) * K;
-      if (out > 0) return { x: lerp(px, home.x, out), base: lerp(sp.base - 4 * K, home.base, out) + hop(out, 24), heart: out < 0.1 };
-      if (jin < 1) return { x: lerp(home.x, px, jin), base: lerp(home.base, sp.base - 4 * K, jin) + hop(jin, 40), clip: jin > 0.7 ? sp.base - 12 * K : null, splash: jin > 0.9 };
-      return { x: px + Math.round(Math.sin(ms / 160 + role) * 3), base: sp.base - 4 * K + Math.round(Math.sin(ms / 220 + role * 2) * 2), clip: sp.base - 12 * K, flip: role === 1, splash: (Math.floor(ms / 400) + role) % 3 === 0 };
+      const inB = sp.base - 10 * K; // 볼풀 안: 몸 아래쪽은 볼풀 앞면에 가려 머리·어깨만 보임(볼풀을 나중에 그림)
+      if (out > 0) return { x: lerp(px, home.x, out), base: lerp(inB, home.base, out) + hop(out, 24), heart: out < 0.1 };
+      if (jin < 1) return { x: lerp(home.x, px, jin), base: lerp(home.base, inB, jin) + hop(jin, 40), splash: jin > 0.9, inPool: jin > 0.6 };
+      return { x: px + Math.round(Math.sin(ms / 160 + role) * 3), base: inB + Math.round(Math.sin(ms / 220 + role * 2) * 2), flip: role === 1, splash: (Math.floor(ms / 400) + role) % 3 === 0, inPool: true };
     }
     case "blocks": { // 양쪽에서 번갈아 콩콩 → 블록 흔들 → 마주 보고 하트
       const side = role === 0 ? -1 : 1, x = sp.x + side * 24 * K;

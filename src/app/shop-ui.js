@@ -1,10 +1,11 @@
 // 상점·꾸미기·매일 선물 화면. 상태와 규칙은 core/economy.js·catalog.js, 여기는 DOM만.
-import { ITEMS, ITEM, SLOTS, TABS, PICKS, PACKS, SOON, UNLOCK, UNLOCKS, STAR_SWAPS, STAR_SWAP_WEEK_GEMS } from "../core/catalog.js?v=5fa7d34-1791550867";
-import { drawCourseThumb } from "../render/walk-courses.js?v=5fa7d34-1791550867";
-import { canAfford, gems, DAILY, purchaseHistory, themeOpen, FORGIVE, forgiveState, candyPrice } from "../core/economy.js?v=5fa7d34-1791550867";
-import { gemButtonState } from "../core/wallet.js?v=5fa7d34-1791550867";
-import { drawThumb } from "../render/deco.js?v=5fa7d34-1791550867";
-import { SPRITES, drawSprite, spriteSize } from "../render/sprites.js?v=5fa7d34-1791550867";
+import { ITEMS, ITEM, SLOTS, TABS, PICKS, PACKS, SOON, UNLOCK, UNLOCKS, STAR_SWAPS, STAR_SWAP_WEEK_GEMS, ROOM, ROOMS } from "../core/catalog.js?v=9326bfc-1791552396";
+import { placedElsewhere } from "../core/rooms.js?v=9326bfc-1791552396";
+import { drawCourseThumb } from "../render/walk-courses.js?v=9326bfc-1791552396";
+import { canAfford, gems, DAILY, purchaseHistory, themeOpen, FORGIVE, forgiveState, candyPrice } from "../core/economy.js?v=9326bfc-1791552396";
+import { gemButtonState } from "../core/wallet.js?v=9326bfc-1791552396";
+import { drawThumb } from "../render/deco.js?v=9326bfc-1791552396";
+import { SPRITES, drawSprite, spriteSize } from "../render/sprites.js?v=9326bfc-1791552396";
 
 const el = (tag, attrs = {}, ...kids) => {
   const e = document.createElement(tag);
@@ -89,12 +90,18 @@ export function renderShop(tabsEl, bodyEl, ctx) {
           : el("button", { disabled: !fs.ok, onclick: () => ctx.onForgive?.(false) }, document.createTextNode("먹이기")))));
   }
   const tab = TABS.find((t) => t.id === state.tab);
-  const list = state.tab === "pick" ? PICKS.map((id) => ITEM[id]) : sortForShop(ITEMS.filter((it) => tab.slots.includes(it.slot) && (it.price || econ.owned[it.id])), tab.slots); // 추천은 손으로 고른 순서 그대로
+  // 어울리는 방 칩(방·가구 탭): 추천일 뿐, 어느 방에든 놓을 수 있음(2026-10-09 방 기획)
+  if (state.tab === "room" || state.tab === "furn") {
+    const rf = state.roomFilter || "all";
+    bodyEl.append(el("div", { class: "chips" }, ...[["all", "전체"], ...ROOMS.map((r) => [r.id, r.id === "home" ? "내 방" : r.name.split(" ").pop()])].map(([id, nm]) => el("button", { class: `chip${rf === id ? " on" : ""}`, text: nm, onclick: () => { state.roomFilter = id; ctx.rerender(); } }))));
+  }
+  const rfOk = (it) => !(state.tab === "room" || state.tab === "furn") || !state.roomFilter || state.roomFilter === "all" || (it.room || "home") === state.roomFilter;
+  const list = state.tab === "pick" ? PICKS.map((id) => ITEM[id]) : sortForShop(ITEMS.filter((it) => tab.slots.includes(it.slot) && (it.price || econ.owned[it.id]) && rfOk(it)), tab.slots); // 추천은 손으로 고른 순서 그대로
   const cards = el("div", { class: "cards" });
   for (const it of list) {
     const owned = !!econ.owned[it.id], on = econ.equipped[it.slot] === it.id;
     cards.append(el("button", { class: `card${state.sel === it.id ? " sel" : ""}`, onclick: () => { state.sel = it.id; ctx.onSelect(it); ctx.rerender(); } },
-      owned ? el("span", { class: `tag${on ? " on" : ""}`, text: on ? "끼움" : "있음" }) : null,
+      owned ? el("span", { class: `tag${on ? " on" : ""}`, text: on ? "끼움" : placedElsewhere(econ, it.id) ? `${ROOM[placedElsewhere(econ, it.id)].name.split(" ").pop()}에` : "있음" }) : null,
       thumb(it), el("span", { class: "nm", text: it.name }), owned ? el("span", { class: "small dim", text: " " }) : priceEl(it.price)));
   }
   bodyEl.append(cards);

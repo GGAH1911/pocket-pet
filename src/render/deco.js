@@ -1,7 +1,8 @@
 // 방 꾸미기 그림: 벽지·바닥·러그·커튼·가구. 상점 미리보기(작은 그림)도 같은 함수로 그린다.
 // 좌표는 캔버스 논리 픽셀. 가구는 x(가운데)·base(바닥에 닿는 y) 기준.
-import { PALETTE } from "./palette.js?v=5fa7d34-1791550867";
-import { SPRITES, drawSprite, spriteSize } from "./sprites.js?v=5fa7d34-1791550867";
+import { PALETTE } from "./palette.js?v=9326bfc-1791552396";
+import { SPRITES, drawSprite, spriteSize } from "./sprites.js?v=9326bfc-1791552396";
+import { ROOM_WALLS, drawWallRoom, drawFloorRoom, drawRugRoom, CURTAIN_COLORS, drawCurtainExtra, FURN_HALF_ROOM, drawFurnRoom, drawSmallRoom } from "./deco-rooms.js?v=9326bfc-1791552396"; // 새 방 4개 그림(2026-10-09)
 
 export const HAT_SPRITE = { hat_ribbon: "hatRibbon", hat_straw: "hatStraw", hat_glasses: "hatGlasses", hat_crown: "hatCrown", hat_flower: "hatFlower" };
 
@@ -12,6 +13,7 @@ const ellipse = (ctx, cx, cy, rx, ry, c) => { for (let i = -ry; i <= ry; i++) { 
 // ---------- 벽지 ----------
 export const WALL_BASE = { wall_basic: P.c, wall_berry: "#ffe6ee", wall_cloud: "#dceeff", wall_night: "#3d4f9a", wall_leaf: "#e2f4dc" };
 export function drawWall(ctx, w, floorY, id = "wall_basic") {
+  if (ROOM_WALLS[id] && drawWallRoom(ctx, w, floorY, id)) return;
   rect(ctx, 0, 0, w, floorY, WALL_BASE[id] || P.c);
   if (id === "wall_berry") {
     for (let y = 6; y < floorY - 6; y += 12) for (let x = (y / 12) % 2 ? 10 : 3; x < w; x += 14) { rect(ctx, x, y + 1, 3, 3, P.r); rect(ctx, x + 1, y + 4, 1, 1, P.r); rect(ctx, x, y, 3, 1, P.G); rect(ctx, x + 1, y + 2, 1, 1, P.w); }
@@ -29,6 +31,7 @@ export function drawWall(ctx, w, floorY, id = "wall_basic") {
 
 // ---------- 바닥 ----------
 export function drawFloor(ctx, w, h, floorY, id = "floor_wood") {
+  if (drawFloorRoom(ctx, w, h, floorY, id)) return;
   if (id === "floor_check") {
     for (let y = floorY; y < h; y += 8) for (let x = 0; x < w; x += 8) rect(ctx, x, y, 8, 8, (Math.floor(x / 8) + Math.floor((y - floorY) / 8)) % 2 ? "#efd9bd" : "#fffaf2"); // 칸 번호로 번갈아(바닥 시작 위치와 무관)
   } else if (id === "floor_carpet") {
@@ -46,6 +49,7 @@ export function drawFloor(ctx, w, h, floorY, id = "floor_wood") {
 // ---------- 러그 ----------
 const RUG = { rug_pink: [P.P, P.p], rug_star: [P.B, "#3d4f9a"], rug_green: [P.G, P.g], rug_purple: [P.V, P.v] };
 export function drawRug(ctx, cx, rugY, w, id = "rug_pink") {
+  if (drawRugRoom(ctx, cx, rugY, w, id)) return;
   const R1 = Math.min(40, w * 0.3), R2 = Math.min(32, w * 0.24);
   if (id === "rug_rainbow") {
     const cols = [P.r, P.o, P.y, P.g, P.b, P.v];
@@ -68,7 +72,7 @@ export function drawRug(ctx, cx, rugY, w, id = "rug_pink") {
 // ---------- 창문 커튼(창틀 바깥 양옆 + 위 주름 장식) ----------
 export function drawCurtain(ctx, r, id) {
   if (!id) return;
-  const [c1, c2] = id === "curtain_lace" ? [P.w, "#efe2d4"] : id === "curtain_star" ? [P.B, "#3d4f9a"] : [P.p, P.P];
+  const [c1, c2] = CURTAIN_COLORS[id] || (id === "curtain_lace" ? [P.w, "#efe2d4"] : id === "curtain_star" ? [P.B, "#3d4f9a"] : [P.p, P.P]);
   const pw = Math.max(7, Math.round(r.w * 0.18)); // 펼쳤을 때 폭
   const y0 = r.y - 3, y1 = r.y + r.h + 6, tie = 0.58; // 끈으로 묶는 높이(위에서 58%)
   for (const side of [-1, 1]) {
@@ -89,6 +93,7 @@ export function drawCurtain(ctx, r, id) {
     if (id === "curtain_star") for (let y = r.y + 1; y < r.y + r.h; y += 5) rect(ctx, side < 0 ? outer + 1 : outer - 2, y + (side > 0 ? 2 : 0), 1, 1, P.y);
     if (id === "curtain_lace") for (let fx = 0; fx < pw - 2; fx += 2) rect(ctx, side < 0 ? outer + fx : outer - 1 - fx, y1, 1, 1, P.s); // 레이스 끝단
   }
+  if (CURTAIN_COLORS[id]) drawCurtainExtra(ctx, r, id);
   rect(ctx, r.x - 6, r.y - 6, r.w + 12, 4, c2); // 위 장식(봉)
   for (let x = r.x - 6; x < r.x + r.w + 6; x += 4) rect(ctx, x, r.y - 2, 2, 2, c1);
 }
@@ -96,8 +101,9 @@ export function drawCurtain(ctx, r, id) {
 // ---------- 가구 ----------
 // opts: { now, dark(0~1) }
 // 가구 가로 반폭(화면 끝에서 안 잘리게 자리 잡을 때 씀)
-export const FURN_HALF = { sofa: 28, cloudbed: 18, shelf: 12, lamp: 9, plant: 10, fishbowl: 11, radio: 10 };
+export const FURN_HALF = { sofa: 28, cloudbed: 18, shelf: 12, lamp: 9, plant: 10, fishbowl: 11, radio: 10, ...FURN_HALF_ROOM };
 export function drawFurniture(ctx, id, x, base, { now = 0, dark = 0, front = false } = {}) {
+  if (drawFurnRoom(ctx, id, x, base, { now, dark, front })) return;
   const k = P.k;
   if (id === "lamp") {
     rect(ctx, x - 5, base - 2, 10, 2, k); rect(ctx, x - 1, base - 22, 2, 20, P.N);
@@ -145,7 +151,8 @@ export function drawFurniture(ctx, id, x, base, { now = 0, dark = 0, front = fal
 
 // ---------- 작은 칸(2026-10-09): 창가·벽걸이·바닥 소품. x = 가운데, base = 닿는 y(벽걸이는 가운데 y) ----------
 // opts: { now(움직임), wall(실제 시각, 벽시계), dark }
-export function drawSmall(ctx, id, x, base, { now = 0, wall = Date.now(), dark = 0 } = {}) {
+export function drawSmall(ctx, id, x, base, { now = 0, wall = Date.now(), dark = 0, days = 0 } = {}) {
+  if (drawSmallRoom(ctx, id, x, base, { now, wall, dark, days })) return;
   const k = P.k;
   if (id === "sill_cactus") {
     rect(ctx, x - 4, base - 5, 8, 5, k); rect(ctx, x - 3, base - 4, 6, 3, P.o); rect(ctx, x - 3, base - 4, 6, 1, P.O);

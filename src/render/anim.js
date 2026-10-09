@@ -1,4 +1,4 @@
-import { WALK_REACT } from "./walk-courses.js?v=5fa7d34-1791550867";
+import { WALK_REACT } from "./walk-courses.js?v=9326bfc-1791552396";
 // 애니메이션 엔진. 게임 규칙과는 무관하게 "지금 화면에 어떻게 보일지"만 계산한다.
 // - 한 번 재생(행동 반응, 부화, 진화): play(type, data)
 // - 평소 움직임(깜빡임, 걸어 다니기, 숨쉬기)과 상태 표현(눈물, 어지러움, Zzz)은 매 프레임 계산
@@ -82,7 +82,8 @@ export function frame(a, now, scene, { roam = 20 } = {}) {
   // 숨쉬기
   const breath = Math.sin(now / 420);
   p.sy = 1 + breath * 0.025; p.sx = 1 - breath * 0.02;
-  if (scene.asleep || scene.napping) { p.sy = 1 + Math.sin(now / 900) * 0.04; p.sx = 1 - Math.sin(now / 900) * 0.03; }
+  if (scene.napping && !scene.asleep) { p.sy = 1 + Math.sin(now / 900) * 0.04; p.sx = 1 - Math.sin(now / 900) * 0.03; }
+  if (scene.asleep) { p.sy = 1; p.sx = 1; } // 밤잠(이불 덮음): 몸이 늘었다 줄면 이불 윗선이 따라 움직여 꿈틀거려 보임(사용자 지적 2026-10-09) → 가만히, 숨은 Zzz로
   // 깜빡임
   if (now > a.blink.nextAt) { a.blink.until = now + 130; a.blink.nextAt = now + 2200 + hash(now) * 3000; }
   if (now < a.blink.until) p.eyes = "closed";
@@ -131,6 +132,7 @@ export function frame(a, now, scene, { roam = 20 } = {}) {
   if (scene.asleep || scene.napping) {
     f.bed = 1;
     if (scene.asleep) f.blanket = 1; // 밤잠: 이불 덮음
+    if (scene.asleep && scene.bedDx != null) { w.x = w.target = scene.bedDx; p.dx = scene.bedDx; p.dy += scene.bedLift || 0; f.bed = 0; f.inBed = true; } // 침대가 있으면 밤잠은 침대 위에서(쿠션 대신, 2026-10-09 방 기획)
     p.eyes = "sleep";
     for (let i = 0; i < 3; i++) {
       const ph = ((now / 1800) + i / 3) % 1;

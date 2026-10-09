@@ -96,6 +96,15 @@
     .pack { display: flex; align-items: center; gap: 10px; background: #fff; border: 0; width: 100%; border-radius: 14px; padding: 10px 12px; margin-bottom: 8px; box-shadow: 0 2px 0 var(--line); text-align: left; }
     .pack canvas { width: 32px; height: 26px; image-rendering: pixelated; } .pack canvas.pile { width: 44px; height: 26px; }
     .pack:disabled { opacity: .45; }
+    .chips { display: flex; gap: 6px; overflow-x: auto; margin: 0 0 8px; } .chip { border: 0; background: #fff; border-radius: 14px; padding: 5px 11px; font-weight: 700; font-size: 12px; white-space: nowrap; box-shadow: 0 1px 0 var(--line); } .chip.on { background: var(--accent, #e86a8a); color: #fff; }
+    #stage { position: relative; } #stage canvas#room { transition: opacity .2s; } #stage.roomfade canvas#room { opacity: 0; }
+    #roombar { position: absolute; top: 6px; left: 50%; transform: translateX(-50%); display: flex; gap: 4px; align-items: center; z-index: 2; }
+    #roombar button { border: 0; background: rgba(255,250,242,.86); border-radius: 12px; font-weight: 800; font-size: 13px; padding: 5px 10px; box-shadow: 0 2px 0 var(--line); position: relative; }
+    #roombar .rarrow { padding: 5px 8px; } #roombar .dot { position: absolute; top: -2px; right: -2px; width: 8px; height: 8px; border-radius: 50%; background: #ff5f7e; }
+    .rooms .dexcard-in { max-width: 420px; max-height: 90vh; overflow: auto; } .roomgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 8px 0; }
+    .roomcard { background: #fff; border-radius: 12px; padding: 8px; display: flex; flex-direction: column; gap: 3px; text-align: left; box-shadow: 0 2px 0 var(--line); }
+    .roomcard.on { outline: 3px solid var(--accent, #e86a8a); } .roomcard.lock .roomthumb { filter: saturate(.55) opacity(.75); } .roomcard small { font-size: 11px; opacity: .8; line-height: 1.35; }
+    .dexcard-in canvas.roomthumb { width: 100%; height: auto; margin: 0 0 4px; border-radius: 8px; }
     .playroom .dexcard-in { max-width: 420px; max-height: 92vh; overflow: auto; } .playroom .dexcard-in canvas.pr-canvas { width: 100%; height: auto; image-rendering: pixelated; border-radius: 12px; border: 2px solid var(--line); display: block; margin: 6px 0; cursor: pointer; } .pr-line { min-height: 1.4em; }
     .giftbox { background: #fff; border-radius: 14px; padding: 10px 12px; margin: 10px 0; box-shadow: 0 2px 0 var(--line); } .giftbox summary { font-weight: 800; cursor: pointer; }
     .giftcode { flex: 1; min-width: 0; font: 700 17px ui-monospace, monospace; letter-spacing: 2px; text-transform: uppercase; padding: 8px 10px; border: 2px solid var(--line); border-radius: 10px; }
@@ -221,7 +230,7 @@
       <button class="iconbtn" id="btn-deco" data-act="deco" aria-label="꾸미기"><canvas data-sprite="iconDeco"></canvas></button>
       <button class="iconbtn" id="btn-menu" aria-label="메뉴">≡</button>
     </header>
-    <main id="stage"><canvas id="room"></canvas></main>
+    <main id="stage"><canvas id="room"></canvas><div id="roombar"></div></main>
     <div id="stats"></div>
     <div id="msg"></div>
     <nav>
@@ -239,7 +248,8 @@
         <button class="tile" data-open="dex"><canvas data-sprite="iconBook"></canvas>도감</button>
         <button class="tile" data-open="shop"><canvas data-sprite="iconShop"></canvas>상점</button>
         <button class="tile" data-act="deco"><canvas data-sprite="iconDeco"></canvas>꾸미기</button>
-        <button class="tile" id="tile-play"><canvas data-sprite="iconPlay"></canvas>놀이방</button>
+        <button class="tile" id="tile-play"><canvas data-sprite="iconRoomPlay"></canvas>놀이방</button>
+        <button class="tile" id="tile-rooms"><canvas data-sprite="iconDeco"></canvas>방<i class="dot" id="rooms-dot" hidden></i></button>
         <button class="tile" id="tile-gift"><canvas data-sprite="iconGift"></canvas>선물함<i class="dot" id="gift-dot" hidden></i></button>
       </div>
       <h3 class="sec">설정</h3>
@@ -346,6 +356,6 @@
       </div>
     </div>
   </div>
-  <script type="module" src="src/main.js?v=5fa7d34-1791550867"></script>
+  <script type="module" src="src/main.js?v=9326bfc-1791552396"></script>
 </body>
 </html>

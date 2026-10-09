@@ -1,11 +1,11 @@
 // 방 화면 그리기. 게임 규칙은 모르고 받은 상태만 그린다.
 // 캔버스는 "도트 해상도"로 그리고 CSS가 정수배로 키운다.
-import { PALETTE } from "./palette.js?v=5fa7d34-1791550867";
-import { SPRITES, drawSprite, spriteSize } from "./sprites.js?v=5fa7d34-1791550867";
-import { buildCreature, paintGrid, formKey, eggSpriteFor } from "./creature.js?v=5fa7d34-1791550867";
-import { drawFace, POOLS } from "./face.js?v=5fa7d34-1791550867";
-import { drawSky } from "./sky.js?v=5fa7d34-1791550867";
-import { drawWall, drawFloor, drawRug, drawCurtain, drawFurniture, drawLampGlow, drawSmall, HAT_SPRITE, FURN_HALF } from "./deco.js?v=5fa7d34-1791550867";
+import { PALETTE } from "./palette.js?v=9326bfc-1791552396";
+import { SPRITES, drawSprite, spriteSize } from "./sprites.js?v=9326bfc-1791552396";
+import { buildCreature, paintGrid, formKey, eggSpriteFor } from "./creature.js?v=9326bfc-1791552396";
+import { drawFace, POOLS } from "./face.js?v=9326bfc-1791552396";
+import { drawSky } from "./sky.js?v=9326bfc-1791552396";
+import { drawWall, drawFloor, drawRug, drawCurtain, drawFurniture, drawLampGlow, drawSmall, HAT_SPRITE, FURN_HALF } from "./deco.js?v=9326bfc-1791552396";
 
 // 방 배치(그리기와 동작이 같은 좌표를 쓰게 한 곳에서 계산)
 export function roomLayout(w, h, deco = {}) {
@@ -23,8 +23,8 @@ export function roomLayout(w, h, deco = {}) {
   };
   return { floorY, cx: Math.round(w / 2), rugY, baseY: rugY + 4, furnBase, furnPos, smallPos };
 }
-import { WALK_STOPS as WALK_STOPS_REF, walkDist as walkDistRef } from "./anim.js?v=5fa7d34-1791550867";
-import { drawCourseBg, drawCourseThing, isSplash } from "./walk-courses.js?v=5fa7d34-1791550867";
+import { WALK_STOPS as WALK_STOPS_REF, walkDist as walkDistRef } from "./anim.js?v=9326bfc-1791552396";
+import { drawCourseBg, drawCourseThing, isSplash } from "./walk-courses.js?v=9326bfc-1791552396";
 const clamp01 = (x) => Math.max(0, Math.min(1, x));
 
 const FLOOR = "#f5b98c";
@@ -77,6 +77,7 @@ export function drawRoom(ctx, { w, h, now, scene, f, wall = Date.now(), loc = { 
   const poopRects = drawPoops(ctx, sc.poopSlots || [], { cx, rugY, w, pop: fr.poopPop || 0 });
   const box = fr.hidePet ? null : drawPet(ctx, sc, fr, { cx, baseY, now });
   if (fr.onSofa && deco.furnR === "sofa") drawFurniture(ctx, "sofa", furnPos.furnR, furnBase, { front: true }); // 소파에 앉은 모습: 좌석 앞면·팔걸이를 펫 앞에
+  if (fr.inBed && (deco.furnR === "bed_wood" || deco.furnR === "bed_star")) drawFurniture(ctx, deco.furnR, furnPos.furnR, furnBase, { front: true, now }); // 침대에서 잘 때: 이불 앞부분·발판을 펫 앞에
   const px = cx + Math.round(fr.pose.dx);
   for (const pr of fr.props) {
     const sp = SPRITES[pr.sprite]; if (!sp || pr.alpha <= 0) continue;
@@ -351,7 +352,7 @@ function drawCushion(ctx, x, baseY, bodyW, bed, theme) {
 const CACHE = new Map(); // 같은 모습은 다시 계산하지 않기 위한 캐시
 
 // ---------- 밤잠 이불 ----------
-// 쿠션 위에 앉은 펫의 몸 아래쪽을 앞에서 덮는다(입 아래까지, 얼굴은 보임). 숨 쉴 때 가장자리가 살짝 물결침.
+// 쿠션 위에 앉은 펫의 몸 아래쪽을 앞에서 덮는다(입 아래까지, 얼굴은 보임). 이불은 움직이지 않는다(2026-10-09 사용자: "이불이 꿈틀거리면 안 되지").
 // 이불 색: 테마 기본색, 몸 색과 겹치면 다른 색(파란 몸에 하늘색 이불이면 안 보이므로)
 function blanketColors(theme, built) {
   if (theme !== "fantasy") return [PALETTE.p, PALETTE.P, PALETTE.w];
@@ -369,7 +370,7 @@ function drawBlanket(ctx, x, base, box, P, bodyW, k, now, theme, built) {
   if (bottom - top < 2) return;
   const [c1, c2, dot] = blanketColors(theme, built);
   for (let xx = 0; xx < W; xx++) {
-    const wave = Math.round(Math.sin(xx / 4 + now / 700) * 0.8);
+    const wave = Math.round(Math.sin(xx / 4) * 0.8); // 고정된 주름(시간에 따라 안 움직임)
     const edge = xx === 0 || xx === W - 1 ? 2 : xx === 1 || xx === W - 2 ? 1 : 0; // 둥근 모서리
     const yTop = top + wave + edge;
     const px = left + xx;

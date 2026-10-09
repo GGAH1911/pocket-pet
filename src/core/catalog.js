@@ -78,6 +78,58 @@ export const ITEMS = [
   { id: "hat_flower", slot: "hat", name: "꽃 머리띠", price: { star: 400 } },
 ];
 
+// ---------- 방(2026-10-09 사용자 요청 "방 더 만들 수 있게, 하나는 플레이하다 기본으로, 나머지는 유료", 게임·경제·아동 심리 자문 기획) ----------
+// 모든 방이 같은 칸을 쓰고, 방마다 그 방 전용 무료 기본 벽지·바닥이 있다. 한 물건은 한 방에만(옮기면 다른 방에서 빠짐).
+export const ROOMS = [
+  { id: "home", name: "내 방", wall: "wall_basic", floor: "floor_wood", desc: "따뜻한 내 방" },
+  { id: "bed", name: "꿈나라 침실", wall: "wall_bedroom", floor: "floor_bedroom", desc: "별이 반짝이는 포근한 방. 침대를 놓으면 밤에 침대에서 이불 덮고 자요", unlock: "room_bed" },
+  { id: "kitchen", name: "냠냠 부엌", wall: "wall_kitchen", floor: "floor_kitchen", desc: "아침 햇살이 드는 고소한 부엌. 식탁·오븐·냉장고", unlock: "room_kitchen" },
+  { id: "bath", name: "보글 욕실", wall: "wall_bath", floor: "floor_bath", desc: "비눗방울이 둥실 떠다니는 시원한 욕실. 욕조·세면대", unlock: "room_bath" },
+  { id: "garden", name: "햇살 온실", wall: "wall_garden", floor: "floor_garden", desc: "초록 잎과 나비가 있는 유리 온실. 레몬 나무·벤치", unlock: "room_garden" },
+];
+export const ROOM = Object.fromEntries(ROOMS.map((r) => [r.id, r]));
+ITEMS.push(
+  // 방마다 기본 벽지·바닥(무료, 팔지 않음)
+  { id: "wall_bedroom", slot: "wall", name: "별빛 연보라 벽지", basic: true, room: "bed" },
+  { id: "floor_bedroom", slot: "floor", name: "연보라 카펫", basic: true, room: "bed" },
+  { id: "wall_kitchen", slot: "wall", name: "민트 줄무늬 벽지", basic: true, room: "kitchen" },
+  { id: "floor_kitchen", slot: "floor", name: "노랑 체크 바닥", basic: true, room: "kitchen" },
+  { id: "wall_bath", slot: "wall", name: "하늘 타일 벽", basic: true, room: "bath" },
+  { id: "floor_bath", slot: "floor", name: "물빛 타일 바닥", basic: true, room: "bath" },
+  { id: "wall_garden", slot: "wall", name: "유리 온실 벽", basic: true, room: "garden" },
+  { id: "floor_garden", slot: "floor", name: "나무 데크", basic: true, room: "garden" },
+  // 새 가구 30개(별사탕 20 : 보석 10, 경제 자문). room = 어울리는 방(추천일 뿐, 어느 방에든 놓을 수 있음)
+  { id: "bed_wood", slot: "furnR", name: "나무 침대", price: { star: 1200 }, room: "bed", desc: "밤에 침대에서 자요" },
+  { id: "bed_star", slot: "furnR", name: "별 침대", price: { gem: 150 }, room: "bed", desc: "밤에 침대에서 자요" },
+  { id: "dresser", slot: "furnL", name: "분홍 서랍장", price: { star: 700 }, room: "bed" },
+  { id: "sill_moon", slot: "sill", name: "달 무드등", price: { gem: 60 }, room: "bed", desc: "불을 끄면 은은하게" },
+  { id: "hang_dream", slot: "wallR", name: "드림캐처", price: { star: 400 }, room: "bed" },
+  { id: "prop_slipper", slot: "prop", name: "토끼 슬리퍼", price: { star: 250 }, room: "bed" },
+  { id: "curtain_moon", slot: "curtain", name: "달밤 커튼", price: { star: 450 }, room: "bed" },
+  { id: "rug_cloud", slot: "rug", name: "구름 러그", price: { gem: 90 }, room: "bed" },
+  { id: "table", slot: "furnR", name: "동그란 식탁", price: { star: 1000 }, room: "kitchen" },
+  { id: "fridge", slot: "furnL", name: "민트 냉장고", price: { star: 900 }, room: "kitchen" },
+  { id: "oven", slot: "furnL", name: "빵 오븐", price: { gem: 120 }, room: "kitchen", desc: "빵이 부풀어요" },
+  { id: "sill_herb", slot: "sill", name: "허브 화분", price: { star: 300 }, room: "kitchen" },
+  { id: "hang_ladle", slot: "wallR", name: "국자 걸이", price: { star: 350 }, room: "kitchen" },
+  { id: "prop_basket", slot: "prop", name: "과일 바구니", price: { star: 300 }, room: "kitchen" },
+  { id: "curtain_cafe", slot: "curtain", name: "카페 커튼", price: { gem: 60 }, room: "kitchen" },
+  { id: "tub_wood", slot: "furnR", name: "나무통 욕조", price: { star: 1100 }, room: "bath", desc: "김이 모락모락" },
+  { id: "tub_bubble", slot: "furnR", name: "거품 욕조", price: { gem: 150 }, room: "bath", desc: "방울이 올라와요" },
+  { id: "sink", slot: "furnL", name: "세면대 거울", price: { star: 800 }, room: "bath" },
+  { id: "sill_duck", slot: "sill", name: "고무 오리", price: { star: 250 }, room: "bath" },
+  { id: "hang_towel", slot: "wallR", name: "수건 걸이", price: { star: 300 }, room: "bath" },
+  { id: "prop_bubble", slot: "prop", name: "비눗방울 병", price: { gem: 60 }, room: "bath", desc: "방울이 둥실" },
+  { id: "rug_bathmat", slot: "rug", name: "꽃 발매트", price: { star: 250 }, room: "bath" },
+  { id: "curtain_drop", slot: "curtain", name: "물방울 커튼", price: { gem: 90 }, room: "bath" },
+  { id: "lemon_tree", slot: "furnL", name: "레몬 나무", price: { gem: 120 }, room: "garden" },
+  { id: "sunflower", slot: "furnL", name: "해바라기 화분", price: { star: 600 }, room: "garden", desc: "살랑살랑" },
+  { id: "bench", slot: "furnR", name: "정원 벤치", price: { star: 1000 }, room: "garden" },
+  { id: "sill_sprout", slot: "sill", name: "새싹 상자", price: { star: 300 }, room: "garden", desc: "함께한 날만큼 자라요" },
+  { id: "hang_bird", slot: "wallR", name: "새집", price: { gem: 60 }, room: "garden", desc: "가끔 아기새가 고개를 내밀어요" },
+  { id: "prop_can", slot: "prop", name: "물뿌리개", price: { star: 250 }, room: "garden" },
+  { id: "curtain_vine", slot: "curtain", name: "덩굴 커튼", price: { star: 400 }, room: "garden" },
+);
 export const ITEM = Object.fromEntries(ITEMS.map((it) => [it.id, it]));
 export const BASIC_EQUIP = { wall: "wall_basic", floor: "floor_wood", rug: "rug_pink" };
 
@@ -121,6 +173,11 @@ export const UNLOCKS = [
   { id: "walk_beach", walk: "beach", name: "바닷가 산책", desc: "꽃게·조개껍데기·밀려오는 파도", price: { gem: 200 } },
   { id: "walk_mountain", walk: "mountain", name: "산길 산책", desc: "다람쥐·버섯·개울(겨울엔 눈 덮인 산)", price: { gem: 200 } },
   { id: "walk_lake", walk: "lake", name: "숲속 호수 산책", desc: "아기 오리·네잎클로버·개구리, 나무 데크 길", price: { gem: 200 } },
+  // 방(2026-10-09): 하나는 내 방이 꽉 차면 선물(기기, econ.roomGift), 나머지는 보석 200(산책 코스와 같은 값, 방마다 같게: 값이 아니라 마음에 드는 걸로 고르게)
+  { id: "room_bed", room: "bed", name: "꿈나라 침실", price: { gem: 200 } },
+  { id: "room_kitchen", room: "kitchen", name: "냠냠 부엌", price: { gem: 200 } },
+  { id: "room_bath", room: "bath", name: "보글 욕실", price: { gem: 200 } },
+  { id: "room_garden", room: "garden", name: "햇살 온실", price: { gem: 200 } },
 ];
 export const WALK_UNLOCK = { beach: "walk_beach", mountain: "walk_mountain", lake: "walk_lake" }; // 공원은 늘 열림
 export const UNLOCK = Object.fromEntries(UNLOCKS.map((u) => [u.id, u]));
