@@ -66,6 +66,17 @@ export const TABS = [
 export const PICKS = ["sofa", "wall_berry", "lamp", "hat_ribbon", "rug_rainbow", "fishbowl"]; // 추천 탭
 
 // 돈으로 사는 보석 상품(앱에서만). sku는 Play 콘솔 상품 id와 같게.
+// 하트 보석 → 별사탕 바꾸기(2026-10-09 사용자 결정 "돈이 있으면 별사탕을 살 수 있어야", 경제 자문 숫자).
+// 새 플레이 상품 없이 보석을 서버 지갑에서 빼고 별사탕은 기기에 넣음(환불·청약철회 장부는 보석에만). 비율은 보석 꾸미기를 직접 사는 것보다 일부러 나쁘게(1:3~1:4).
+// 하루 1번, 일주일(최근 7일)에 보석 400개까지(서버가 셈). 받은 보석부터 씀.
+export const STAR_SWAPS = [
+  { id: "s1", gem: 60, star: 180 },
+  { id: "s2", gem: 150, star: 500, bonus: "+11% 더" },
+  { id: "s3", gem: 400, star: 1600, bonus: "+33% 더" },
+];
+export const STAR_SWAP_WEEK_GEMS = 400;
+export const starSwapId = (sw, now) => `star_${sw.id}_${Math.floor(now)}_${Math.random().toString(36).slice(2, 10)}`;
+export const starSwapOf = (itemId) => { const m = /^star_(s[1-3])_\d{10,14}_[a-z0-9]{1,12}$/.exec(String(itemId)); return m ? STAR_SWAPS.find((x) => x.id === m[1]) || null : null; };
 export const PACKS = [
   { id: "starter", sku: "starter_pack", name: "시작 꾸러미", krw: 3300, gems: 300, stars: 1000, items: ["cloudbed"], once: true, desc: "하트 보석 300 + 구름 침대 + 별사탕 1,000" },
   { id: "gem60", sku: "gem_60", name: "하트 보석 60", krw: 1100, gems: 60 },

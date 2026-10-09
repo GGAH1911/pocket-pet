@@ -1,7 +1,7 @@
 // 여행을 떠난 친구 다시 데려오기(2026-10-08 사용자 요청: 아들이 키우던 펫이 여행을 떠남 → 도감 기록으로 되살리기).
 // 도감 기록(collection)에 남은 이름·테마·모습(key)·태어난 시각·몸무게·실수·속도로 같은 모습의 펫을 다시 만든다.
 // 돌아온 친구는 다시 여행을 떠나지 않는다(pet.returned). 방치로 삐져 떠나는 규칙은 그대로.
-import { createPet } from "./state.js?v=3e387e6-1791542017";
+import { createPet } from "./state.js?v=951309d-1791546757";
 
 export const REVIVABLE = new Set(["journey", "runaway"]);
 export const canRevive = (rec) => !!rec && REVIVABLE.has(rec.how) && !rec.returnedAt && /^(animal|fantasy)\./.test(rec.key || "");

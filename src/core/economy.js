@@ -47,6 +47,7 @@ export function normalizeEcon(e) {
     bought: e.bought && typeof e.bought === "object" ? { ...e.bought } : {},
     orders: e.orders && typeof e.orders === "object" ? { ...e.orders } : {},
     unlocks: e.unlocks && typeof e.unlocks === "object" ? { ...e.unlocks } : {},
+    ...(typeof e.starSwapDay === "string" ? { starSwapDay: e.starSwapDay } : {}), // 별사탕 바꾸기 한 날(화면 표시용, 상한은 서버가 셈)
   };
 }
 

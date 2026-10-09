@@ -1,10 +1,10 @@
 // 상점·꾸미기·매일 선물 화면. 상태와 규칙은 core/economy.js·catalog.js, 여기는 DOM만.
-import { ITEMS, ITEM, SLOTS, TABS, PICKS, PACKS, SOON, UNLOCK, UNLOCKS } from "../core/catalog.js?v=3e387e6-1791542017";
-import { drawCourseThumb } from "../render/walk-courses.js?v=3e387e6-1791542017";
-import { canAfford, gems, DAILY, purchaseHistory, themeOpen, FORGIVE, forgiveState, candyPrice } from "../core/economy.js?v=3e387e6-1791542017";
-import { gemButtonState } from "../core/wallet.js?v=3e387e6-1791542017";
-import { drawThumb } from "../render/deco.js?v=3e387e6-1791542017";
-import { SPRITES, drawSprite, spriteSize } from "../render/sprites.js?v=3e387e6-1791542017";
+import { ITEMS, ITEM, SLOTS, TABS, PICKS, PACKS, SOON, UNLOCK, UNLOCKS, STAR_SWAPS, STAR_SWAP_WEEK_GEMS } from "../core/catalog.js?v=951309d-1791546757";
+import { drawCourseThumb } from "../render/walk-courses.js?v=951309d-1791546757";
+import { canAfford, gems, DAILY, purchaseHistory, themeOpen, FORGIVE, forgiveState, candyPrice } from "../core/economy.js?v=951309d-1791546757";
+import { gemButtonState } from "../core/wallet.js?v=951309d-1791546757";
+import { drawThumb } from "../render/deco.js?v=951309d-1791546757";
+import { SPRITES, drawSprite, spriteSize } from "../render/sprites.js?v=951309d-1791546757";
 
 const el = (tag, attrs = {}, ...kids) => {
   const e = document.createElement(tag);
@@ -140,6 +140,15 @@ function renderGemShop(box, ctx) {
   for (const p of PACKS.filter((x) => !x.once)) {
     box.append(el("button", { class: "pack", disabled: closed, onclick: () => ctx.onPack(p) }, gemPile(p.gems), el("span", { class: "g" }, document.createTextNode(p.name), el("small", { text: p.bonus || "기본" })), el("span", { class: "krw", text: closed ? "준비 중" : won(p.krw) })));
   }
+  // 하트 보석 → 별사탕 바꾸기(하루 1번, 일주일 보석 400개까지, 서버가 셈)
+  box.append(el("h3", { class: "sec", text: "별사탕 바꾸기" }));
+  const swappedToday = econ.starSwapDay === new Date().toDateString();
+  for (const sw of STAR_SWAPS) {
+    box.append(el("button", { class: "pack", disabled: swappedToday, onclick: () => ctx.onStarSwap?.(sw) }, spriteCanvas("coinStar", 32, 26),
+      el("span", { class: "g" }, document.createTextNode(`별사탕 ${sw.star.toLocaleString()}`), el("small", { text: sw.bonus || "기본" })),
+      el("span", { class: "gemprice" }, spriteCanvas("coinGem", 16, 13), document.createTextNode(` ${sw.gem}`))));
+  }
+  box.append(el("p", { class: "fine", text: swappedToday ? "오늘은 이미 바꿨어요. 내일 또 바꿀 수 있어요." : `하루 한 번, 일주일에 하트 보석 ${STAR_SWAP_WEEK_GEMS}개까지 바꿀 수 있어요. 받은 보석부터 써요. 바꾼 별사탕은 되돌릴 수 없어요.` }));
   const dt = g.at ? new Date(g.at) : null;
   const seen = dt ? `${dt.getMonth() + 1}월 ${dt.getDate()}일 ${String(dt.getHours()).padStart(2, "0")}:${String(dt.getMinutes()).padStart(2, "0")}` : null;
   box.append(el("p", { class: "fine", text: `가진 하트 보석 ${gems(econ)}개 (산 것 ${econ.gemPaid}, 받은 것 ${econ.gemFree}). 받은 것부터 먼저 써요. 하트 보석은 서버 지갑에 있고, 인터넷에 연결됐을 때만 받고 쓸 수 있어요.${seen ? ` 마지막 확인 ${seen}.` : ""}${g.pending ? ` 받을 보석 ${g.pending}개는 연결되면 들어와요.` : ""}` }));
