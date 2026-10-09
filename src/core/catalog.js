@@ -87,7 +87,7 @@ export const WALK_UNLOCK = { beach: "walk_beach", mountain: "walk_mountain", lak
 export const UNLOCK = Object.fromEntries(UNLOCKS.map((u) => [u.id, u]));
 // 친구 부활권: 여행 떠난 친구를 도감 기록으로 다시 데려옴. 기록마다 한 번(서버 지갑 상품 id "revive_<태어난 시각>"). 2026-10-08 사용자 결정(유료), 경제 자문 가격 200
 export const REVIVE = { name: "친구 부활권", price: { gem: 200 } };
-export const candyItemId = (now) => `candy_${Math.floor(now)}_${Math.random().toString(36).slice(2, 10)}`; // 살 때마다 새 id(시계를 맞춰 옛 id를 다시 쓰는 허점 막기) // 새 마음 사탕 1개 사기(서버 지갑 상품, 살 때마다 새 id). 값은 economy FORGIVE.price
+export const candyItemId = (bornAt, now) => `candy_${Math.floor(bornAt || 0)}_${Math.floor(now)}_${Math.random().toString(36).slice(2, 10)}`; // 앞 숫자=이 친구가 태어난 때(값은 친구마다 60·90·120), 살 때마다 새 id // 살 때마다 새 id(시계를 맞춰 옛 id를 다시 쓰는 허점 막기) // 새 마음 사탕 1개 사기(서버 지갑 상품, 살 때마다 새 id). 값은 economy FORGIVE.price
 export const reviveItemId = (rec) => `revive_${Math.floor(rec.bornAt || 0)}_${Math.floor(rec.endedAt || 0)}`; // 떠날 때마다 새 부활권(같은 친구가 다시 떠나면 또 사야, 2026-10-09 허점 수정)
 export const REVIVE_FREE_BEFORE = 0; // 무료 데려오기 없음(2026-10-09 사용자 결정: 도감에서 데려오기는 늘 유료, 플레이어 잘못엔 대가가 있어야)
 

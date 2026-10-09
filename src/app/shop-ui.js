@@ -1,10 +1,10 @@
 // 상점·꾸미기·매일 선물 화면. 상태와 규칙은 core/economy.js·catalog.js, 여기는 DOM만.
-import { ITEMS, ITEM, SLOTS, TABS, PICKS, PACKS, SOON, UNLOCK, UNLOCKS } from "../core/catalog.js?v=c4d73ca-1791537141";
-import { drawCourseThumb } from "../render/walk-courses.js?v=c4d73ca-1791537141";
-import { canAfford, gems, DAILY, purchaseHistory, themeOpen, FORGIVE, forgiveState, candyPrice } from "../core/economy.js?v=c4d73ca-1791537141";
-import { gemButtonState } from "../core/wallet.js?v=c4d73ca-1791537141";
-import { drawThumb } from "../render/deco.js?v=c4d73ca-1791537141";
-import { SPRITES, drawSprite, spriteSize } from "../render/sprites.js?v=c4d73ca-1791537141";
+import { ITEMS, ITEM, SLOTS, TABS, PICKS, PACKS, SOON, UNLOCK, UNLOCKS } from "../core/catalog.js?v=635f5a9-1791540834";
+import { drawCourseThumb } from "../render/walk-courses.js?v=635f5a9-1791540834";
+import { canAfford, gems, DAILY, purchaseHistory, themeOpen, FORGIVE, forgiveState, candyPrice } from "../core/economy.js?v=635f5a9-1791540834";
+import { gemButtonState } from "../core/wallet.js?v=635f5a9-1791540834";
+import { drawThumb } from "../render/deco.js?v=635f5a9-1791540834";
+import { SPRITES, drawSprite, spriteSize } from "../render/sprites.js?v=635f5a9-1791540834";
 
 const el = (tag, attrs = {}, ...kids) => {
   const e = document.createElement(tag);
@@ -84,8 +84,8 @@ export function renderShop(tabsEl, bodyEl, ctx) {
       : fs.reason === "egg" ? "알에서 깨어나면 먹을 수 있어요."
       : "";
     bodyEl.append(el("div", { class: "banner" }, el("b", { text: `${FORGIVE.name} (가진 것 ${have}개)` }), document.createTextNode(note),
-      el("div", { class: "row", style: "margin-top:8px" }, el("span", { class: "small dim", style: "flex:1", text: "매일 선물 7일째에 1개(최대 3개) · 단계마다 한 번 · 살수록 비싸져요(주간 사탕 받으면 처음 값)" }),
-        buyMode ? el("button", { onclick: () => ctx.onForgive?.(true) }, priceEl({ gem: candyPrice(econ.candyBuys) }), document.createTextNode(" 사서 먹이기"))
+      el("div", { class: "row", style: "margin-top:8px" }, el("span", { class: "small dim", style: "flex:1", text: "매일 선물 7일째에 1개(최대 3개) · 단계마다 한 번 · 살수록 비싸져요(새 친구는 처음 값부터)" }),
+        buyMode ? el("button", { onclick: () => ctx.onForgive?.(true) }, priceEl({ gem: candyPrice(ctx.pet?.candyBuys) }), document.createTextNode(" 사서 먹이기"))
           : el("button", { disabled: !fs.ok, onclick: () => ctx.onForgive?.(false) }, document.createTextNode("먹이기")))));
   }
   const tab = TABS.find((t) => t.id === state.tab);
