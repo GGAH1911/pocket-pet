@@ -1,10 +1,10 @@
 // 도감: 본 적 있는 모습 표시, 지금까지 키운 펫 기록, 초상화 그리기
-import { FORMS, buildCreature, paintGrid, formKey, lookOf } from "../render/creature.js?v=84a5c60-1791514463";
-import { drawFace, POOLS } from "../render/face.js?v=84a5c60-1791514463";
-import { SPRITES, drawSprite } from "../render/sprites.js?v=84a5c60-1791514463";
-import { BRANCH, SECRET } from "../core/rules.js?v=84a5c60-1791514463";
-import { EGGS, foundCount } from "./eggs.js?v=84a5c60-1791514463";
-import { canRevive } from "../core/revive.js?v=84a5c60-1791514463";
+import { FORMS, buildCreature, paintGrid, formKey, lookOf } from "../render/creature.js?v=bada71c-1791514558";
+import { drawFace, POOLS } from "../render/face.js?v=bada71c-1791514558";
+import { SPRITES, drawSprite } from "../render/sprites.js?v=bada71c-1791514558";
+import { BRANCH, SECRET } from "../core/rules.js?v=bada71c-1791514558";
+import { EGGS, foundCount } from "./eggs.js?v=bada71c-1791514558";
+import { canRevive } from "../core/revive.js?v=bada71c-1791514558";
 
 export const THEME_KO = { animal: "동물", fantasy: "상상 속 생물" };
 export const HOW_KO = { journey: "여행을 떠남", runaway: "서운해서 할머니 댁에 감", star: "별이 됨", retired: "친구 마을로 이사" };
@@ -34,11 +34,11 @@ const themeAdults = (profile, theme) => ["A", "B", "C", "D", "S"].filter((b) => 
 
 // 보상: 어른 수로 열린다(놀이 수치는 안 건드리는 꾸미기·선택권만)
 export const REWARDS = [
-  { id: "frame", need: 1, label: "함께 찍은 사진", desc: "방 벽에 지금 친구와 함께한 친구들이 함께 찍은 사진이 걸려요" },
+  { id: "frame", need: 1, label: "사진 액자", desc: "방 벽에 친구 사진이 걸려요. 도감에서 어떤 친구를 걸지 고를 수 있어요" },
   { id: "eggColor", need: 3, label: "알 색 고르기", desc: "새 알을 받을 때 무늬 색을 골라요. 커서도 귀 끝·점 색으로 남아요" },
   { id: "starRug", need: 5, label: "별 러그", desc: "밤하늘 별무늬 러그를 받아요(꾸미기에서 깔기)" },
   { id: "goldEgg", secret: true, label: "금빛 알", desc: "알 색 고르기에 금색이 생겨요 (숨은 친구를 만나면)" },
-  { id: "goldFrame", need: ADULT_KEYS.length, label: "반짝 사진틀", desc: "어른 10종을 다 만나면 사진 테두리가 금색이 돼요" },
+  { id: "goldFrame", need: ADULT_KEYS.length, label: "반짝 사진틀", desc: "어른 10종을 다 만나면 사진 액자 테두리가 금색이 돼요" },
 ];
 export function rewardOpen(profile, r) {
   if (r.secret) return ADULT_KEYS.some((k) => k.endsWith(".S") && profile.seen[k]);
@@ -133,6 +133,15 @@ export function recordPet(profile, pet) {
   };
   profile.collection.push(rec);
   return rec;
+}
+
+// 도감 줄의 '액자에 걸기' 버튼(지금 걸린 친구면 '걸려 있어요')
+function frameBtn(opts, key, look, name) {
+  const on = opts.frameKey === `${name}|${key}`;
+  const b = el("button", { class: "ghost small revive", text: on ? "액자에 걸림" : "액자에 걸기" });
+  if (on) b.disabled = true;
+  b.addEventListener("click", (ev) => { ev.stopPropagation(); opts.onFrame?.(key, look || {}, name); });
+  return b;
 }
 
 // 캔버스에 초상화(가운데, 발밑 기준)
@@ -249,7 +258,9 @@ export function renderCollection(box, profile, opts = {}) {
       const b = el("button", { class: "ghost small revive", text: opts.canSwap ? "데려오기" : "내일 또" });
       if (!opts.canSwap) b.disabled = true;
       b.addEventListener("click", (ev) => { ev.stopPropagation(); opts.onSwap?.(i); });
-      row.append(b); vl.append(row);
+      row.append(b);
+      if (opts.frameOpen && pp.stage !== "egg") row.append(frameBtn(opts, formKey(pp.theme, pp.stage, pp.branch), lookOf(pp), pp.name));
+      vl.append(row);
     });
     box.append(vl);
   }
@@ -266,6 +277,7 @@ export function renderCollection(box, profile, opts = {}) {
       el("div", { class: "small", text: `${HOW_KO[r.how] || r.how} · ${r.ageDays}살 · 실수 ${r.mistakes} · ${SPEED_KO[r.speed] || ""}` }),
       el("div", { class: "small dim", text: `${fmtDate(r.endedAt)} · 편지 보기 ›${r.returnedAt ? " · 돌아왔어요" : ""}` }),
     ));
+    if (opts.frameOpen && r.key && !r.key.endsWith(".egg")) rowEl.append(frameBtn(opts, r.key, r.look, r.name));
     if (opts.onRevive && canRevive(r)) { // 여행 떠난 친구 다시 데려오기
       const rb = el("button", { class: "ghost small revive", text: "다시 데려오기" });
       rb.addEventListener("click", (ev) => { ev.stopPropagation(); opts.onRevive(r); });

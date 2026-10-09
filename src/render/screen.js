@@ -1,11 +1,11 @@
 // 방 화면 그리기. 게임 규칙은 모르고 받은 상태만 그린다.
 // 캔버스는 "도트 해상도"로 그리고 CSS가 정수배로 키운다.
-import { PALETTE } from "./palette.js?v=84a5c60-1791514463";
-import { SPRITES, drawSprite, spriteSize } from "./sprites.js?v=84a5c60-1791514463";
-import { buildCreature, paintGrid, formKey, eggSpriteFor } from "./creature.js?v=84a5c60-1791514463";
-import { drawFace, POOLS } from "./face.js?v=84a5c60-1791514463";
-import { drawSky } from "./sky.js?v=84a5c60-1791514463";
-import { drawWall, drawFloor, drawRug, drawCurtain, drawFurniture, drawLampGlow, HAT_SPRITE, FURN_HALF } from "./deco.js?v=84a5c60-1791514463";
+import { PALETTE } from "./palette.js?v=bada71c-1791514558";
+import { SPRITES, drawSprite, spriteSize } from "./sprites.js?v=bada71c-1791514558";
+import { buildCreature, paintGrid, formKey, eggSpriteFor } from "./creature.js?v=bada71c-1791514558";
+import { drawFace, POOLS } from "./face.js?v=bada71c-1791514558";
+import { drawSky } from "./sky.js?v=bada71c-1791514558";
+import { drawWall, drawFloor, drawRug, drawCurtain, drawFurniture, drawLampGlow, HAT_SPRITE, FURN_HALF } from "./deco.js?v=bada71c-1791514558";
 
 // 방 배치(그리기와 동작이 같은 좌표를 쓰게 한 곳에서 계산)
 export function roomLayout(w, h, deco = {}) {
@@ -16,8 +16,8 @@ export function roomLayout(w, h, deco = {}) {
   const furnPos = { furnL: Math.max(half(deco.furnL) + 2, Math.round(w * 0.13)), furnR: Math.min(w - half(deco.furnR) - 2, Math.round(w * 0.87)) };
   return { floorY, cx: Math.round(w / 2), rugY, baseY: rugY + 4, furnBase, furnPos };
 }
-import { WALK_STOPS as WALK_STOPS_REF, walkDist as walkDistRef } from "./anim.js?v=84a5c60-1791514463";
-import { drawCourseBg, drawCourseThing, isSplash } from "./walk-courses.js?v=84a5c60-1791514463";
+import { WALK_STOPS as WALK_STOPS_REF, walkDist as walkDistRef } from "./anim.js?v=bada71c-1791514558";
+import { drawCourseBg, drawCourseThing, isSplash } from "./walk-courses.js?v=bada71c-1791514558";
 const clamp01 = (x) => Math.max(0, Math.min(1, x));
 
 const FLOOR = "#f5b98c";
@@ -291,7 +291,8 @@ function drawMemoryFrame(ctx, fx, fy, memo) {
     const c = memberCanvas(m.key, m.look); if (!c) return;
     const cx = ix + Math.round(((n + 0.5) / ms.length) * iw);
     ctx.imageSmoothingEnabled = false;
-    ctx.drawImage(c, 0, 0, 76, 50, cx - 19, iy + ih - 25 + (n % 2 ? 1 : 0), 38, 25); // 반 크기로 나란히(사진 속 단체 사진), 발이 아래쪽
+    if (ms.length === 1) ctx.drawImage(c, 38 - iw / 2, 49 - ih, iw, ih, ix, iy, iw, ih); // 한 친구: 원래 크기, 발이 사진 아래쪽
+    else ctx.drawImage(c, 0, 0, 76, 50, cx - 19, iy + ih - 25 + (n % 2 ? 1 : 0), 38, 25); // 여럿: 반 크기로 나란히
   });
   ctx.restore();
   ctx.fillStyle = PALETTE.k; ctx.fillRect(fx + W / 2 - 1, fy - 5, 2, 4); // 거는 끈
