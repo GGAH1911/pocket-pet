@@ -1,8 +1,8 @@
 // 하트 보석 서버 지갑: 기기 쪽 순수 규칙(네트워크 없음). 설계 docs/wallet.md
 // 보석 잔액과 보석·결제로 얻은 꾸미기는 서버가 정한다. 기기의 econ.gemFree/gemPaid는 서버 값의 사본(마지막으로 받은 값)일 뿐이다.
-import { ITEM, ITEMS, PACKS, BASIC_EQUIP, UNLOCK, UNLOCKS, REVIVE } from "./catalog.js?v=bada71c-1791514558";
+import { ITEM, ITEMS, PACKS, BASIC_EQUIP, UNLOCK, UNLOCKS, REVIVE } from "./catalog.js?v=7912b1f-1791515630";
 
-export const gemPriceOf = (id) => { if (/^revive_\d{10,14}$/.test(String(id))) return REVIVE.price.gem; if (/^candy_\d{10,14}$/.test(String(id))) return 60; const it = ITEM[id] || UNLOCK[id]; return it?.price?.gem > 0 ? it.price.gem : null; };
+export const gemPriceOf = (id) => { if (/^revive_\d{10,14}(_\d{1,14})?$/.test(String(id))) return REVIVE.price.gem; if (/^candy_\d{10,14}(_[a-z0-9]{1,12})?$/.test(String(id))) return 60; const it = ITEM[id] || UNLOCK[id]; return it?.price?.gem > 0 ? it.price.gem : null; };
 // 서버가 소유를 관리하는 상품: 보석 가격 상품 + 꾸러미로만 얻는 상품
 export const SERVER_ITEMS = new Set([...ITEMS.filter((it) => gemPriceOf(it.id)).map((it) => it.id), ...UNLOCKS.map((u) => u.id), ...PACKS.flatMap((p) => p.items || [])]);
 export const FRESH_MS = 10 * 60 * 1000; // 이만큼 지나면 숫자를 '확인 전'으로 흐리게
@@ -62,10 +62,10 @@ export function gemButtonState({ online, busy, total, price }) {
 }
 
 // 무료 보석 대기열(오프라인이면 쌓았다가 연결되면 보냄). 같은 알은 한 번만
-export function queueEarn(profile, kind, id = null, op, now = Date.now()) {
+export function queueEarn(profile, kind, id = null, op, now = Date.now(), extra = {}) {
   const q = walletOf(profile).queue;
   if (kind === "egg" && q.some((x) => x.kind === "egg" && x.id === id)) return false;
-  q.push({ op, kind, id, at: now });
+  q.push({ op, kind, id, at: now, ...extra });
   return true;
 }
 export const pendingGems = (profile) => (profile.wallet?.queue || []).length * 5;

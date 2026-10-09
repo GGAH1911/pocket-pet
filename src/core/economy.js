@@ -165,7 +165,7 @@ export function claimDaily(e, now) {
   if (!st.available) return null;
   const r = DAILY[st.idx];
   if (r.star) e.star += r.star; // 보석 칸(r.gem)은 서버 지갑에 적립 요청(호출하는 쪽)
-  if (r.candy) e.candy = Math.min(CANDY_MAX, (e.candy || 0) + r.candy);
+  // 사탕(r.candy)은 여기서 주지 않는다: 서버가 이 칸의 보석(주 1번 상한)을 받아 줄 때 함께 들어옴(기기 시계 앞당기기로 무한 획득 막기, app/wallet.js flushEarn)
   e.daily = { lastDay: dayKey(now), idx: (st.idx + 1) % DAILY.length, total: (e.daily.total || 0) + 1 };
   return { ...r, idx: st.idx };
 }

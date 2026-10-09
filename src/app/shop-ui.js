@@ -1,10 +1,10 @@
 // 상점·꾸미기·매일 선물 화면. 상태와 규칙은 core/economy.js·catalog.js, 여기는 DOM만.
-import { ITEMS, ITEM, SLOTS, TABS, PICKS, PACKS, SOON, UNLOCK, UNLOCKS } from "../core/catalog.js?v=bada71c-1791514558";
-import { drawCourseThumb } from "../render/walk-courses.js?v=bada71c-1791514558";
-import { canAfford, gems, DAILY, purchaseHistory, themeOpen, FORGIVE, forgiveState } from "../core/economy.js?v=bada71c-1791514558";
-import { gemButtonState } from "../core/wallet.js?v=bada71c-1791514558";
-import { drawThumb } from "../render/deco.js?v=bada71c-1791514558";
-import { SPRITES, drawSprite, spriteSize } from "../render/sprites.js?v=bada71c-1791514558";
+import { ITEMS, ITEM, SLOTS, TABS, PICKS, PACKS, SOON, UNLOCK, UNLOCKS } from "../core/catalog.js?v=7912b1f-1791515630";
+import { drawCourseThumb } from "../render/walk-courses.js?v=7912b1f-1791515630";
+import { canAfford, gems, DAILY, purchaseHistory, themeOpen, FORGIVE, forgiveState } from "../core/economy.js?v=7912b1f-1791515630";
+import { gemButtonState } from "../core/wallet.js?v=7912b1f-1791515630";
+import { drawThumb } from "../render/deco.js?v=7912b1f-1791515630";
+import { SPRITES, drawSprite, spriteSize } from "../render/sprites.js?v=7912b1f-1791515630";
 
 const el = (tag, attrs = {}, ...kids) => {
   const e = document.createElement(tag);
