@@ -1,3 +1,4 @@
+import { WALK_REACT } from "./walk-courses.js?v=27feca3-1791512818";
 // 애니메이션 엔진. 게임 규칙과는 무관하게 "지금 화면에 어떻게 보일지"만 계산한다.
 // - 한 번 재생(행동 반응, 부화, 진화): play(type, data)
 // - 평소 움직임(깜빡임, 걸어 다니기, 숨쉬기)과 상태 표현(눈물, 어지러움, Zzz)은 매 프레임 계산
@@ -285,8 +286,8 @@ function applyOneShot(f, c, t, now, scene) {
     case "walk": {
       const evs = c.data.events || [];
       let cur = null;
-      WALK_STOPS.forEach(([a, b], i) => { if (t >= a && t < b && evs[i]) cur = { i, kind: evs[i].kind, k: (t - a) / (b - a) }; });
-      f.walk = { t, dist: walkDist(t), events: evs, cur, season: c.data.season || null, fade: t < 0.06 ? 1 - t / 0.06 : t > 0.94 ? (t - 0.94) / 0.06 : 0 };
+      WALK_STOPS.forEach(([a, b], i) => { if (t >= a && t < b && evs[i]) cur = { i, kind: WALK_REACT[evs[i].kind] || evs[i].kind, k: (t - a) / (b - a) }; }); // 코스마다 다른 것도 반응은 공원 4가지 중 하나
+      f.walk = { t, dist: walkDist(t), events: evs, cur, season: c.data.season || null, course: c.data.course || "park", winter: !!c.data.winter, fade: t < 0.06 ? 1 - t / 0.06 : t > 0.94 ? (t - 0.94) / 0.06 : 0 };
       p.facing = 1; p.dx = 0;
       if (!cur) { p.dy -= Math.abs(Math.sin(now / 110)) * 2.5; p.eyes = p.eyes || null; p.mouth = "smile"; } // 통통 걷기
       else {

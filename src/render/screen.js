@@ -1,11 +1,11 @@
 // 방 화면 그리기. 게임 규칙은 모르고 받은 상태만 그린다.
 // 캔버스는 "도트 해상도"로 그리고 CSS가 정수배로 키운다.
-import { PALETTE } from "./palette.js?v=880f4fe-1791512088";
-import { SPRITES, drawSprite, spriteSize } from "./sprites.js?v=880f4fe-1791512088";
-import { buildCreature, paintGrid, formKey, eggSpriteFor } from "./creature.js?v=880f4fe-1791512088";
-import { drawFace, POOLS } from "./face.js?v=880f4fe-1791512088";
-import { drawSky } from "./sky.js?v=880f4fe-1791512088";
-import { drawWall, drawFloor, drawRug, drawCurtain, drawFurniture, drawLampGlow, HAT_SPRITE, FURN_HALF } from "./deco.js?v=880f4fe-1791512088";
+import { PALETTE } from "./palette.js?v=27feca3-1791512818";
+import { SPRITES, drawSprite, spriteSize } from "./sprites.js?v=27feca3-1791512818";
+import { buildCreature, paintGrid, formKey, eggSpriteFor } from "./creature.js?v=27feca3-1791512818";
+import { drawFace, POOLS } from "./face.js?v=27feca3-1791512818";
+import { drawSky } from "./sky.js?v=27feca3-1791512818";
+import { drawWall, drawFloor, drawRug, drawCurtain, drawFurniture, drawLampGlow, HAT_SPRITE, FURN_HALF } from "./deco.js?v=27feca3-1791512818";
 
 // 방 배치(그리기와 동작이 같은 좌표를 쓰게 한 곳에서 계산)
 export function roomLayout(w, h, deco = {}) {
@@ -16,7 +16,8 @@ export function roomLayout(w, h, deco = {}) {
   const furnPos = { furnL: Math.max(half(deco.furnL) + 2, Math.round(w * 0.13)), furnR: Math.min(w - half(deco.furnR) - 2, Math.round(w * 0.87)) };
   return { floorY, cx: Math.round(w / 2), rugY, baseY: rugY + 4, furnBase, furnPos };
 }
-import { WALK_STOPS as WALK_STOPS_REF, walkDist as walkDistRef } from "./anim.js?v=880f4fe-1791512088";
+import { WALK_STOPS as WALK_STOPS_REF, walkDist as walkDistRef } from "./anim.js?v=27feca3-1791512818";
+import { drawCourseBg, drawCourseThing, isSplash } from "./walk-courses.js?v=27feca3-1791512818";
 const clamp01 = (x) => Math.max(0, Math.min(1, x));
 
 const FLOOR = "#f5b98c";
@@ -113,28 +114,8 @@ function drawWalk(ctx, { w, h, now, scene, f, wall, loc, weather }) {
   const groundY = Math.round(h * 0.5);
   const info = drawSky(ctx, { x: 0, y: 0, w, h: groundY }, wall, loc, now, weather);
   const night = clamp01(-(info.sunAlt ?? 10) / 12) * 0.5; // 밤엔 땅도 어둡게
-  // 먼 나무(0.45배 속도)
-  const span = 44;
-  for (let i = -1; i < Math.ceil(w / span) + 2; i++) {
-    const wi = Math.floor(d * 0.45 / span) + i; // 세계 번호(같은 나무는 같은 모양)
-    const tx = Math.round(wi * span - d * 0.45 + hashN(wi) * 14);
-    const th = 14 + Math.round(hashN(wi + 7) * 8), r = 8 + Math.round(hashN(wi + 3) * 4);
-    ctx.fillStyle = PALETTE.n; ctx.fillRect(tx - 1, groundY - th + r, 3, th - r + 2);
-    for (const [cc, rr, oy] of [[PALETTE.k, r + 1, 0], [PALETTE.G, r, 0], [PALETTE.g, r - 3, -2]]) for (let yy = -rr; yy <= rr; yy++) { const hw = Math.round(Math.sqrt(rr * rr - yy * yy)); ctx.fillStyle = cc; ctx.fillRect(tx - hw, groundY - th + yy + oy + 2, hw * 2 + 1, 1); } // 동그란 나뭇잎(테두리도 동그랗게)
-  }
-  // 땅: 풀 + 길
-  const pathTop = groundY + Math.round((h - groundY) * 0.28), pathH = 24;
-  ctx.fillStyle = PALETTE.g; ctx.fillRect(0, groundY, w, h - groundY);
-  ctx.fillStyle = PALETTE.G; for (let y = groundY + 4; y < h; y += 9) for (let x = -((d * 1.2) % 16); x < w; x += 16) ctx.fillRect(Math.round(x + (y % 3) * 5), y, 2, 1);
-  ctx.fillStyle = "#f0d6a8"; ctx.fillRect(0, pathTop, w, pathH);
-  ctx.fillStyle = "#e2bf86"; ctx.fillRect(0, pathTop, w, 2); ctx.fillRect(0, pathTop + pathH - 2, w, 2);
-  for (let i = -1; i < w / 20 + 2; i++) { const wi = Math.floor(d / 20) + i; const x = Math.round(wi * 20 - d); ctx.fillStyle = "#d9b47a"; ctx.fillRect(x + Math.round(hashN(wi) * 12), pathTop + 5 + Math.round(hashN(wi + 1) * 14), 2, 1); }
-  // 가까운 풀숲·꽃(1.3배 속도)
-  for (let i = -1; i < w / 26 + 2; i++) {
-    const wi = Math.floor(d * 1.3 / 26) + i; const x = Math.round(wi * 26 - d * 1.3 + hashN(wi + 9) * 10), y = pathTop + pathH + 10 + Math.round(hashN(wi + 2) * 12);
-    ctx.fillStyle = PALETTE.G; ctx.fillRect(x, y - 3, 1, 3); ctx.fillRect(x + 2, y - 4, 1, 4); ctx.fillRect(x + 4, y - 2, 1, 2);
-    if (hashN(wi + 5) > 0.55) { ctx.fillStyle = [PALETTE.p, PALETTE.y, PALETTE.w, PALETTE.v][Math.floor(hashN(wi + 6) * 4)]; ctx.fillRect(x + 1, y - 6, 3, 2); ctx.fillStyle = PALETTE.y; ctx.fillRect(x + 2, y - 6, 1, 1); }
-  }
+  const course = wk.course || "park";
+  const { pathTop, pathH } = drawCourseBg(ctx, course, { w, h, d, now, groundY, winter: !!wk.winter || (weather && weather.kind === "snow") }); // 코스별 배경(walk-courses.js)
   if (night > 0) { ctx.fillStyle = `rgba(20,16,60,${night})`; ctx.fillRect(0, groundY - 30, w, h - groundY + 30); }
 
   // 만나는 것들(길 위, 세계 위치에 고정 → 걸어가면 다가옴)
@@ -142,7 +123,7 @@ function drawWalk(ctx, { w, h, now, scene, f, wall, loc, weather }) {
   const sc = scene || {};
   const things = wk.events.map((ev, i) => {
     const a = WALK_STOPS_REF[i] ? WALK_STOPS_REF[i][0] : 0;
-    const ex = petX + (ev.kind === "puddle" ? 2 : 44) + (walkDistRef(a) - d); // 멈출 때: 웅덩이는 발밑(뛰어들기), 나머지는 펫 앞 44px
+    const ex = petX + (isSplash(ev.kind) ? 2 : 44) + (walkDistRef(a) - d); // 멈출 때: 웅덩이·파도·개울은 발밑(뛰어들기), 나머지는 펫 앞 44px
     const k = wk.cur && wk.cur.i === i ? wk.cur.k : (wk.t > (WALK_STOPS_REF[i] || [0, 0])[1] ? 1 : 0);
     return { ev, x: Math.round(ex), k };
   }).filter((o) => o.x > -40 && o.x < w + 40);
@@ -188,6 +169,7 @@ function drawWalk(ctx, { w, h, now, scene, f, wall, loc, weather }) {
 
 // 산책길에서 만나는 것: 나비·꽃·웅덩이·친구
 function drawWalkThing(ctx, ev, x, baseY, k, now, petX) {
+  if (drawCourseThing(ctx, ev, x, baseY, k, now)) return; // 바닷가·산·호수에서 만나는 것
   if (ev.kind === "flower") {
     ctx.fillStyle = PALETTE.G; ctx.fillRect(x, baseY - 10, 1, 10); ctx.fillRect(x - 2, baseY - 5, 2, 1);
     ctx.fillStyle = PALETTE.k; ctx.fillRect(x - 4, baseY - 16, 9, 7);

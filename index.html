@@ -58,6 +58,8 @@
     .tg.on { background: #7cc68b; } .tg.on::after { left: 23px; }
     .seg { border: 0; padding: 5px 9px; border-radius: 9px; background: #f5e9dc; font-size: 12px; font-weight: 700; }
     .seg.on { background: var(--deep); color: #fff; }
+    .courses { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; } .courses .seg { font-size: 13px; padding: 7px 10px; } .courses .seg.lock { opacity: .55; }
+    .banner.course { display: flex; gap: 10px; align-items: flex-start; } .coursethumb { width: 112px; height: 92px; image-rendering: pixelated; border-radius: 8px; flex: none; } .cinfo { flex: 1; min-width: 0; }
     .linkbtn { border: 0; background: none; padding: 0; color: var(--deep); font: inherit; font-weight: 700; text-decoration: underline; }
     .sleepcustom { flex-wrap: wrap; font-size: 13px; } .sleepcustom select { font: inherit; padding: 4px 6px; border-radius: 8px; border: 1px solid var(--line); background: #fff; }
     .goarrow { margin-left: auto; border: 0; background: none; font-weight: 700; font-size: 13px; opacity: .75; }
@@ -261,6 +263,7 @@
       <h2>어떻게 놀까요?</h2>
       <button class="big" data-act="playHome">집에서 놀기 (놀이 4가지 중 하나)</button>
       <button class="big ghost" data-act="walk">산책 가기 (기분이 크게 올라요, 조금 지치고 살짝 더러워져요)</button>
+      <div class="courses" id="walk-courses"></div>
     </section>
     <section class="sheet" data-sheet="notify" hidden>
       <h2>알림</h2>
@@ -334,6 +337,6 @@
       </div>
     </div>
   </div>
-  <script type="module" src="src/main.js?v=880f4fe-1791512088"></script>
+  <script type="module" src="src/main.js?v=27feca3-1791512818"></script>
 </body>
 </html>

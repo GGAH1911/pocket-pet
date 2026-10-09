@@ -76,7 +76,14 @@ export const PACKS = [
 export const PACK = Object.fromEntries(PACKS.map((p) => [p.id, p]));
 
 // 알 해금(서버 지갑이 소유를 관리, 꾸미기 칸 없음). 무지개 알은 하트 보석으로 한 번 열면 계속(2026-10-06 사용자 결정, 경제 자문 가격 150 = 바다 알의 절반)
-export const UNLOCKS = [{ id: "theme_fantasy", theme: "fantasy", name: "무지개 알", price: { gem: 150 } }];
+export const UNLOCKS = [
+  { id: "theme_fantasy", theme: "fantasy", name: "무지개 알", price: { gem: 150 } },
+  // 산책 코스(2026-10-08 사용자 요청). 공원은 기본. 가격은 곧 나올 상품으로 예고했던 산책 장소 값(보석 200)
+  { id: "walk_beach", walk: "beach", name: "바닷가 산책", desc: "꽃게·조개껍데기·밀려오는 파도", price: { gem: 200 } },
+  { id: "walk_mountain", walk: "mountain", name: "산길 산책", desc: "다람쥐·버섯·개울(겨울엔 눈 덮인 산)", price: { gem: 200 } },
+  { id: "walk_lake", walk: "lake", name: "숲속 호수 산책", desc: "아기 오리·네잎클로버·개구리, 나무 데크 길", price: { gem: 200 } },
+];
+export const WALK_UNLOCK = { beach: "walk_beach", mountain: "walk_mountain", lake: "walk_lake" }; // 공원은 늘 열림
 export const UNLOCK = Object.fromEntries(UNLOCKS.map((u) => [u.id, u]));
 // 친구 부활권: 여행 떠난 친구를 도감 기록으로 다시 데려옴. 기록마다 한 번(서버 지갑 상품 id "revive_<태어난 시각>"). 2026-10-08 사용자 결정(유료), 경제 자문 가격 200
 export const REVIVE = { name: "친구 부활권", price: { gem: 200 } };
@@ -87,8 +94,6 @@ export const REVIVE_FREE_BEFORE = Date.parse("2026-10-09T00:00:00+09:00"); // �
 // 곧 나올 상품(알·산책 탭에 미리 보여 주기만)
 export const SOON = [
   { id: "egg_sea", name: "바다 친구들 알", desc: "새 계통 9종 + 숨은 친구", price: { gem: 300 } },
-  { id: "walk_beach", name: "바닷가 산책", desc: "모래성·조개·파도", price: { gem: 200 } },
-  { id: "walk_snow", name: "눈 덮인 산 산책", desc: "눈사람·썰매·발자국", price: { gem: 200 } },
 ];
 
 // 기본 상품을 가진 상태로 만든다(새 저장·옛 저장 모두)

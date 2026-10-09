@@ -15,8 +15,9 @@ export const EARN = {
 };
 
 // 매일 선물: 7칸. 하루 빠져도 처음으로 안 돌아가고 다음 칸이 이어진다.
-// 4일째는 새 마음 사탕 1개(2026-10-08 사용자 결정: 실수 지우기는 로그인 보상으로, 더 필요하면 하트 보석)
-export const DAILY = [{ star: 30 }, { star: 30 }, { star: 40 }, { candy: 1 }, { star: 50 }, { star: 60 }, { gem: 5 }];
+// 7일째(한 주 다 채운 칸)에 하트 보석 5 + 새 마음 사탕 1개 = 7번 받을 때마다 1개(하루 1번이라 일주일에 1개). 사용자 결정 + 경제 자문(2026-10-08)
+export const DAILY = [{ star: 30 }, { star: 30 }, { star: 40 }, { star: 40 }, { star: 50 }, { star: 60 }, { gem: 5, candy: 1 }];
+export const CANDY_MAX = 3; // 쌓아 둘 수 있는 최대(세대마다 쓸모 있는 갈림 2번 + 예비 1)
 
 export function newEcon() {
   return {
@@ -51,7 +52,7 @@ export function normalizeEcon(e) {
 
 // ---- 새 마음 사탕: 이번 단계 돌봄 실수를 지움. 매일 선물 4일째에 1개, 더 필요하면 하트 보석으로 1개씩(사용자 결정 2026-10-08).
 // 단계마다 1번, 평생 실수·숨은 친구 조건은 그대로(경제 자문) ----
-export const FORGIVE = { id: "forgive", name: "새 마음 사탕", price: { gem: 30 } }; // price = 하트 보석으로 1개 살 때
+export const FORGIVE = { id: "forgive", name: "새 마음 사탕", price: { gem: 60 } }; // 60 = 상점 최저 유료가(30이면 갈림을 싸게 상시 확정할 수 있어 올림, 경제 자문) // price = 하트 보석으로 1개 살 때
 export const stageTag = (pet) => `${pet.stage}|${pet.branch || ""}|${pet.ageMin - pet.stageMin}`; // 지금 단계를 가리키는 값(진화하면 바뀜)
 export function forgiveState(e, pet) {
   if (!pet || pet.ended || pet.stage === "egg") return { ok: false, reason: "egg" };
@@ -164,7 +165,7 @@ export function claimDaily(e, now) {
   if (!st.available) return null;
   const r = DAILY[st.idx];
   if (r.star) e.star += r.star; // 보석 칸(r.gem)은 서버 지갑에 적립 요청(호출하는 쪽)
-  if (r.candy) e.candy = (e.candy || 0) + r.candy;
+  if (r.candy) e.candy = Math.min(CANDY_MAX, (e.candy || 0) + r.candy);
   e.daily = { lastDay: dayKey(now), idx: (st.idx + 1) % DAILY.length, total: (e.daily.total || 0) + 1 };
   return { ...r, idx: st.idx };
 }
