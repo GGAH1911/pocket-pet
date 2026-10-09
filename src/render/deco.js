@@ -1,7 +1,7 @@
 // 방 꾸미기 그림: 벽지·바닥·러그·커튼·가구. 상점 미리보기(작은 그림)도 같은 함수로 그린다.
 // 좌표는 캔버스 논리 픽셀. 가구는 x(가운데)·base(바닥에 닿는 y) 기준.
-import { PALETTE } from "./palette.js?v=5abef87-1791550150";
-import { SPRITES, drawSprite, spriteSize } from "./sprites.js?v=5abef87-1791550150";
+import { PALETTE } from "./palette.js?v=9dda849-1791550733";
+import { SPRITES, drawSprite, spriteSize } from "./sprites.js?v=9dda849-1791550733";
 
 export const HAT_SPRITE = { hat_ribbon: "hatRibbon", hat_straw: "hatStraw", hat_glasses: "hatGlasses", hat_crown: "hatCrown", hat_flower: "hatFlower" };
 
@@ -203,7 +203,8 @@ export function drawSmall(ctx, id, x, base, { now = 0, wall = Date.now(), dark =
 }
 
 // ---------- 놀이방 기구(2026-10-09). x = 가운데, base = 바닥 ----------
-export function drawPlay(ctx, id, x, base, { now = 0 } = {}) {
+// 같이 놀기 장면(app/playshow.js)용: sw = 그네 흔들림(도트), dip = 트램펄린 눌림, shake = 블록 흔들림
+export function drawPlay(ctx, id, x, base, { now = 0, sw: swing = null, dip = null, shake = 0 } = {}) {
   const k = P.k;
   if (id === "play_slide") {
     rect(ctx, x - 14, base - 30, 3, 30, k); rect(ctx, x - 8, base - 30, 3, 30, k); // 사다리
@@ -222,16 +223,16 @@ export function drawPlay(ctx, id, x, base, { now = 0 } = {}) {
     for (let i = 0; i < 14; i++) { const bx = x - 15 + ((i * 7) % 31), by = base - 17 + ((i * 5) % 4); rect(ctx, bx - 1, by - 1, 4, 4, k); rect(ctx, bx, by, 2, 2, cols[i % cols.length]); }
   } else if (id === "play_blocks") {
     const B = [[-12, 0, P.r], [-2, 0, P.b], [8, 0, P.y], [-7, -9, P.g], [3, -9, P.p], [-2, -18, P.v]];
-    for (const [dx, dy, c] of B) { rect(ctx, x + dx - 4, base + dy - 9, 10, 9, k); rect(ctx, x + dx - 3, base + dy - 8, 8, 7, c); rect(ctx, x + dx - 3, base + dy - 8, 8, 1, P.w); }
+    for (const [dx0, dy, c] of B) { const dx = dx0 + (shake ? Math.round(Math.sin(now / 60 + dy) * shake) : 0); rect(ctx, x + dx - 4, base + dy - 9, 10, 9, k); rect(ctx, x + dx - 3, base + dy - 8, 8, 7, c); rect(ctx, x + dx - 3, base + dy - 8, 8, 1, P.w); }
   } else if (id === "play_tramp") {
-    const b = Math.abs(Math.round(Math.sin(now / 350) * 2));
+    const b = dip ?? Math.abs(Math.round(Math.sin(now / 350) * 2));
     for (const lx of [-13, -5, 5, 13]) rect(ctx, x + lx, base - 7, 2, 7, k);
     ellipse(ctx, x, base - 9 + Math.min(1, b), 17, 4, k); ellipse(ctx, x, base - 9 + Math.min(1, b), 16, 3, P.v); ellipse(ctx, x, base - 9 + Math.min(1, b), 12, 2, "#3d4f9a");
     if (b > 1) { rect(ctx, x - 4, base - 18, 1, 2, P.w); rect(ctx, x + 4, base - 17, 1, 2, P.w); }
   } else if (id === "play_swing") {
     rect(ctx, x - 16, base - 34, 32, 3, k); rect(ctx, x - 15, base - 33, 30, 1, P.N);
     for (let i = 0; i < 34; i++) { rect(ctx, x - 16 - Math.round(i * 0.12), base - 34 + i, 2, 1, k); rect(ctx, x + 14 + Math.round(i * 0.12), base - 34 + i, 2, 1, k); }
-    const sw = Math.round(Math.sin(now / 700) * 4);
+    const sw = swing ?? Math.round(Math.sin(now / 700) * 4);
     for (let i = 0; i < 20; i++) { const t = i / 20; rect(ctx, x - 5 + Math.round(sw * t), base - 31 + i, 1, 1, P.N); rect(ctx, x + 5 + Math.round(sw * t), base - 31 + i, 1, 1, P.N); }
     rect(ctx, x - 7 + sw, base - 12, 15, 3, k); rect(ctx, x - 6 + sw, base - 11, 13, 1, P.r);
   }

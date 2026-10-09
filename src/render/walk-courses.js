@@ -1,7 +1,7 @@
 // 산책 코스(2026-10-08 사용자 요청: 공원 말고 해변·산 등). 코스마다 배경 층과 길에서 만나는 것이 다르다.
 // 배경: 하늘(실제 시각·날씨, screen.js) 아래에 먼 층(느리게)·땅·길·가까운 층(빠르게)이 흘러간다. d = 걸어간 거리(px).
 // 만나는 것의 반응은 anim.js WALK_REACT로 공원 것(나비·꽃·웅덩이·친구)에 맞춘다.
-import { PALETTE as P } from "./palette.js?v=5abef87-1791550150";
+import { PALETTE as P } from "./palette.js?v=9dda849-1791550733";
 
 export const COURSES = {
   park: { name: "공원", kinds: ["butterfly", "flower", "puddle", "friend"], splash: "puddle" },
