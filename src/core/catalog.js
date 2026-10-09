@@ -89,7 +89,7 @@ export const UNLOCK = Object.fromEntries(UNLOCKS.map((u) => [u.id, u]));
 export const REVIVE = { name: "친구 부활권", price: { gem: 200 } };
 export const candyItemId = (now) => `candy_${Math.floor(now)}`; // 새 마음 사탕 1개 사기(서버 지갑 상품, 살 때마다 새 id). 값은 economy FORGIVE.price
 export const reviveItemId = (rec) => `revive_${Math.floor(rec.bornAt || 0)}`;
-export const REVIVE_FREE_BEFORE = Date.parse("2026-10-09T00:00:00+09:00"); // 부활권이 생기기 전에 떠난 친구는 한 번 무료(사용자 요청: 아들 펫 살리기)
+export const REVIVE_FREE_BEFORE = 0; // 무료 데려오기 없음(2026-10-09 사용자 결정: 도감에서 데려오기는 늘 유료, 플레이어 잘못엔 대가가 있어야)
 
 // 곧 나올 상품(알·산책 탭에 미리 보여 주기만)
 export const SOON = [

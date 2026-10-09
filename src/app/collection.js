@@ -1,13 +1,13 @@
 // 도감: 본 적 있는 모습 표시, 지금까지 키운 펫 기록, 초상화 그리기
-import { FORMS, buildCreature, paintGrid, formKey, lookOf } from "../render/creature.js?v=27feca3-1791512818";
-import { drawFace, POOLS } from "../render/face.js?v=27feca3-1791512818";
-import { SPRITES, drawSprite } from "../render/sprites.js?v=27feca3-1791512818";
-import { BRANCH, SECRET } from "../core/rules.js?v=27feca3-1791512818";
-import { EGGS, foundCount } from "./eggs.js?v=27feca3-1791512818";
-import { canRevive } from "../core/revive.js?v=27feca3-1791512818";
+import { FORMS, buildCreature, paintGrid, formKey, lookOf } from "../render/creature.js?v=84a5c60-1791514463";
+import { drawFace, POOLS } from "../render/face.js?v=84a5c60-1791514463";
+import { SPRITES, drawSprite } from "../render/sprites.js?v=84a5c60-1791514463";
+import { BRANCH, SECRET } from "../core/rules.js?v=84a5c60-1791514463";
+import { EGGS, foundCount } from "./eggs.js?v=84a5c60-1791514463";
+import { canRevive } from "../core/revive.js?v=84a5c60-1791514463";
 
 export const THEME_KO = { animal: "동물", fantasy: "상상 속 생물" };
-export const HOW_KO = { journey: "여행을 떠남", runaway: "삐져서 떠남", star: "별이 됨", retired: "새 알에게 자리를 물려줌" };
+export const HOW_KO = { journey: "여행을 떠남", runaway: "서운해서 할머니 댁에 감", star: "별이 됨", retired: "친구 마을로 이사" };
 const SPEED_KO = { slow: "느긋", normal: "보통", fast: "빠름" };
 
 export function formOrder(theme) {
@@ -34,11 +34,11 @@ const themeAdults = (profile, theme) => ["A", "B", "C", "D", "S"].filter((b) => 
 
 // 보상: 어른 수로 열린다(놀이 수치는 안 건드리는 꾸미기·선택권만)
 export const REWARDS = [
-  { id: "frame", need: 1, label: "추억 액자", desc: "방 벽 액자에 가장 최근 함께한 친구 그림이 걸려요" },
+  { id: "frame", need: 1, label: "함께 찍은 사진", desc: "방 벽에 지금 친구와 함께한 친구들이 함께 찍은 사진이 걸려요" },
   { id: "eggColor", need: 3, label: "알 색 고르기", desc: "새 알을 받을 때 무늬 색을 골라요. 커서도 귀 끝·점 색으로 남아요" },
   { id: "starRug", need: 5, label: "별 러그", desc: "밤하늘 별무늬 러그를 받아요(꾸미기에서 깔기)" },
   { id: "goldEgg", secret: true, label: "금빛 알", desc: "알 색 고르기에 금색이 생겨요 (숨은 친구를 만나면)" },
-  { id: "goldFrame", need: ADULT_KEYS.length, label: "금 액자", desc: "어른 10종을 다 만나면 추억 액자가 금색이 돼요" },
+  { id: "goldFrame", need: ADULT_KEYS.length, label: "반짝 사진틀", desc: "어른 10종을 다 만나면 사진 테두리가 금색이 돼요" },
 ];
 export function rewardOpen(profile, r) {
   if (r.secret) return ADULT_KEYS.some((k) => k.endsWith(".S") && profile.seen[k]);
@@ -235,6 +235,25 @@ export function renderCollection(box, profile, opts = {}) {
     box.append(tree);
   }
 
+  // 3-5) 친구 마을: 이사 간 친구들(돌봄 없음). 하루 한 번 지금 친구와 교대
+  if (opts.village?.length) {
+    box.append(el("h3", { text: `친구 마을 ${opts.village.length}` }));
+    box.append(el("p", { class: "small dim", text: "마을 친구들은 배고프지도 심심하지도 않아요. 하루에 한 번 지금 친구와 바꿔 데려올 수 있어요." }));
+    const vl = el("div", { class: "past" });
+    opts.village.forEach((v, i) => {
+      const pp = v.pet, cv = el("canvas", { width: 56, height: 46 });
+      if (pp.stage === "egg") { const c2 = cv.getContext("2d"); c2.imageSmoothingEnabled = false; drawSprite(c2, SPRITES.egg, 20, 12, 1); } else portrait(cv, formKey(pp.theme, pp.stage, pp.branch), lookOf(pp));
+      const row = el("div", { class: "pastrow" }, cv, el("div", {},
+        el("b", { text: `${pp.name} · ${pp.stage === "egg" ? "알" : FORMS[formKey(pp.theme, pp.stage, pp.branch)]?.name || ""}` }),
+        el("div", { class: "small dim", text: `${fmtDate(v.movedAt)}에 이사 왔어요` })));
+      const b = el("button", { class: "ghost small revive", text: opts.canSwap ? "데려오기" : "내일 또" });
+      if (!opts.canSwap) b.disabled = true;
+      b.addEventListener("click", (ev) => { ev.stopPropagation(); opts.onSwap?.(i); });
+      row.append(b); vl.append(row);
+    });
+    box.append(vl);
+  }
+
   // 4) 함께한 친구들(추억 앨범)
   box.append(el("h3", { text: `함께한 친구들 ${profile.collection.length}` }));
   if (!profile.collection.length) box.append(el("p", { class: "small dim", text: "아직 없어요. 지금 친구를 끝까지 키우면 여기에 남아요. 떠날 때 남긴 편지도 다시 읽을 수 있어요." }));
@@ -242,7 +261,7 @@ export function renderCollection(box, profile, opts = {}) {
   for (const r of [...profile.collection].reverse()) {
     const cv = el("canvas", { width: 56, height: 46 });
     portrait(cv, r.key, r.look || {});
-    const rowEl = el("button", { class: "pastrow" }, cv, el("div", {},
+    const rowEl = el("div", { class: "pastrow", role: "button", tabindex: "0" }, cv, el("div", {}, // 안에 '다시 데려오기' 버튼이 들어가서 버튼 안 버튼이 되지 않게 div
       el("b", { text: `${r.name} · ${r.form}` }),
       el("div", { class: "small", text: `${HOW_KO[r.how] || r.how} · ${r.ageDays}살 · 실수 ${r.mistakes} · ${SPEED_KO[r.speed] || ""}` }),
       el("div", { class: "small dim", text: `${fmtDate(r.endedAt)} · 편지 보기 ›${r.returnedAt ? " · 돌아왔어요" : ""}` }),
@@ -280,11 +299,12 @@ export function letterText(pet) {
   if (how === "star") return m <= 3
     ? `함께한 날들 정말 행복했어요. 이제 하늘에서 반짝이며 지켜볼게요. 밤하늘을 보면 저를 떠올려 주세요.\n- ${n}`
     : `조금 외로운 날도 있었지만, 그래도 곁에 있어서 좋았어요. 하늘에서 지켜볼게요.\n- ${n}`;
-  if (how === "runaway") return `너무 배고프고 외로웠어요… 저는 다른 곳으로 가 볼게요. 다음 친구는 꼭 자주 봐 주세요.\n- ${n}`;
-  if (how === "retired") return `새 친구가 오는 거죠? 저는 도감에서 늘 기다릴게요. 잘해 주세요!\n- ${n}`;
+  // 아이가 자기 탓을 키우지 않게, 되돌릴 수 있는 말로(아동 심리 자문 2026-10-09)
+  if (how === "runaway") return `조금 서운했어요… 친구 마을 할머니 댁에서 쉬고 있을게요. 맛있는 거 들고 데리러 와 줄래요?\n- ${n}`;
+  if (how === "retired") return `친구 마을에 집이 생겼어요! 보고 싶으면 놀러 와요.\n- ${n}`;
   return m <= 3
-    ? `그동안 정말 고마웠어요! 맛있는 밥이랑 신나는 놀이 다 기억할게요. 넓은 세상 구경하고 올게요.\n- ${n}`
+    ? `그동안 정말 고마웠어요! 맛있는 밥이랑 신나는 놀이 다 기억할게요. 넓은 세상 구경하고 올게요. 엽서 보낼게요!\n- ${n}`
     : m <= 10
-      ? `가끔 배고프고 심심했지만 즐거웠어요. 이제 여행을 떠나요. 잘 지내요!\n- ${n}`
-      : `조금 외로웠어요. 그래도 고마웠어요. 다음 친구는 더 많이 안아 주세요.\n- ${n}`;
+      ? `가끔 배고프고 심심했지만 즐거웠어요. 이제 여행을 떠나요. 엽서 보낼게요!\n- ${n}`
+      : `조금 심심한 날도 있었지만 고마웠어요. 여행 다녀올게요. 엽서 보낼게요!\n- ${n}`;
 }

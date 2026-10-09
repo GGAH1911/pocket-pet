@@ -1,34 +1,35 @@
 // 부팅 순서는 이 파일 한 곳에서만 정해요.
 // (지난 게임에서 파일 읽는 순서 때문에 저장 기본값이 빠지는 버그가 있었어요.)
 // 순서: 저장 불러오기 → 꺼져 있던 시간 계산 → 화면 시작 → 서비스 워커·알림 확인 → 알림 일정 올리기
-import { createPet } from "./core/state.js?v=27feca3-1791512818";
-import { advance, feed, play, wash, walk, wakeFromNap, cleanPoop, toggleLight, giveMedicine, patPet, switchEndMode, retirePet } from "./core/sim.js?v=27feca3-1791512818";
-import { predictNotifications } from "./core/notify.js?v=27feca3-1791512818";
-import { josa } from "./core/josa.js?v=27feca3-1791512818";
-import { drawRoom, drawIcon, roomLayout } from "./render/screen.js?v=27feca3-1791512818";
-import { createAnimator, play as playAnim, frame as animFrame, addFx, DUR as ANIM_DUR } from "./render/anim.js?v=27feca3-1791512818";
-import { pickGame, createGame, GAME_NAMES } from "./app/games.js?v=27feca3-1791512818";
-import { EGGS, findEgg, createStreak, specialDay, SPECIAL_KO, HAT_OF, wishTime, MAKER_LETTER } from "./app/eggs.js?v=27feca3-1791512818";
-import { earn, buy, equip, unequip, grant as grantItem, gems, canAfford, dailyStatus, claimDaily, DAILY, THEME_UNLOCK, themeOpen, forgiveStage, FORGIVE } from "./core/economy.js?v=27feca3-1791512818";
-import { ITEMS, ITEM, SLOTS, TABS, PICKS, PACKS, SOON, BASIC_EQUIP, UNLOCK, UNLOCKS, WALK_UNLOCK, REVIVE, reviveItemId, REVIVE_FREE_BEFORE, candyItemId } from "./core/catalog.js?v=27feca3-1791512818";
-import { COURSES, WALK_KO } from "./render/walk-courses.js?v=27feca3-1791512818";
-import { renderShop, renderDeco, dailyCard, spriteCanvas } from "./app/shop-ui.js?v=27feca3-1791512818";
-import { formKey, lookOf, FORMS as FORMS_REF, SPOT_COLORS, eggSpriteFor } from "./render/creature.js?v=27feca3-1791512818";
-import { guessLocation, sunTimes, moonIllumination, moonPosition, moonPhaseName } from "./core/astro.js?v=27feca3-1791512818";
-import { classifyWeather, weatherUrl, parseWeather } from "./core/weather.js?v=27feca3-1791512818";
-import { createFacePicker, pickFace } from "./render/face.js?v=27feca3-1791512818";
-import { SPRITES, drawSprite } from "./render/sprites.js?v=27feca3-1791512818";
-import { loadProfile, saveProfile, freshProfile, exportCode, importCode, SAVE_KEYS, setSaveMirror, resetProfile } from "./app/store.js?v=27feca3-1791512818";
-import * as native from "./app/native.js?v=27feca3-1791512818";
-import * as cloud from "./app/cloud.js?v=27feca3-1791512818";
-import { planReconcile, isPaid } from "./core/billing.js?v=27feca3-1791512818";
-import { queueEarn, needsWallet, pendingGems, reconcileOwned } from "./core/wallet.js?v=27feca3-1791512818";
-import { SLEEP_START_OPTS, SLEEP_END_OPTS, sleepLength, sleepOk } from "./core/daytime.js?v=27feca3-1791512818";
-import { lastRevivable, revivePet, canRevive } from "./core/revive.js?v=27feca3-1791512818";
-import * as wallet from "./app/wallet.js?v=27feca3-1791512818";
-import { sfx, setSoundEnabled } from "./app/sound.js?v=27feca3-1791512818";
-import { markSeen, recordPet, renderCollection, letterText, portrait, currentKey, HOW_KO, unlockedSet, REWARDS, nextGoal, adultsSeen, ADULT_KEYS, formOrder, EGG_COLOR_KO } from "./app/collection.js?v=27feca3-1791512818";
-import { deviceInfo, registerSW, enablePush, ensurePush, uploadSchedule, sendTest, serverStatus, PUSH_SERVER } from "./app/push.js?v=27feca3-1791512818";
+import { createPet } from "./core/state.js?v=84a5c60-1791514463";
+import { advance, feed, play, wash, walk, wakeFromNap, cleanPoop, toggleLight, giveMedicine, patPet, switchEndMode, retirePet } from "./core/sim.js?v=84a5c60-1791514463";
+import { predictNotifications } from "./core/notify.js?v=84a5c60-1791514463";
+import { josa } from "./core/josa.js?v=84a5c60-1791514463";
+import { drawRoom, drawIcon, roomLayout } from "./render/screen.js?v=84a5c60-1791514463";
+import { createAnimator, play as playAnim, frame as animFrame, addFx, DUR as ANIM_DUR } from "./render/anim.js?v=84a5c60-1791514463";
+import { pickGame, createGame, GAME_NAMES } from "./app/games.js?v=84a5c60-1791514463";
+import { EGGS, findEgg, createStreak, specialDay, SPECIAL_KO, HAT_OF, wishTime, MAKER_LETTER } from "./app/eggs.js?v=84a5c60-1791514463";
+import { earn, buy, equip, unequip, grant as grantItem, gems, canAfford, dailyStatus, claimDaily, DAILY, THEME_UNLOCK, themeOpen, forgiveStage, FORGIVE } from "./core/economy.js?v=84a5c60-1791514463";
+import { ITEMS, ITEM, SLOTS, TABS, PICKS, PACKS, SOON, BASIC_EQUIP, UNLOCK, UNLOCKS, WALK_UNLOCK, REVIVE, reviveItemId, REVIVE_FREE_BEFORE, candyItemId } from "./core/catalog.js?v=84a5c60-1791514463";
+import { COURSES, WALK_KO } from "./render/walk-courses.js?v=84a5c60-1791514463";
+import { renderShop, renderDeco, dailyCard, spriteCanvas } from "./app/shop-ui.js?v=84a5c60-1791514463";
+import { formKey, lookOf, FORMS as FORMS_REF, SPOT_COLORS, eggSpriteFor } from "./render/creature.js?v=84a5c60-1791514463";
+import { guessLocation, sunTimes, moonIllumination, moonPosition, moonPhaseName } from "./core/astro.js?v=84a5c60-1791514463";
+import { classifyWeather, weatherUrl, parseWeather } from "./core/weather.js?v=84a5c60-1791514463";
+import { createFacePicker, pickFace } from "./render/face.js?v=84a5c60-1791514463";
+import { SPRITES, drawSprite } from "./render/sprites.js?v=84a5c60-1791514463";
+import { loadProfile, saveProfile, freshProfile, exportCode, importCode, SAVE_KEYS, setSaveMirror, resetProfile } from "./app/store.js?v=84a5c60-1791514463";
+import * as native from "./app/native.js?v=84a5c60-1791514463";
+import * as cloud from "./app/cloud.js?v=84a5c60-1791514463";
+import { planReconcile, isPaid } from "./core/billing.js?v=84a5c60-1791514463";
+import { queueEarn, needsWallet, pendingGems, reconcileOwned } from "./core/wallet.js?v=84a5c60-1791514463";
+import { SLEEP_START_OPTS, SLEEP_END_OPTS, sleepLength, sleepOk } from "./core/daytime.js?v=84a5c60-1791514463";
+import { lastRevivable, revivePet, canRevive } from "./core/revive.js?v=84a5c60-1791514463";
+import { moveToVillage, swapWithVillage, canSwapToday, villageOf } from "./core/village.js?v=84a5c60-1791514463";
+import * as wallet from "./app/wallet.js?v=84a5c60-1791514463";
+import { sfx, setSoundEnabled } from "./app/sound.js?v=84a5c60-1791514463";
+import { markSeen, recordPet, renderCollection, letterText, portrait, currentKey, HOW_KO, unlockedSet, REWARDS, nextGoal, adultsSeen, ADULT_KEYS, formOrder, EGG_COLOR_KO } from "./app/collection.js?v=84a5c60-1791514463";
+import { deviceInfo, registerSW, enablePush, ensurePush, uploadSchedule, sendTest, serverStatus, PUSH_SERVER } from "./app/push.js?v=84a5c60-1791514463";
 
 const clock = { offset: 0, now() { return Date.now() + this.offset; } }; // offset은 개발 도구만 바꾼다
 
@@ -553,11 +554,11 @@ function onTap(ev) {
     }
     say(skyText(), 7000); sfx("tap"); return;
   }
-  if (memoBox && x >= memoBox.x - 2 && x <= memoBox.x + memoBox.w + 2 && y >= memoBox.y - 4 && y <= memoBox.y + memoBox.h + 2) { // 비밀: 추억 액자
-    const last = profile.collection[profile.collection.length - 1];
-    if (last) {
-      if (p.stage !== "egg" && !p.asleep && !p.ended && !anim.cur) playAnim(anim, "lookFrame", performance.now(), { name: last.name });
-      say(`추억 액자: ${last.name} (${last.form})`, 4000); sfx("tap"); discover("frame");
+  if (memoBox && x >= memoBox.x - 2 && x <= memoBox.x + memoBox.w + 2 && y >= memoBox.y - 4 && y <= memoBox.y + memoBox.h + 2) { // 비밀: 함께 찍은 사진
+    const others = photoMembers().filter((m) => m.name !== p?.name);
+    if (others.length) {
+      if (p.stage !== "egg" && !p.asleep && !p.ended && !anim.cur) playAnim(anim, "lookFrame", performance.now(), { name: others[0].name });
+      say(`함께 찍은 사진: ${photoMembers().map((m) => m.name).join(", ")}`, 4000); sfx("tap"); discover("frame");
       return;
     }
   }
@@ -756,7 +757,7 @@ function startFarewell() {
 }
 function showLetter() {
   const p = profile.pet; if (!p) return;
-  $("ending-title").textContent = p.ended.type === "star" ? `${I(p.name)} 별이 됐어요` : p.ended.type === "retired" ? `${josa(p.name, "과", "와")} 작별해요` : `${p.name}의 편지`;
+  $("ending-title").textContent = p.ended.type === "star" ? `${I(p.name)} 별이 됐어요` : p.ended.type === "retired" ? `${I(p.name)} 이사 가요` : `${p.name}의 편지`;
   $("ending-letter").textContent = letterText(p);
   const back = $("btn-ending-back"); back.hidden = !["journey", "runaway"].includes(p.ended.type); back.textContent = `${josa(p.name, "을", "를")} 다시 데려오기`;
   $("ending-meta").textContent = `${(p.ageMin / 1440).toFixed(1)}살 · 돌봄 실수 ${p.mistakes.total} · ${HOW_KO[p.ended.type] || ""}`;
@@ -785,18 +786,24 @@ function finishEnding() {
 // 친구 부활권(하트 보석, 기록마다 한 번). 사기 전에 누가 어떤 모습으로 돌아오는지 보여 준다(경제 자문). 부활권이 생기기 전에 떠난 친구는 한 번 무료
 function offerRevive(rec) {
   if (!canRevive(rec)) return;
-  const free = (rec.endedAt || 0) < REVIVE_FREE_BEFORE;
+  const free = false; // 늘 유료(사용자 결정 2026-10-09). 친구 마을 교대는 무료(이사 간 친구는 플레이어 잘못이 아님)
   const cur = profile.pet && !profile.pet.ended && profile.pet.stage !== "egg" ? profile.pet : null;
   document.querySelector(".dexcard.revivecard")?.remove();
   const card = document.createElement("div"); card.className = "dexcard revivecard";
   const when = rec.endedAt ? new Date(rec.endedAt).toLocaleDateString("ko-KR") : "";
   card.innerHTML = `<div class="dexcard-in"><button class="x" aria-label="닫기">✕</button><b>${REVIVE.name}</b><canvas width="112" height="92" style="width:112px;height:92px;image-rendering:pixelated;display:block;margin:8px auto"></canvas>
     <p class="small"><b></b> · <span></span></p><p class="small dim"></p>
-    <p class="small">이 친구가 그 모습 그대로 돌아와요. 돌아온 친구는 다시 여행을 떠나지 않아요(돌보지 않으면 삐져 떠날 수는 있어요).${cur ? ` 지금 키우는 친구는 도감에 남아요.` : ""}</p>
+    <p class="small">이 친구가 그 모습 그대로 돌아와요. 돌아온 친구는 다시 여행을 떠나지 않아요.</p>
+    ${cur ? `<div class="rvmove"><canvas width="76" height="50"></canvas><p class="small"></p></div>` : ""}
     <button class="big" id="rv-go"></button></div>`;
   portrait(card.querySelector("canvas"), rec.key, rec.look || {});
   card.querySelector("p b").textContent = rec.name; card.querySelector("p span").textContent = rec.form || "";
-  card.querySelector("p.dim").textContent = `${when} ${rec.how === "runaway" ? "떠나 버렸어요" : "여행을 떠났어요"} · ${rec.ageDays}살 · 실수 ${rec.mistakes}`;
+  card.querySelector("p.dim").textContent = `${when} ${rec.how === "runaway" ? "할머니 댁에 갔어요" : "여행을 떠났어요"} · ${rec.ageDays}살`;
+  if (cur) { // 결과를 미리: 지금 친구는 친구 마을로 이사(언제든 만남)
+    const mv = card.querySelector(".rvmove");
+    if (cur.stage !== "egg") portrait(mv.querySelector("canvas"), currentKey(cur), lookOf(cur)); else mv.querySelector("canvas").remove();
+    mv.querySelector("p").textContent = `${josa(cur.name, "은", "는")} 친구 마을로 이사 가요. 도감 → 친구 마을에서 언제든 만날 수 있어요.`;
+  }
   const go = card.querySelector("#rv-go");
   go.textContent = free ? "무료로 데려오기 (부활권 생기기 전에 떠난 친구)" : `하트 보석 ${REVIVE.price.gem}개로 데려오기`;
   card.querySelector(".x").addEventListener("click", () => card.remove());
@@ -818,8 +825,8 @@ function offerRevive(rec) {
 // 여행 떠난 친구 다시 데려오기(도감 기록으로). 지금 키우는 친구가 있으면 그 친구는 도감에 남기고 바꾼다
 function bringBack(rec) {
   if (!canRevive(rec)) return;
-  const cur = profile.pet;
-  if (cur && !cur.ended && cur.stage !== "egg") { retirePet(cur, clock.now(), S()); recordPet(profile, cur); }
+  const cur = profile.pet && !profile.pet.ended ? profile.pet : null;
+  if (cur) moveToVillage(profile, cur, clock.now()); // 지금 친구는 사라지지 않고 친구 마을로 이사(돌보는 건 하나)
   profile.pet = revivePet(rec, clock.now());
   rec.returnedAt = Date.now();
   profile.ui.poopSlots = []; farewellShown = false;
@@ -827,26 +834,42 @@ function bringBack(rec) {
   $("start").hidden = true; $("ending").hidden = true; closeSheet();
   pickFace(faces, profile.pet, performance.now(), { force: true });
   renderStats(); scheduleSync(500);
-  setTimeout(() => { playAnim(anim, "greetBig", performance.now()); sfx("greet"); say(`${I(rec.name)} 여행에서 돌아왔어요! 이제 계속 함께해요`, 6000); }, 400);
+  setTimeout(() => { playAnim(anim, "greetBig", performance.now()); sfx("greet"); say(`${I(rec.name)} 돌아왔어요! 이제 계속 함께해요${cur ? `. ${josa(cur.name, "은", "는")} 친구 마을로 이사 갔어요(도감에서 만나요)` : ""}`, 7000); }, 400);
 }
 
-// "계속 살기"에서 직접 마무리
+// 새 알 받기: 지금 친구는 친구 마을로 이사(작별 대신). 다시 여행을 떠나지 않는 친구(돌아온 친구·계속 살기)에게만
 function retireNow() {
   const p = profile.pet; if (!p) return;
-  if (!confirm(`${josa(p.name, "과", "와")} 작별하고 새 알을 받을까요? ${I(p.name)} 도감에 남아요.`)) return;
-  retirePet(p, clock.now(), S());
-  closeSheet();
-  startFarewell();
+  if (!confirm(`${josa(p.name, "은", "는")} 친구 마을로 이사 가고 새 알을 받을까요? 도감 → 친구 마을에서 언제든 만날 수 있어요.`)) return;
+  moveToVillage(profile, p, clock.now());
+  profile.pet = null; profile.ui.poopSlots = [];
+  persist(); markCloudDirty(); clearSchedule();
+  closeSheet(); showStart(); renderStats();
+  say(`${josa(p.name, "이", "가")} 친구 마을로 이사 갔어요. "놀러 와!"라고 했어요`, 6000);
+}
+// 친구 마을 친구와 교대(하루 한 번, 무료)
+function swapVillage(i) {
+  const v = villageOf(profile)[i]; if (!v) return;
+  const cur = profile.pet && !profile.pet.ended ? profile.pet : null;
+  if (!canSwapToday(profile, clock.now())) { say("오늘은 이미 친구를 바꿨어요. 내일 또 바꿀 수 있어요", 4000); sfx("refuse"); return; }
+  if (!confirm(cur ? `${josa(v.pet.name, "을", "를")} 데려오고 ${josa(cur.name, "은", "는")} 친구 마을에 놀러 갈까요? 하루에 한 번 바꿀 수 있어요.` : `${josa(v.pet.name, "을", "를")} 데려올까요?`)) return;
+  const r = swapWithVillage(profile, i, clock.now()); if (!r.ok) return;
+  profile.ui.poopSlots = []; farewellShown = false;
+  persist(); markCloudDirty();
+  $("start").hidden = true; closeSheet();
+  pickFace(faces, profile.pet, performance.now(), { force: true });
+  renderStats(); scheduleSync(500);
+  setTimeout(() => { playAnim(anim, "greetBig", performance.now()); sfx("greet"); say(`${I(r.back.name)} 친구 마을에서 놀러 왔어요!${r.moved ? ` ${josa(r.moved.name, "은", "는")} 마을에서 쉬어요` : ""}`, 6000); }, 400);
 }
 
 // ---------- 도감 ----------
 function renderDex() {
-  renderCollection($("dex-body"), profile, { pet: profile.pet, settings: profile.settings, onRevive: (r) => { closeSheet(); offerRevive(r); } });
+  renderCollection($("dex-body"), profile, { pet: profile.pet, settings: profile.settings, onRevive: (r) => { closeSheet(); offerRevive(r); }, village: villageOf(profile), canSwap: canSwapToday(profile, clock.now()), onSwap: (i) => swapVillage(i) });
   const p = profile.pet;
   const box = $("dex-retire");
   box.innerHTML = "";
-  if (p && !p.ended && p.stage === "adult" && profile.settings.endMode === "forever") {
-    const b = document.createElement("button"); b.className = "big ghost"; b.textContent = `${josa(p.name, "과", "와")} 작별하고 새 알 받기`;
+  if (p && !p.ended && p.stage === "adult" && (profile.settings.endMode === "forever" || p.returned)) {
+    const b = document.createElement("button"); b.className = "big ghost"; b.textContent = `${josa(p.name, "은", "는")} 친구 마을로 이사, 새 알 받기`;
     b.addEventListener("click", retireNow); box.append(b);
   }
 }
@@ -901,7 +924,7 @@ function showStart() {
   $("start").hidden = false;
   renderThemeLocks();
   const rv = lastRevivable(profile), b = $("btn-revive");
-  b.hidden = !rv; if (rv) { b.textContent = `${rv.how === "runaway" ? "떠나 버린" : "여행 떠난"} ${josa(rv.name, "을", "를")} 다시 데려오기`; b.onclick = () => offerRevive(rv); }
+  b.hidden = !rv; if (rv) { b.textContent = `${rv.how === "runaway" ? "할머니 댁에 간" : "여행 떠난"} ${josa(rv.name, "을", "를")} 다시 데려오기`; b.onclick = () => offerRevive(rv); }
   stepTo("theme");
 }
 // 알 고르기: 잠긴 알은 실루엣처럼 흐리게 + 가격을 미리 보여 줌(눌러서 바로 열 수 있게)
@@ -1351,17 +1374,26 @@ function resetPet() {
   clearSchedule();
 }
 
-// ---------- 방 꾸밈: 장착한 꾸미기 + 상점 미리 보기 + 도감 보상(추억 액자) ----------
+// 함께 찍은 사진에 나올 친구들: 지금 친구 + 친구 마을 친구 + 최근 함께한 친구(최대 3명)
+function photoMembers() {
+  const out = [], seen = new Set();
+  const add = (key, look, name) => { if (key && !seen.has(name + key) && out.length < 3) { seen.add(name + key); out.push({ key, look: look || {}, name }); } };
+  const p = profile.pet; if (p && !p.ended && p.stage !== "egg") add(currentKey(p), lookOf(p), p.name);
+  for (const v of [...villageOf(profile)].reverse()) if (v.pet.stage !== "egg") add(currentKey(v.pet), lookOf(v.pet), v.pet.name);
+  for (const r of [...profile.collection].reverse()) add(r.key, r.look, r.name);
+  return out;
+}
+// ---------- 방 꾸밈: 장착한 꾸미기 + 상점 미리 보기 + 도감 보상(함께 찍은 사진) ----------
 let previewDeco = null; // 상점에서 미리 놓아 보는 중인 상품 { slot: id }
 let decoCache = { key: "", deco: {} };
 function roomDeco() {
-  const last = profile.collection[profile.collection.length - 1];
   const eq = profile.econ ? profile.econ.equipped : {};
-  const k = `${profile.collection.length}|${Object.keys(profile.seen).length}|${JSON.stringify(eq)}|${JSON.stringify(previewDeco)}`;
+  const members = photoMembers();
+  const k = `${members.map((m) => m.key + (m.look?.spot || "")).join(",")}|${Object.keys(profile.seen).length}|${JSON.stringify(eq)}|${JSON.stringify(previewDeco)}`;
   if (decoCache.key !== k) {
     const open = unlockedSet(profile);
     decoCache = { key: k, deco: {
-      memory: open.has("frame") && last ? { key: last.key, look: last.look || {}, gold: open.has("goldFrame") } : null,
+      memory: open.has("frame") && members.length >= 2 ? { members, gold: open.has("goldFrame") } : null, // 함께 찍은 사진(혼자 있는 초상은 걸지 않음, 아동 심리 자문)
       deco: { ...eq, ...(previewDeco || {}) },
     } };
   }
@@ -1544,7 +1576,7 @@ function boot() {
   // 개발 도구(공개 배포에는 없음): ?dev 로 열기
   if (QS.has("dev")) {
     window.__pp = { clock, getProfile: () => profile, tick, anim, playAnim: (n, d) => playAnim(anim, n, performance.now(), d), mg: () => mg, layout: () => layout, forceGame: null, boxes: () => ({ windowBox, petBox, memoBox }), render: () => renderStats() };
-    import("./dev/panel.js?v=27feca3-1791512818").then((m) => m.mount({ clock, getProfile: () => profile, tick, renderStats, syncNow, serverStatus })).catch(() => {});
+    import("./dev/panel.js?v=84a5c60-1791514463").then((m) => m.mount({ clock, getProfile: () => profile, tick, renderStats, syncNow, serverStatus })).catch(() => {});
   }
 }
 

@@ -1,11 +1,11 @@
 // 방 화면 그리기. 게임 규칙은 모르고 받은 상태만 그린다.
 // 캔버스는 "도트 해상도"로 그리고 CSS가 정수배로 키운다.
-import { PALETTE } from "./palette.js?v=27feca3-1791512818";
-import { SPRITES, drawSprite, spriteSize } from "./sprites.js?v=27feca3-1791512818";
-import { buildCreature, paintGrid, formKey, eggSpriteFor } from "./creature.js?v=27feca3-1791512818";
-import { drawFace, POOLS } from "./face.js?v=27feca3-1791512818";
-import { drawSky } from "./sky.js?v=27feca3-1791512818";
-import { drawWall, drawFloor, drawRug, drawCurtain, drawFurniture, drawLampGlow, HAT_SPRITE, FURN_HALF } from "./deco.js?v=27feca3-1791512818";
+import { PALETTE } from "./palette.js?v=84a5c60-1791514463";
+import { SPRITES, drawSprite, spriteSize } from "./sprites.js?v=84a5c60-1791514463";
+import { buildCreature, paintGrid, formKey, eggSpriteFor } from "./creature.js?v=84a5c60-1791514463";
+import { drawFace, POOLS } from "./face.js?v=84a5c60-1791514463";
+import { drawSky } from "./sky.js?v=84a5c60-1791514463";
+import { drawWall, drawFloor, drawRug, drawCurtain, drawFurniture, drawLampGlow, HAT_SPRITE, FURN_HALF } from "./deco.js?v=84a5c60-1791514463";
 
 // 방 배치(그리기와 동작이 같은 좌표를 쓰게 한 곳에서 계산)
 export function roomLayout(w, h, deco = {}) {
@@ -16,8 +16,8 @@ export function roomLayout(w, h, deco = {}) {
   const furnPos = { furnL: Math.max(half(deco.furnL) + 2, Math.round(w * 0.13)), furnR: Math.min(w - half(deco.furnR) - 2, Math.round(w * 0.87)) };
   return { floorY, cx: Math.round(w / 2), rugY, baseY: rugY + 4, furnBase, furnPos };
 }
-import { WALK_STOPS as WALK_STOPS_REF, walkDist as walkDistRef } from "./anim.js?v=27feca3-1791512818";
-import { drawCourseBg, drawCourseThing, isSplash } from "./walk-courses.js?v=27feca3-1791512818";
+import { WALK_STOPS as WALK_STOPS_REF, walkDist as walkDistRef } from "./anim.js?v=84a5c60-1791514463";
+import { drawCourseBg, drawCourseThing, isSplash } from "./walk-courses.js?v=84a5c60-1791514463";
 const clamp01 = (x) => Math.max(0, Math.min(1, x));
 
 const FLOOR = "#f5b98c";
@@ -37,7 +37,7 @@ export function drawRoom(ctx, { w, h, now, scene, f, wall = Date.now(), loc = { 
   const skyInfo = drawWindow(ctx, win, wall, loc, now, 0, weather);
   drawCurtain(ctx, win, deco.curtain);
 
-  // 액자: 도감 보상 '추억 액자'가 열리면 가장 최근 함께한 친구 그림(금 액자 보상이면 금색 테두리)
+  // 사진: 도감 보상 '함께 찍은 사진'이 열리면 지금 친구와 함께한 친구들의 단체 사진(반짝 사진틀이면 금색 테두리)
   const memo = scene && scene.memory;
   if (memo) drawMemoryFrame(ctx, Math.round(w * 0.64), Math.round(floorY * 0.2), memo);
   else {
@@ -102,7 +102,7 @@ export function drawRoom(ctx, { w, h, now, scene, f, wall = Date.now(), loc = { 
     ctx.globalAlpha = 1;
   }
   if (fr.flash > 0) { ctx.fillStyle = `rgba(255,255,255,${fr.flash})`; ctx.fillRect(0, 0, w, h); }
-  return { pet: box, poops: poopRects, window: win, sky: skyInfo, memo: memo ? { x: Math.round(w * 0.64), y: Math.round(floorY * 0.2), w: 36, h: 34 } : null, layout: { w, h, cx, baseY, headY: box ? box.y + 4 : baseY - 30 } };
+  return { pet: box, poops: poopRects, window: win, sky: skyInfo, memo: memo ? { x: Math.round(w * 0.64), y: Math.round(floorY * 0.2), w: 40, h: 34 } : null, layout: { w, h, cx, baseY, headY: box ? box.y + 4 : baseY - 30 } };
 }
 
 // ---------- 산책: 바깥 장면 ----------
@@ -264,31 +264,36 @@ function drawFx(ctx, fx) {
   }
 }
 
-// 추억 액자: 최근 함께한 친구 초상화(1칸=1px), 캐시해서 매 프레임 다시 만들지 않음
-const MEMO_CACHE = { key: "", canvas: null };
+// 함께 찍은 사진(2026-10-09, 아동 심리 자문: 혼자 있는 초상 액자는 영정처럼 보여서): 지금 친구와 친구 마을 친구들이 나란히 선 단체 사진.
+// 흰 테두리 사진(반짝 사진틀 보상이면 금색 테두리), 친구 그림은 1칸=1px로 캐시
+const MEMO_CACHE = new Map();
+function memberCanvas(key, look) {
+  const ck = `${key}|${JSON.stringify(look || {})}`;
+  if (!MEMO_CACHE.has(ck) && typeof document !== "undefined") {
+    const b = buildCreature(key, { look: look || {} });
+    if (!b) return null;
+    drawFace(b.g, b.P, POOLS.great[1]);
+    const c = document.createElement("canvas"); c.width = 76; c.height = 50; paintGrid(c.getContext("2d"), b.g, 38, 48, 1);
+    MEMO_CACHE.set(ck, c); if (MEMO_CACHE.size > 20) MEMO_CACHE.delete(MEMO_CACHE.keys().next().value);
+  }
+  return MEMO_CACHE.get(ck) || null;
+}
 function drawMemoryFrame(ctx, fx, fy, memo) {
-  const W = 36, H = 34;
+  const W = 40, H = 34;
   ctx.fillStyle = PALETTE.k; ctx.fillRect(fx - 1, fy - 1, W + 2, H + 2);
-  ctx.fillStyle = memo.gold ? PALETTE.Y : PALETTE.o; ctx.fillRect(fx, fy, W, H);
+  ctx.fillStyle = memo.gold ? PALETTE.Y : PALETTE.w; ctx.fillRect(fx, fy, W, H);
   if (memo.gold) { ctx.fillStyle = PALETTE.y; ctx.fillRect(fx, fy, W, 1); ctx.fillRect(fx, fy, 1, H); }
-  ctx.fillStyle = "#fff4e3"; ctx.fillRect(fx + 2, fy + 2, W - 4, H - 4);
-  const ck = `${memo.key}|${JSON.stringify(memo.look)}`;
-  if (MEMO_CACHE.key !== ck && typeof document !== "undefined") {
-    const b = buildCreature(memo.key, { look: memo.look || {} });
-    if (b) {
-      drawFace(b.g, b.P, POOLS.great[1]);
-      const c = document.createElement("canvas"); c.width = 76; c.height = 50;
-      const cx2 = c.getContext("2d"); paintGrid(cx2, b.g, 38, 48, 1);
-      MEMO_CACHE.key = ck; MEMO_CACHE.canvas = c;
-    }
-  }
-  if (MEMO_CACHE.key === ck && MEMO_CACHE.canvas) {
-    // 그림을 액자 안쪽에 맞춰(정수배 축소 없이 가운데 잘라) 넣는다
-    const iw = W - 4, ih = H - 4;
-    ctx.save(); ctx.beginPath(); ctx.rect(fx + 2, fy + 2, iw, ih); ctx.clip();
-    ctx.drawImage(MEMO_CACHE.canvas, 38 - iw / 2, 49 - ih, iw, ih, fx + 2, fy + 2, iw, ih); // 1:1, 발이 액자 아래쪽
-    ctx.restore();
-  }
+  const ix = fx + 2, iy = fy + 2, iw = W - 4, ih = H - 7; // 아래 테두리가 조금 두꺼운 사진
+  ctx.fillStyle = "#bfe3ff"; ctx.fillRect(ix, iy, iw, ih); ctx.fillStyle = "#8fd694"; ctx.fillRect(ix, iy + ih - 6, iw, 6);
+  const ms = memo.members || [];
+  ctx.save(); ctx.beginPath(); ctx.rect(ix, iy, iw, ih); ctx.clip();
+  ms.forEach((m, n) => {
+    const c = memberCanvas(m.key, m.look); if (!c) return;
+    const cx = ix + Math.round(((n + 0.5) / ms.length) * iw);
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(c, 0, 0, 76, 50, cx - 19, iy + ih - 25 + (n % 2 ? 1 : 0), 38, 25); // 반 크기로 나란히(사진 속 단체 사진), 발이 아래쪽
+  });
+  ctx.restore();
   ctx.fillStyle = PALETTE.k; ctx.fillRect(fx + W / 2 - 1, fy - 5, 2, 4); // 거는 끈
 }
 

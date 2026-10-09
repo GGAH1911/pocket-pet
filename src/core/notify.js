@@ -1,10 +1,10 @@
 // 알림 일정 예측. "지금부터 아무도 안 돌보면 언제 무슨 일이 생기나"를 계산해 알림 목록으로 만든다.
 // 휴대폰이 이 목록을 알림 서버에 올리고, 서버는 시각이 되면 보내기만 한다.
 // 규칙은 GDD 7-1절. 공정성 원칙(알림 없이 돌봄 실수가 생기지 않음)은 test/notify.test.mjs 가 지킨다.
-import { advance } from "./sim.js?v=27feca3-1791512818";
-import { isBusyTime } from "./daytime.js?v=27feca3-1791512818";
-import { DEFAULT_SETTINGS } from "./rules.js?v=27feca3-1791512818";
-import { josa } from "./josa.js?v=27feca3-1791512818";
+import { advance } from "./sim.js?v=84a5c60-1791514463";
+import { isBusyTime } from "./daytime.js?v=84a5c60-1791514463";
+import { DEFAULT_SETTINGS } from "./rules.js?v=84a5c60-1791514463";
+import { josa } from "./josa.js?v=84a5c60-1791514463";
 
 const I = (n) => josa(n, "이", "가"); // 주격
 const EUL = (n) => josa(n, "을", "를"); // 목적격
@@ -15,8 +15,8 @@ export const SAME_KIND_GAP_MS = 60 * MIN;
 
 // 우선순위 순서(앞이 더 급함). urgent는 최소 간격·바쁜 시간 거르기를 무시한다.
 export const KINDS = {
-  ended: { urgent: true, text: (n, e) => (e.how === "journey" ? `${I(n)} 여행을 떠났어요. 편지를 남겼어요` : e.how === "runaway" ? `${I(n)} 삐져서 떠나 버렸어요. 편지를 남겼어요` : `${I(n)} 하늘의 별이 됐어요`) },
-  danger: { urgent: true, text: (n) => `${I(n)} 많이 아파요. 이대로면 떠나 버릴지도 몰라요` },
+  ended: { urgent: true, text: (n, e) => (e.how === "journey" ? `${I(n)} 여행을 떠났어요. 편지를 남겼어요` : e.how === "runaway" ? `${I(n)} 서운해서 친구 마을 할머니 댁에 갔어요. 데리러 가 볼까요?` : `${I(n)} 하늘의 별이 됐어요`) },
+  danger: { urgent: true, text: (n) => `${I(n)} 배고프고 아파서 기운이 없어요. 돌봐 주러 와 줄래요?` }, // 불안을 주지 않게(아동 심리 자문)
   cryHunger: { urgent: true, text: (n) => `${I(n)} 배고파서 울고 있어요. 1시간 안에 와 주세요` },
   cryMood: { urgent: true, text: (n) => `${I(n)} 심심해서 울고 있어요. 1시간 안에 와 주세요` },
   sick: { urgent: true, text: (n) => `${I(n)} 아파요. 약이 필요해요` },

@@ -1,4 +1,4 @@
-import { WALK_REACT } from "./walk-courses.js?v=27feca3-1791512818";
+import { WALK_REACT } from "./walk-courses.js?v=84a5c60-1791514463";
 // 애니메이션 엔진. 게임 규칙과는 무관하게 "지금 화면에 어떻게 보일지"만 계산한다.
 // - 한 번 재생(행동 반응, 부화, 진화): play(type, data)
 // - 평소 움직임(깜빡임, 걸어 다니기, 숨쉬기)과 상태 표현(눈물, 어지러움, Zzz)은 매 프레임 계산
@@ -322,8 +322,8 @@ function applyOneShot(f, c, t, now, scene) {
     case "lookFrame": {
       // 그리운 친구: 액자(오른쪽 위) 쪽을 올려다보며 "○○ 보고 싶다…"
       p.facing = 1; p.dx += ease(t / 0.3) * 10;
-      p.eyes = t < 0.6 ? "round" : "teary"; p.mouth = t < 0.6 ? "o" : "smile";
-      if (t > 0.25) f.texts.push({ text: `${c.data.name || "친구"} 보고 싶다…`, x: 0, y: -48, alpha: Math.min(1, (t - 0.25) * 4), size: 8 });
+      p.eyes = t < 0.6 ? "round" : "happy"; p.mouth = t < 0.6 ? "o" : "bigsmile";
+      if (t > 0.25) f.texts.push({ text: `${c.data.name || "친구"} 잘 지내나? 놀러 가고 싶다!`, x: 0, y: -48, alpha: Math.min(1, (t - 0.25) * 4), size: 8 });
       if (t > 0.6) f.props.push({ sprite: "heart", x: 18, y: -38 - (t - 0.6) * 40, scale: 2, alpha: 1 - (t - 0.6) * 2 });
       break;
     }

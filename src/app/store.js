@@ -1,8 +1,8 @@
 // 저장: 휴대폰 브라우저 저장소(localStorage). 직전 저장본을 백업으로 하나 더 둔다.
-import { DEFAULT_SETTINGS } from "../core/rules.js?v=27feca3-1791512818";
-import { SAVE_VERSION, migratePet } from "../core/state.js?v=27feca3-1791512818";
-import { newEcon, normalizeEcon, grant, equip } from "../core/economy.js?v=27feca3-1791512818";
-import { ensureBasics, ITEM } from "../core/catalog.js?v=27feca3-1791512818";
+import { DEFAULT_SETTINGS } from "../core/rules.js?v=84a5c60-1791514463";
+import { SAVE_VERSION, migratePet } from "../core/state.js?v=84a5c60-1791514463";
+import { newEcon, normalizeEcon, grant, equip } from "../core/economy.js?v=84a5c60-1791514463";
+import { ensureBasics, ITEM } from "../core/catalog.js?v=84a5c60-1791514463";
 
 const KEY = "pocket-pet:save";
 const BACKUP = "pocket-pet:save:backup";
@@ -24,7 +24,7 @@ export function freshProfile() {
 export function migrateProfile(p) { return migrate(p); }
 
 // '처음부터 다시': 펫만 새로. 기기·설정·도감·화폐·꾸미기·비밀과 이어하기 연결·결제 지급 대기·거래기록 보고 대기열은 지킨다(전수 조사 A1)
-export const RESET_KEEP = ["deviceId", "push", "settings", "collection", "seen", "econ", "eggs", "cloud", "payPending", "payReport", "wallet", "walletEnc", "walletMergeFrom"];
+export const RESET_KEEP = ["deviceId", "push", "settings", "collection", "seen", "econ", "eggs", "cloud", "payPending", "payReport", "wallet", "walletEnc", "walletMergeFrom", "village", "villageSwapDay"];
 export function resetProfile(p) {
   const out = { ...freshProfile(), seenGuide: true };
   for (const k of RESET_KEEP) if (p[k] !== undefined) out[k] = p[k];
@@ -44,6 +44,7 @@ function migrate(p) {
   p.seen = p.seen && typeof p.seen === "object" ? p.seen : {};
   p.ui = p.ui || { poopSlots: [] };
   if (p.pet) p.pet = migratePet(p.pet); // 옛 펫도 버리지 않고 새 모양으로 바꾼다(알 수 없는 버전만 null)
+  p.village = Array.isArray(p.village) ? p.village.filter((v) => v && v.pet && (v.pet = migratePet(v.pet))) : []; // 친구 마을
   // 화폐·꾸미기(2026-10-05 M7): 없으면 새로, 있으면 손상 값 정리. 기본 상품은 늘 가짐
   p.econ = normalizeEcon(p.econ);
   ensureBasics(p.econ, Date.now());
