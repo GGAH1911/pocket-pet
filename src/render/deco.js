@@ -1,7 +1,7 @@
 // 방 꾸미기 그림: 벽지·바닥·러그·커튼·가구. 상점 미리보기(작은 그림)도 같은 함수로 그린다.
 // 좌표는 캔버스 논리 픽셀. 가구는 x(가운데)·base(바닥에 닿는 y) 기준.
-import { PALETTE } from "./palette.js?v=e15d242-1791548365";
-import { SPRITES, drawSprite, spriteSize } from "./sprites.js?v=e15d242-1791548365";
+import { PALETTE } from "./palette.js?v=e97b1c4-1791549514";
+import { SPRITES, drawSprite, spriteSize } from "./sprites.js?v=e97b1c4-1791549514";
 
 export const HAT_SPRITE = { hat_ribbon: "hatRibbon", hat_straw: "hatStraw", hat_glasses: "hatGlasses", hat_crown: "hatCrown", hat_flower: "hatFlower" };
 
@@ -143,6 +143,100 @@ export function drawFurniture(ctx, id, x, base, { now = 0, dark = 0, front = fal
   }
 }
 
+// ---------- 작은 칸(2026-10-09): 창가·벽걸이·바닥 소품. x = 가운데, base = 닿는 y(벽걸이는 가운데 y) ----------
+// opts: { now(움직임), wall(실제 시각, 벽시계), dark }
+export function drawSmall(ctx, id, x, base, { now = 0, wall = Date.now(), dark = 0 } = {}) {
+  const k = P.k;
+  if (id === "sill_cactus") {
+    rect(ctx, x - 4, base - 5, 8, 5, k); rect(ctx, x - 3, base - 4, 6, 3, P.o); rect(ctx, x - 3, base - 4, 6, 1, P.O);
+    rect(ctx, x - 2, base - 13, 4, 8, k); rect(ctx, x - 1, base - 12, 2, 7, P.G);
+    rect(ctx, x - 5, base - 11, 3, 4, k); rect(ctx, x - 4, base - 10, 1, 2, P.G); rect(ctx, x + 2, base - 12, 3, 4, k); rect(ctx, x + 3, base - 11, 1, 2, P.G);
+    rect(ctx, x, base - 14, 1, 1, P.p);
+  } else if (id === "sill_cat") {
+    const wag = Math.floor(now / 500) % 4 === 0 ? -1 : 0;
+    rect(ctx, x + 4, base - 6 + wag, 3, 2, k); rect(ctx, x + 6, base - 9 + wag, 2, 4, k); // 꼬리
+    rect(ctx, x - 5, base - 7, 10, 7, k); rect(ctx, x - 4, base - 6, 8, 5, P.w); // 몸
+    rect(ctx, x - 4, base - 13, 8, 7, k); rect(ctx, x - 3, base - 12, 6, 5, P.w); // 머리
+    rect(ctx, x - 4, base - 15, 2, 2, k); rect(ctx, x + 2, base - 15, 2, 2, k); // 귀
+    rect(ctx, x - 2, base - 10, 1, 1, k); rect(ctx, x + 1, base - 10, 1, 1, k); rect(ctx, x - 3, base - 9, 1, 1, P.p); rect(ctx, x + 2, base - 9, 1, 1, P.p);
+    rect(ctx, x - 1, base - 4, 2, 2, P.o);
+  } else if (id === "sill_jar") {
+    rect(ctx, x - 4, base - 11, 8, 11, k); rect(ctx, x - 3, base - 10, 6, 9, "#cfeaff"); rect(ctx, x - 3, base - 13, 6, 3, k); rect(ctx, x - 2, base - 12, 4, 1, P.N);
+    const tw = Math.floor(now / 400);
+    for (const [dx, dy, i] of [[-2, -3, 0], [1, -5, 1], [-1, -8, 2], [2, -2, 3]]) rect(ctx, x + dx, base + dy, 1, 1, (tw + i) % 3 === 0 || dark > 0.25 ? P.y : P.Y);
+    rect(ctx, x - 3, base - 10, 1, 4, P.w);
+  } else if (id === "wall_clock") {
+    const cy = base;
+    ellipse(ctx, x, cy, 8, 8, k); ellipse(ctx, x, cy, 7, 7, P.w); ellipse(ctx, x, cy, 6, 6, "#fffaf2");
+    for (const [dx, dy] of [[0, -5], [5, 0], [0, 5], [-5, 0]]) rect(ctx, x + dx, cy + dy, 1, 1, k);
+    const d = new Date(wall), hh = (d.getHours() % 12) + d.getMinutes() / 60, mm = d.getMinutes();
+    const hand = (ang, len, c) => { for (let i = 1; i <= len; i++) rect(ctx, x + Math.round(Math.sin(ang) * i), cy - Math.round(Math.cos(ang) * i), 1, 1, c); };
+    hand((hh / 12) * Math.PI * 2, 3, k); hand((mm / 60) * Math.PI * 2, 5, P.r);
+    rect(ctx, x, cy, 1, 1, k); rect(ctx, x - 1, cy - 10, 3, 2, P.p);
+  } else if (id === "wall_shelf") {
+    const y = base + 4;
+    rect(ctx, x - 11, y, 22, 3, k); rect(ctx, x - 10, y + 1, 20, 1, P.n);
+    rect(ctx, x - 9, y + 3, 2, 3, k); rect(ctx, x + 7, y + 3, 2, 3, k);
+    rect(ctx, x - 8, y - 5, 5, 5, k); rect(ctx, x - 7, y - 4, 3, 3, P.v); // 작은 화분
+    rect(ctx, x - 7, y - 8, 1, 3, P.G); rect(ctx, x - 5, y - 9, 1, 4, P.G); rect(ctx, x - 6, y - 10, 1, 1, P.p); rect(ctx, x - 4, y - 10, 1, 1, P.y);
+    rect(ctx, x + 1, y - 7, 3, 7, k); rect(ctx, x + 2, y - 6, 1, 5, P.b); rect(ctx, x + 4, y - 6, 3, 6, k); rect(ctx, x + 5, y - 5, 1, 4, P.y); // 책
+  } else if (id === "wall_garland") {
+    const cols = [P.p, P.y, P.b, P.g, P.v];
+    for (let i = -12; i <= 12; i++) rect(ctx, x + i, base - 6 + Math.round((i * i) / 30), 1, 1, k);
+    cols.forEach((c, n) => { const fx = x - 10 + n * 5, fy = base - 5 + Math.round(((fx - x) ** 2) / 30); rect(ctx, fx - 2, fy, 5, 2, c); rect(ctx, fx - 1, fy + 2, 3, 2, c); rect(ctx, fx, fy + 4, 1, 1, c); });
+  } else if (id === "prop_ball") {
+    const b = Math.abs(Math.round(Math.sin(now / 600) * 1));
+    ellipse(ctx, x, base - 5 - b, 5, 5, k); ellipse(ctx, x, base - 5 - b, 4, 4, P.r);
+    rect(ctx, x - 4, base - 6 - b, 9, 2, P.y); rect(ctx, x - 1, base - 9 - b, 2, 8, P.b); rect(ctx, x - 2, base - 8 - b, 1, 1, P.w);
+  } else if (id === "prop_bear") {
+    ellipse(ctx, x, base - 5, 6, 5, k); ellipse(ctx, x, base - 5, 5, 4, P.N); ellipse(ctx, x, base - 4, 2, 2, P.n); // 몸
+    ellipse(ctx, x, base - 13, 5, 4, k); ellipse(ctx, x, base - 13, 4, 3, P.N); // 머리
+    rect(ctx, x - 5, base - 18, 3, 3, k); rect(ctx, x + 3, base - 18, 3, 3, k); rect(ctx, x - 4, base - 17, 1, 1, P.n); rect(ctx, x + 4, base - 17, 1, 1, P.n);
+    rect(ctx, x - 2, base - 14, 1, 1, k); rect(ctx, x + 2, base - 14, 1, 1, k); rect(ctx, x - 1, base - 12, 3, 2, P.n); rect(ctx, x, base - 12, 1, 1, k);
+    rect(ctx, x - 1, base - 9, 3, 1, P.r);
+  } else if (id === "prop_train") {
+    rect(ctx, x - 8, base - 9, 16, 6, k); rect(ctx, x - 7, base - 8, 14, 4, P.r); rect(ctx, x + 1, base - 13, 7, 5, k); rect(ctx, x + 2, base - 12, 5, 3, P.b); // 몸·칸
+    rect(ctx, x - 6, base - 12, 3, 3, k); rect(ctx, x - 7, base - 13, 5, 1, k); // 굴뚝
+    for (const wx of [-5, 0, 5]) { rect(ctx, x + wx - 2, base - 4, 4, 4, k); rect(ctx, x + wx - 1, base - 3, 2, 2, P.N); }
+    const ph = (now / 900) % 1; ctx.globalAlpha = 1 - ph; ellipse(ctx, x - 5 - Math.round(ph * 3), base - 15 - Math.round(ph * 6), 2, 2, P.w); ctx.globalAlpha = 1;
+  }
+}
+
+// ---------- 놀이방 기구(2026-10-09). x = 가운데, base = 바닥 ----------
+export function drawPlay(ctx, id, x, base, { now = 0 } = {}) {
+  const k = P.k;
+  if (id === "play_slide") {
+    rect(ctx, x - 14, base - 30, 3, 30, k); rect(ctx, x - 8, base - 30, 3, 30, k); // 사다리
+    for (let y = base - 26; y < base; y += 6) rect(ctx, x - 13, y, 7, 2, P.y);
+    rect(ctx, x - 13, base - 29, 1, 29, P.y); rect(ctx, x - 7, base - 29, 1, 29, P.y);
+    rect(ctx, x - 15, base - 33, 12, 4, k); rect(ctx, x - 14, base - 32, 10, 2, P.r); // 꼭대기
+    for (let i = 0; i < 24; i++) { const sx = x - 4 + i, sy = base - 31 + Math.round(i * 1.15); rect(ctx, sx, sy - 1, 1, 5, k); rect(ctx, sx, sy, 1, 3, P.b); } // 미끄럼
+    rect(ctx, x + 18, base - 4, 3, 4, k);
+  } else if (id === "play_tent") {
+    for (let i = 0; i <= 26; i++) { const hw = Math.round(i * 0.62); rect(ctx, x - hw - 1, base - 26 + i, hw * 2 + 2, 1, k); if (i > 0) rect(ctx, x - hw, base - 26 + i, hw * 2, 1, i % 6 < 3 ? P.p : P.w); }
+    for (let i = 8; i <= 26; i++) { const hw = Math.round((i - 8) * 0.3); rect(ctx, x - hw, base - 26 + i, hw * 2 + 1, 1, "#7a4a3a"); }
+    rect(ctx, x, base - 31, 1, 6, k); rect(ctx, x + 1, base - 31, 4, 3, P.y);
+  } else if (id === "play_pool") {
+    rect(ctx, x - 18, base - 14, 36, 14, k); rect(ctx, x - 17, base - 13, 34, 12, P.b); rect(ctx, x - 17, base - 13, 34, 2, "#cfeaff");
+    const cols = [P.r, P.y, P.g, P.p, P.v, P.o];
+    for (let i = 0; i < 14; i++) { const bx = x - 15 + ((i * 7) % 31), by = base - 17 + ((i * 5) % 4); rect(ctx, bx - 1, by - 1, 4, 4, k); rect(ctx, bx, by, 2, 2, cols[i % cols.length]); }
+  } else if (id === "play_blocks") {
+    const B = [[-12, 0, P.r], [-2, 0, P.b], [8, 0, P.y], [-7, -9, P.g], [3, -9, P.p], [-2, -18, P.v]];
+    for (const [dx, dy, c] of B) { rect(ctx, x + dx - 4, base + dy - 9, 10, 9, k); rect(ctx, x + dx - 3, base + dy - 8, 8, 7, c); rect(ctx, x + dx - 3, base + dy - 8, 8, 1, P.w); }
+  } else if (id === "play_tramp") {
+    const b = Math.abs(Math.round(Math.sin(now / 350) * 2));
+    for (const lx of [-13, -5, 5, 13]) rect(ctx, x + lx, base - 7, 2, 7, k);
+    ellipse(ctx, x, base - 9 + Math.min(1, b), 17, 4, k); ellipse(ctx, x, base - 9 + Math.min(1, b), 16, 3, P.v); ellipse(ctx, x, base - 9 + Math.min(1, b), 12, 2, "#3d4f9a");
+    if (b > 1) { rect(ctx, x - 4, base - 18, 1, 2, P.w); rect(ctx, x + 4, base - 17, 1, 2, P.w); }
+  } else if (id === "play_swing") {
+    rect(ctx, x - 16, base - 34, 32, 3, k); rect(ctx, x - 15, base - 33, 30, 1, P.N);
+    for (let i = 0; i < 34; i++) { rect(ctx, x - 16 - Math.round(i * 0.12), base - 34 + i, 2, 1, k); rect(ctx, x + 14 + Math.round(i * 0.12), base - 34 + i, 2, 1, k); }
+    const sw = Math.round(Math.sin(now / 700) * 4);
+    for (let i = 0; i < 20; i++) { const t = i / 20; rect(ctx, x - 5 + Math.round(sw * t), base - 31 + i, 1, 1, P.N); rect(ctx, x + 5 + Math.round(sw * t), base - 31 + i, 1, 1, P.N); }
+    rect(ctx, x - 7 + sw, base - 12, 15, 3, k); rect(ctx, x - 6 + sw, base - 11, 13, 1, P.r);
+  }
+}
+
 // 밤에 불을 끄면 스탠드가 은은하게(어둠 위에 덧그림)
 export function drawLampGlow(ctx, x, base, dark) {
   if (dark < 0.25) return;
@@ -162,5 +256,8 @@ export function drawThumb(canvas, item, now = 0) {
   else if (item.slot === "rug") drawRug(ctx, W / 2, H / 2, W * 1.15, item.id);
   else if (item.slot === "curtain") { const r = { x: Math.round(W * 0.3), y: Math.round(H * 0.25), w: Math.round(W * 0.4), h: Math.round(H * 0.5) }; rect(ctx, r.x - 2, r.y - 2, r.w + 4, r.h + 4, P.N); rect(ctx, r.x, r.y, r.w, r.h, P.b); drawCurtain(ctx, r, item.id); }
   else if (item.slot === "furnL" || item.slot === "furnR") drawFurniture(ctx, item.id, W / 2, H - 2, { now });
+  else if (item.slot === "sill" || item.slot === "prop") { ctx.save(); ctx.translate(W / 2, H - 3); ctx.scale(2, 2); drawSmall(ctx, item.id, 0, 0, { now }); ctx.restore(); } // 작은 소품은 2배로
+  else if (item.slot === "wallR") { rect(ctx, 0, 0, W, H, P.c); ctx.save(); ctx.translate(W / 2, Math.round(H / 2)); ctx.scale(2, 2); drawSmall(ctx, item.id, 0, 0, { now }); ctx.restore(); }
+  else if (item.slot === "playL" || item.slot === "playM" || item.slot === "playR") { ctx.save(); const sc = Math.min(1, (H - 2) / 36); ctx.translate(W / 2, H - 2); ctx.scale(sc, sc); drawPlay(ctx, item.id, 0, 0, { now }); ctx.restore(); }
   else if (item.slot === "hat") { const sp = SPRITES[HAT_SPRITE[item.id]]; if (sp) { const { w: sw, h: sh } = spriteSize(sp); const sc = Math.max(1, Math.floor(Math.min(W / sw, H / sh) * 0.7)); drawSprite(ctx, sp, Math.round((W - sw * sc) / 2), Math.round((H - sh * sc) / 2), sc); } }
 }

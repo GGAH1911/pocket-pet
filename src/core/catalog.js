@@ -10,6 +10,14 @@ export const SLOTS = [
   { id: "curtain", name: "창문" },
   { id: "furnL", name: "왼쪽 가구" },
   { id: "furnR", name: "오른쪽 가구" },
+  // 2026-10-09 사용자 요청 "가구 놓을 데가 더 있었으면"(디자인 자문 1단계): 한 화면 안 빈 곳에 칸 3개
+  { id: "sill", name: "창가" },
+  { id: "wallR", name: "벽걸이" },
+  { id: "prop", name: "바닥 소품" },
+  // 놀이방(2026-10-09 디자인 자문 2단계): 마을 친구·놀러 온 친구가 노는 방의 놀이 기구 칸 3개
+  { id: "playL", name: "놀이방 왼쪽" },
+  { id: "playM", name: "놀이방 가운데" },
+  { id: "playR", name: "놀이방 오른쪽" },
   { id: "hat", name: "머리" },
 ];
 
@@ -43,6 +51,25 @@ export const ITEMS = [
   { id: "fishbowl", slot: "furnR", name: "금붕어 어항", price: { gem: 150 }, desc: "금붕어가 헤엄쳐요" },
   { id: "radio", slot: "furnR", name: "꽃무늬 라디오", price: { star: 800 }, desc: "음표가 흘러나와요" },
   { id: "cloudbed", slot: "furnR", name: "구름 침대", source: "시작 꾸러미 전용" },
+  // 창가(창문 아래 턱)
+  { id: "sill_cactus", slot: "sill", name: "꼬마 선인장", price: { star: 300 } },
+  { id: "sill_cat", slot: "sill", name: "고양이 인형", price: { star: 450 }, desc: "가끔 꼬리를 흔들어요" },
+  { id: "sill_jar", slot: "sill", name: "별 유리병", price: { gem: 60 }, desc: "밤이면 반짝여요" },
+  // 벽걸이(오른쪽 벽)
+  { id: "wall_clock", slot: "wallR", name: "벽시계", price: { star: 500 }, desc: "진짜 시각을 가리켜요" },
+  { id: "wall_shelf", slot: "wallR", name: "꽃 선반", price: { star: 400 } },
+  { id: "wall_garland", slot: "wallR", name: "알록 깃발", price: { gem: 60 } },
+  // 바닥 소품(앞쪽 모서리)
+  { id: "prop_ball", slot: "prop", name: "알록 공", price: { star: 250 } },
+  { id: "prop_bear", slot: "prop", name: "곰 인형", price: { star: 600 } },
+  { id: "prop_train", slot: "prop", name: "장난감 기차", price: { gem: 90 }, desc: "칙칙폭폭 연기가 나요" },
+  // 놀이방
+  { id: "play_slide", slot: "playL", name: "미끄럼틀", price: { star: 800 } },
+  { id: "play_tent", slot: "playL", name: "꼬마 텐트", price: { star: 700 } },
+  { id: "play_pool", slot: "playM", name: "볼풀", price: { star: 900 }, desc: "알록달록 공이 가득" },
+  { id: "play_blocks", slot: "playM", name: "쌓기 블록", price: { star: 500 } },
+  { id: "play_tramp", slot: "playR", name: "트램펄린", price: { gem: 90 }, desc: "통통 튀어요" },
+  { id: "play_swing", slot: "playR", name: "그네", price: { gem: 120 }, desc: "흔들흔들" },
   // 머리
   { id: "hat_ribbon", slot: "hat", name: "리본", price: { star: 500 } },
   { id: "hat_straw", slot: "hat", name: "밀짚모자", price: { gem: 60 } },
@@ -58,7 +85,8 @@ export const BASIC_EQUIP = { wall: "wall_basic", floor: "floor_wood", rug: "rug_
 export const TABS = [
   { id: "pick", name: "추천" },
   { id: "room", name: "방", slots: ["wall", "floor", "rug", "curtain"] },
-  { id: "furn", name: "가구", slots: ["furnL", "furnR"] },
+  { id: "furn", name: "가구", slots: ["furnL", "furnR", "sill", "wallR", "prop"] },
+  { id: "play", name: "놀이방", slots: ["playL", "playM", "playR"] },
   { id: "hat", name: "옷", slots: ["hat"] },
   { id: "soon", name: "알·산책" },
   { id: "gem", name: "하트 보석" },

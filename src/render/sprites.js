@@ -1,5 +1,5 @@
 // 코드 속 도트 그림. 한 글자 = 한 도트, 색은 palette.js.
-import { PALETTE } from "./palette.js?v=e15d242-1791548365";
+import { PALETTE } from "./palette.js?v=e97b1c4-1791549514";
 
 export const SPRITES = {
   egg: [
@@ -184,6 +184,16 @@ export const SPRITES = {
     ".kppkkppk.",
     ".kppkkppk.",
     ".kkkkkkkk.",
+  ],
+  iconPlay: [ // 놀이방(알록 공)
+    "...kkkk...",
+    "..kryyrk..",
+    ".kryyyyrk.",
+    "kbbwyyybbk",
+    "kbbbbbbbbk",
+    "kggggggwgk",
+    ".kggggggk.",
+    "..kkkkkk..",
   ],
   // ---- 머리 장식(상점) ----
   hatRibbon: [

@@ -1,11 +1,11 @@
 // 방 화면 그리기. 게임 규칙은 모르고 받은 상태만 그린다.
 // 캔버스는 "도트 해상도"로 그리고 CSS가 정수배로 키운다.
-import { PALETTE } from "./palette.js?v=e15d242-1791548365";
-import { SPRITES, drawSprite, spriteSize } from "./sprites.js?v=e15d242-1791548365";
-import { buildCreature, paintGrid, formKey, eggSpriteFor } from "./creature.js?v=e15d242-1791548365";
-import { drawFace, POOLS } from "./face.js?v=e15d242-1791548365";
-import { drawSky } from "./sky.js?v=e15d242-1791548365";
-import { drawWall, drawFloor, drawRug, drawCurtain, drawFurniture, drawLampGlow, HAT_SPRITE, FURN_HALF } from "./deco.js?v=e15d242-1791548365";
+import { PALETTE } from "./palette.js?v=e97b1c4-1791549514";
+import { SPRITES, drawSprite, spriteSize } from "./sprites.js?v=e97b1c4-1791549514";
+import { buildCreature, paintGrid, formKey, eggSpriteFor } from "./creature.js?v=e97b1c4-1791549514";
+import { drawFace, POOLS } from "./face.js?v=e97b1c4-1791549514";
+import { drawSky } from "./sky.js?v=e97b1c4-1791549514";
+import { drawWall, drawFloor, drawRug, drawCurtain, drawFurniture, drawLampGlow, drawSmall, HAT_SPRITE, FURN_HALF } from "./deco.js?v=e97b1c4-1791549514";
 
 // 방 배치(그리기와 동작이 같은 좌표를 쓰게 한 곳에서 계산)
 export function roomLayout(w, h, deco = {}) {
@@ -14,10 +14,17 @@ export function roomLayout(w, h, deco = {}) {
   const furnBase = floorY + Math.round((h - floorY) * 0.24);
   const half = (id) => FURN_HALF[id] || 12;
   const furnPos = { furnL: Math.max(half(deco.furnL) + 2, Math.round(w * 0.13)), furnR: Math.min(w - half(deco.furnR) - 2, Math.round(w * 0.87)) };
-  return { floorY, cx: Math.round(w / 2), rugY, baseY: rugY + 4, furnBase, furnPos };
+  // 작은 칸(2026-10-09): 창가 = 창문 아래 턱 오른쪽, 벽걸이 = 오른쪽 벽 액자 아래, 바닥 소품 = 앞쪽 왼쪽 모서리(똥 자리와 안 겹치게)
+  const win = windowRect(w, floorY);
+  const smallPos = {
+    sill: { x: win.x + Math.round(win.w * 0.78), y: win.y + win.h + 2 },
+    wallR: { x: Math.round(w * 0.82), y: Math.round(floorY * 0.74) },
+    prop: { x: Math.max(9, Math.round(w * 0.1)), y: h - 6 },
+  };
+  return { floorY, cx: Math.round(w / 2), rugY, baseY: rugY + 4, furnBase, furnPos, smallPos };
 }
-import { WALK_STOPS as WALK_STOPS_REF, walkDist as walkDistRef } from "./anim.js?v=e15d242-1791548365";
-import { drawCourseBg, drawCourseThing, isSplash } from "./walk-courses.js?v=e15d242-1791548365";
+import { WALK_STOPS as WALK_STOPS_REF, walkDist as walkDistRef } from "./anim.js?v=e97b1c4-1791549514";
+import { drawCourseBg, drawCourseThing, isSplash } from "./walk-courses.js?v=e97b1c4-1791549514";
 const clamp01 = (x) => Math.max(0, Math.min(1, x));
 
 const FLOOR = "#f5b98c";
@@ -36,6 +43,8 @@ export function drawRoom(ctx, { w, h, now, scene, f, wall = Date.now(), loc = { 
   const win = windowRect(w, floorY);
   const skyInfo = drawWindow(ctx, win, wall, loc, now, 0, weather);
   drawCurtain(ctx, win, deco.curtain);
+  const SP = roomLayout(w, h, deco).smallPos;
+  if (deco.sill) drawSmall(ctx, deco.sill, SP.sill.x, SP.sill.y, { now, wall });
 
   // 사진: 도감 보상 '함께 찍은 사진'이 열리면 지금 친구와 함께한 친구들의 단체 사진(반짝 사진틀이면 금색 테두리)
   const memo = scene && scene.memory;
@@ -47,6 +56,7 @@ export function drawRoom(ctx, { w, h, now, scene, f, wall = Date.now(), loc = { 
     ctx.fillStyle = PALETTE.G; ctx.fillRect(fx + 4, fy + 9, 6, 7); ctx.fillRect(fx + 11, fy + 6, 6, 10);
   }
 
+  if (deco.wallR) drawSmall(ctx, deco.wallR, SP.wallR.x, SP.wallR.y, { now, wall });
   // 걸레받이 + 바닥
   ctx.fillStyle = BASEBOARD; ctx.fillRect(0, floorY - 3, w, 3);
   drawFloor(ctx, w, h, floorY, deco.floor);
@@ -59,6 +69,7 @@ export function drawRoom(ctx, { w, h, now, scene, f, wall = Date.now(), loc = { 
   const { furnBase, furnPos } = roomLayout(w, h, deco); // 가구는 넓이에 맞춰 화면 안에
   const darkNow = (f && f.darkness) || 0;
   for (const slot of ["furnL", "furnR"]) if (deco[slot]) drawFurniture(ctx, deco[slot], furnPos[slot], furnBase, { now, dark: darkNow });
+  if (deco.prop) drawSmall(ctx, deco.prop, SP.prop.x, SP.prop.y, { now, wall, dark: darkNow });
 
   const sc = scene || { stage: "egg" };
   const fr = f || { pose: { dx: 0, dy: 0, sx: 1, sy: 1, eyes: null, mouth: null, facing: 1 }, props: [], texts: [], fx: [], darkness: sc.lightOn === false ? 0.62 : sc.asleep ? 0.18 : 0, flash: 0 };
@@ -267,7 +278,7 @@ function drawFx(ctx, fx) {
 // 함께 찍은 사진(2026-10-09, 아동 심리 자문: 혼자 있는 초상 액자는 영정처럼 보여서): 지금 친구와 친구 마을 친구들이 나란히 선 단체 사진.
 // 흰 테두리 사진(반짝 사진틀 보상이면 금색 테두리), 친구 그림은 1칸=1px로 캐시
 const MEMO_CACHE = new Map();
-function memberCanvas(key, look) {
+export function memberCanvas(key, look) { // 놀이방(app/playroom.js)도 씀
   const ck = `${key}|${JSON.stringify(look || {})}`;
   if (!MEMO_CACHE.has(ck) && typeof document !== "undefined") {
     const b = buildCreature(key, { look: look || {} });

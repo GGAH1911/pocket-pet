@@ -1,10 +1,10 @@
 // 상점·꾸미기·매일 선물 화면. 상태와 규칙은 core/economy.js·catalog.js, 여기는 DOM만.
-import { ITEMS, ITEM, SLOTS, TABS, PICKS, PACKS, SOON, UNLOCK, UNLOCKS, STAR_SWAPS, STAR_SWAP_WEEK_GEMS } from "../core/catalog.js?v=e15d242-1791548365";
-import { drawCourseThumb } from "../render/walk-courses.js?v=e15d242-1791548365";
-import { canAfford, gems, DAILY, purchaseHistory, themeOpen, FORGIVE, forgiveState, candyPrice } from "../core/economy.js?v=e15d242-1791548365";
-import { gemButtonState } from "../core/wallet.js?v=e15d242-1791548365";
-import { drawThumb } from "../render/deco.js?v=e15d242-1791548365";
-import { SPRITES, drawSprite, spriteSize } from "../render/sprites.js?v=e15d242-1791548365";
+import { ITEMS, ITEM, SLOTS, TABS, PICKS, PACKS, SOON, UNLOCK, UNLOCKS, STAR_SWAPS, STAR_SWAP_WEEK_GEMS } from "../core/catalog.js?v=e97b1c4-1791549514";
+import { drawCourseThumb } from "../render/walk-courses.js?v=e97b1c4-1791549514";
+import { canAfford, gems, DAILY, purchaseHistory, themeOpen, FORGIVE, forgiveState, candyPrice } from "../core/economy.js?v=e97b1c4-1791549514";
+import { gemButtonState } from "../core/wallet.js?v=e97b1c4-1791549514";
+import { drawThumb } from "../render/deco.js?v=e97b1c4-1791549514";
+import { SPRITES, drawSprite, spriteSize } from "../render/sprites.js?v=e97b1c4-1791549514";
 
 const el = (tag, attrs = {}, ...kids) => {
   const e = document.createElement(tag);
@@ -101,7 +101,7 @@ export function renderShop(tabsEl, bodyEl, ctx) {
   // 아래 사기 막대
   const it = state.sel && ITEM[state.sel];
   const bar = el("div", { class: "buybar" });
-  if (!it) { bar.append(el("div", { class: "info small dim", text: "상품을 누르면 방에 미리 놓아 볼 수 있어요" })); bodyEl.append(bar); return; }
+  if (!it) { bar.append(el("div", { class: "info small dim", text: state.tab === "play" ? "놀이방 기구는 메뉴 → 놀이방에 놓여요" : "상품을 누르면 방에 미리 놓아 볼 수 있어요" })); bodyEl.append(bar); return; }
   const owned = !!econ.owned[it.id], on = econ.equipped[it.slot] === it.id;
   bar.append(el("div", { class: "info" }, el("b", { text: it.name }), document.createTextNode(it.desc || (owned ? "가지고 있어요" : it.source ? `${it.source}로 얻어요` : "방에 미리 놓여 있어요"))));
   if (owned) bar.append(el("button", { text: on ? "끼우는 중" : "끼우기", disabled: on, onclick: () => ctx.onEquip(it) }));
@@ -120,12 +120,14 @@ export function renderShop(tabsEl, bodyEl, ctx) {
 
 // 하트 보석 묶음 그림: 많이 들수록 보석 무더기가 커진다(사용자 요청 2026-10-09). 60=1개, 330=3개, 720=5개, 1,500=8개
 const PILE = [[1, [[8, 5]]], [300, [[2, 9], [14, 9], [8, 2]]], [700, [[0, 11], [10, 11], [20, 11], [5, 4], [15, 4]]], [1400, [[0, 12], [9, 12], [18, 12], [27, 12], [4, 6], [13, 6], [22, 6], [9, 0]]]];
-function gemPile(n) {
-  const spots = [...PILE].reverse().find(([min]) => n >= min)[1];
+function gemPile(n, sprite = "coinGem", table = PILE) {
+  const spots = [...table].reverse().find(([min]) => n >= min)[1];
   const cv = el("canvas", { width: 44, height: 26, class: "pile" }); const c = cv.getContext("2d"); c.imageSmoothingEnabled = false;
-  for (const [x, y] of spots) drawSprite(c, SPRITES.coinGem, x, y, 2);
+  for (const [x, y] of spots) drawSprite(c, SPRITES[sprite], x, y, 2);
   return cv;
 }
+// 별사탕 바꾸기 묶음도 클수록 무더기(사용자 요청 2026-10-09): 180=1개, 500=3개, 1,600=5개
+const STAR_PILE = [[1, [[14, 5]]], [400, [[4, 10], [24, 10], [14, 1]]], [1500, [[0, 10], [14, 10], [28, 10], [7, 1], [21, 1]]]]; // 별은 16×16(보석보다 커서 자리 따로)
 function renderGemShop(box, ctx) {
   const { econ } = ctx;
   const g = ctx.gem || {};
@@ -144,7 +146,7 @@ function renderGemShop(box, ctx) {
   box.append(el("h3", { class: "sec", text: "별사탕 바꾸기" }));
   const swappedToday = econ.starSwapDay === new Date().toDateString();
   for (const sw of STAR_SWAPS) {
-    box.append(el("button", { class: "pack", disabled: swappedToday, onclick: () => ctx.onStarSwap?.(sw) }, spriteCanvas("coinStar", 32, 26),
+    box.append(el("button", { class: "pack", disabled: swappedToday, onclick: () => ctx.onStarSwap?.(sw) }, gemPile(sw.star, "coinStar", STAR_PILE),
       el("span", { class: "g" }, document.createTextNode(`별사탕 ${sw.star.toLocaleString()}`), el("small", { text: sw.bonus || "기본" })),
       el("span", { class: "gemprice" }, spriteCanvas("coinGem", 16, 13), document.createTextNode(` ${sw.gem}`))));
   }
@@ -177,7 +179,7 @@ function renderGemShop(box, ctx) {
 
 // ---------- 꾸미기 모드 ----------
 // ctx: { econ, state:{slot}, onEquip(item|null, slot), onLocked(item), rerender() }
-const EMPTY_OK = new Set(["curtain", "furnL", "furnR", "hat"]);
+const EMPTY_OK = new Set(["curtain", "furnL", "furnR", "sill", "wallR", "prop", "playL", "playM", "playR", "hat"]);
 export function renderDeco(slotsEl, stripEl, ctx) {
   const { econ, state } = ctx;
   slotsEl.innerHTML = ""; stripEl.innerHTML = "";

@@ -96,6 +96,7 @@
     .pack { display: flex; align-items: center; gap: 10px; background: #fff; border: 0; width: 100%; border-radius: 14px; padding: 10px 12px; margin-bottom: 8px; box-shadow: 0 2px 0 var(--line); text-align: left; }
     .pack canvas { width: 32px; height: 26px; image-rendering: pixelated; } .pack canvas.pile { width: 44px; height: 26px; }
     .pack:disabled { opacity: .45; }
+    .playroom .dexcard-in { max-width: 420px; max-height: 92vh; overflow: auto; } .playroom .dexcard-in canvas.pr-canvas { width: 100%; height: auto; image-rendering: pixelated; border-radius: 12px; border: 2px solid var(--line); display: block; margin: 6px 0; cursor: pointer; } .pr-line { min-height: 1.4em; }
     .giftbox { background: #fff; border-radius: 14px; padding: 10px 12px; margin: 10px 0; box-shadow: 0 2px 0 var(--line); } .giftbox summary { font-weight: 800; cursor: pointer; }
     .giftcode { flex: 1; min-width: 0; font: 700 17px ui-monospace, monospace; letter-spacing: 2px; text-transform: uppercase; padding: 8px 10px; border: 2px solid var(--line); border-radius: 10px; }
     .pack .gemprice { display: inline-flex; align-items: center; gap: 2px; font-weight: 900; background: #fde3ea; border-radius: 10px; padding: 6px 10px; } .pack .gemprice canvas { width: 16px; height: 13px; }
@@ -238,6 +239,7 @@
         <button class="tile" data-open="dex"><canvas data-sprite="iconBook"></canvas>도감</button>
         <button class="tile" data-open="shop"><canvas data-sprite="iconShop"></canvas>상점</button>
         <button class="tile" data-act="deco"><canvas data-sprite="iconDeco"></canvas>꾸미기</button>
+        <button class="tile" id="tile-play"><canvas data-sprite="iconPlay"></canvas>놀이방</button>
         <button class="tile" id="tile-gift"><canvas data-sprite="iconGift"></canvas>선물함<i class="dot" id="gift-dot" hidden></i></button>
       </div>
       <h3 class="sec">설정</h3>
@@ -344,6 +346,6 @@
       </div>
     </div>
   </div>
-  <script type="module" src="src/main.js?v=e15d242-1791548365"></script>
+  <script type="module" src="src/main.js?v=e97b1c4-1791549514"></script>
 </body>
 </html>
