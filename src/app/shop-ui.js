@@ -1,9 +1,9 @@
 // 상점·꾸미기·매일 선물 화면. 상태와 규칙은 core/economy.js·catalog.js, 여기는 DOM만.
-import { ITEMS, ITEM, SLOTS, TABS, PICKS, PACKS, SOON, UNLOCK } from "../core/catalog.js?v=bf34df8-1791372957";
-import { canAfford, gems, DAILY, purchaseHistory, themeOpen } from "../core/economy.js?v=bf34df8-1791372957";
-import { gemButtonState } from "../core/wallet.js?v=bf34df8-1791372957";
-import { drawThumb } from "../render/deco.js?v=bf34df8-1791372957";
-import { SPRITES, drawSprite, spriteSize } from "../render/sprites.js?v=bf34df8-1791372957";
+import { ITEMS, ITEM, SLOTS, TABS, PICKS, PACKS, SOON, UNLOCK } from "../core/catalog.js?v=880f4fe-1791512088";
+import { canAfford, gems, DAILY, purchaseHistory, themeOpen, FORGIVE, forgiveState } from "../core/economy.js?v=880f4fe-1791512088";
+import { gemButtonState } from "../core/wallet.js?v=880f4fe-1791512088";
+import { drawThumb } from "../render/deco.js?v=880f4fe-1791512088";
+import { SPRITES, drawSprite, spriteSize } from "../render/sprites.js?v=880f4fe-1791512088";
 
 const el = (tag, attrs = {}, ...kids) => {
   const e = document.createElement(tag);
@@ -63,6 +63,19 @@ export function renderShop(tabsEl, bodyEl, ctx) {
     bodyEl.append(el("p", { class: "fine", text: "새 알(새 친구 9종)과 산책 장소를 만들고 있어요." }), cards);
     for (const [i, s] of SOON.entries()) { const cv = cards.children[i].querySelector("canvas"); const c = cv.getContext("2d"); c.fillStyle = "#fbefe3"; c.fillRect(0, 0, 56, 46); const sp = SPRITES[s.id.startsWith("egg") ? "eggRainbow" : "ball"]; if (sp) drawSprite(c, sp, 20, 12, 1); c.fillStyle = "#3b2c35"; c.font = "bold 9px system-ui"; c.textAlign = "center"; c.fillText("준비 중", 28, 42); }
     return;
+  }
+  if (state.tab === "pick" && ctx.pet) { // 새 마음 사탕: 이번 단계 실수 지우기(별사탕, 단계마다 1번)
+    const fs = forgiveState(econ, ctx.pet), m = ctx.pet.mistakes?.stage || 0;
+    const have = econ.candy || 0, buyMode = fs.reason === "nocandy";
+    const note = fs.ok || buyMode ? `이번 단계 돌봄 실수 ${m}개를 지워요. 다음 모습이 바뀔 수 있어요. 평생 기록은 그대로예요.`
+      : fs.reason === "used" ? "이번 단계에는 이미 먹었어요. 다음 단계에 또 먹을 수 있어요."
+      : fs.reason === "none" ? "이번 단계엔 지울 실수가 없어요. 잘 돌보고 있어요!"
+      : fs.reason === "egg" ? "알에서 깨어나면 먹을 수 있어요."
+      : "";
+    bodyEl.append(el("div", { class: "banner" }, el("b", { text: `${FORGIVE.name} (가진 것 ${have}개)` }), document.createTextNode(note),
+      el("div", { class: "row", style: "margin-top:8px" }, el("span", { class: "small dim", style: "flex:1", text: "매일 선물 4일째에 1개 · 단계마다 한 번" }),
+        buyMode ? el("button", { onclick: () => ctx.onForgive?.(true) }, priceEl(FORGIVE.price), document.createTextNode(" 사서 먹이기"))
+          : el("button", { disabled: !fs.ok, onclick: () => ctx.onForgive?.(false) }, document.createTextNode("먹이기")))));
   }
   const tab = TABS.find((t) => t.id === state.tab);
   const list = state.tab === "pick" ? PICKS.map((id) => ITEM[id]) : sortForShop(ITEMS.filter((it) => tab.slots.includes(it.slot) && (it.price || econ.owned[it.id])), tab.slots); // 추천은 손으로 고른 순서 그대로
@@ -153,7 +166,7 @@ export function dailyCard({ status, onClaim, onClose }) {
   const stamps = el("div", { class: "stamp" });
   DAILY.forEach((r, i) => {
     const done = i < status.idx, today = status.available && i === status.idx;
-    stamps.append(el("div", { class: `st${done ? " done" : ""}${today ? " today" : ""}${r.gem ? " gemday" : ""}` }, document.createTextNode(`${i + 1}`), spriteCanvas(r.gem ? "coinGem" : "coinStar", 8, 8), document.createTextNode(String(r.gem || r.star))));
+    stamps.append(el("div", { class: `st${done ? " done" : ""}${today ? " today" : ""}${r.gem ? " gemday" : ""}` }, document.createTextNode(`${i + 1}`), spriteCanvas(r.gem ? "coinGem" : r.candy ? "cookie" : "coinStar", 8, 8), document.createTextNode(r.candy ? "사탕" : String(r.gem || r.star))));
   });
   const card = el("div", { class: "dexcard" });
   const inner = el("div", { class: "dexcard-in" }, el("b", { text: status.available ? "오늘의 선물" : "오늘 선물은 받았어요" }),

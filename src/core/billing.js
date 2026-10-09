@@ -2,7 +2,7 @@
 // 규칙(docs/wallet.md 2-4): 결제 직후 토큰을 '지급 대기'(profile.payPending)에 먼저 저장 → 서버 지갑이 적립(econ.orders에 기록)
 // → 그 뒤 구글 소비(consume, 보석 묶음)·확인(acknowledge, 시작 꾸러미). 앱이 중간에 꺼지면 켤 때·복원 때 이어서 한다.
 // econ.orders[토큰]이 있으면 "서버 적립 끝, 소비만 남음"(consumeOnly).
-import { PACKS } from "./catalog.js?v=bf34df8-1791372957";
+import { PACKS } from "./catalog.js?v=880f4fe-1791512088";
 
 const BY_SKU = Object.fromEntries(PACKS.map((p) => [p.sku, p]));
 export const packBySku = (sku) => BY_SKU[sku] || null;

@@ -5,10 +5,10 @@
 import {
   SPEEDS, PER_HOUR_AWAKE, PER_HOUR_ASLEEP, MOOD_PER_POOP_PER_HOUR, HEALTH_PER_HOUR, BUSY_FACTOR,
   POOP, CLEAN, SICK, SNACK_BINGE, NAP_MIN, NAP_ENERGY_PER_HOUR, NAP_LIGHT_BELOW, ACTIONS, STAGE_MIN, BRANCH, MISTAKE, CALL, DEFAULT_SETTINGS, ENDING, SECRET,
-} from "./rules.js?v=bf34df8-1791372957";
-import { clampStat } from "./state.js?v=bf34df8-1791372957";
-import { nextRandom, randomInt } from "./rng.js?v=bf34df8-1791372957";
-import { isSleepTime, isBusyTime } from "./daytime.js?v=bf34df8-1791372957";
+} from "./rules.js?v=880f4fe-1791512088";
+import { clampStat } from "./state.js?v=880f4fe-1791512088";
+import { nextRandom, randomInt } from "./rng.js?v=880f4fe-1791512088";
+import { isSleepTime, isBusyTime } from "./daytime.js?v=880f4fe-1791512088";
 
 const MINUTE = 60000;
 const NEXT_STAGE = { egg: "baby", baby: "child", child: "teen", teen: "adult" };
@@ -47,7 +47,7 @@ function growUp(pet, ts, events) {
 
 // 어른이 떠나는 시점(게임 분, 어른 단계 기준). 끝 방식을 도중에 바꾸면 적어도 하루는 더 함께한다.
 export function departureAt(pet, mode) {
-  if (pet.stage !== "adult") return null;
+  if (pet.stage !== "adult" || pet.returned) return null; // 여행에서 돌아온 친구는 다시 떠나지 않음(core/revive.js)
   let at = mode === "journey" ? ENDING.journeyAdultMin : mode === "classic" ? pet.lifespan || ENDING.classicLifeMin[0] : null;
   if (at === null) return null;
   const sw = pet.endSwitch;

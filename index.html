@@ -58,6 +58,8 @@
     .tg.on { background: #7cc68b; } .tg.on::after { left: 23px; }
     .seg { border: 0; padding: 5px 9px; border-radius: 9px; background: #f5e9dc; font-size: 12px; font-weight: 700; }
     .seg.on { background: var(--deep); color: #fff; }
+    .linkbtn { border: 0; background: none; padding: 0; color: var(--deep); font: inherit; font-weight: 700; text-decoration: underline; }
+    .sleepcustom { flex-wrap: wrap; font-size: 13px; } .sleepcustom select { font: inherit; padding: 4px 6px; border-radius: 8px; border: 1px solid var(--line); background: #fff; }
     .goarrow { margin-left: auto; border: 0; background: none; font-weight: 700; font-size: 13px; opacity: .75; }
     .link { display: block; width: 100%; border: 0; background: none; text-decoration: underline; opacity: .7; font-size: 13px; padding: 10px 0 2px; }
     .sheet.shop, .sheet.deco { max-height: 50%; padding-top: 12px; }
@@ -297,10 +299,12 @@
         <p class="small dim" id="ending-meta"></p>
         <p class="small" id="ending-news"></p>
         <button class="big" id="btn-ending">도감에 남기고 새 알 받기</button>
+        <button class="big ghost" id="btn-ending-back" hidden>다시 데려오기</button>
       </div>
     </div>
     <div id="start" hidden>
       <div class="step" data-step="theme">
+        <button class="big ghost" id="btn-revive" hidden></button>
         <h1>어떤 알을 키울까요?</h1>
         <p>알에 따라 자라는 친구들이 달라요</p>
         <div class="choices">
@@ -330,6 +334,6 @@
       </div>
     </div>
   </div>
-  <script type="module" src="src/main.js?v=bf34df8-1791372957"></script>
+  <script type="module" src="src/main.js?v=880f4fe-1791512088"></script>
 </body>
 </html>

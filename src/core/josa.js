@@ -6,6 +6,9 @@ export function hasBatchim(word) {
   const m = w.match(/(\d+)$/);
   if (m) { const n = m[1].replace(/^0+(?=\d)/, ""); const last = n.replace(/0+$/, ""); return n === "0" ? true : last.length < n.length ? true : DIGIT_B[n.slice(-1)]; } // 십·백·천·만은 모두 받침
   const ch = w.slice(-1);
+  const cp = ch.charCodeAt(0);
+  if (cp >= 0x3131 && cp <= 0x314e) return true; // 홑자음(ㄱ~ㅎ)으로 끝나면 받침처럼: "준ㅁㅁ이"
+  if (cp >= 0x314f && cp <= 0x3163) return false; // 홑모음(ㅏ~ㅣ)으로 끝나면 받침 없음: "줌ㅏㅣ가"
   const code = ch.charCodeAt(0) - 0xac00;
   if (code < 0 || code > 11171) return false; // 한글이 아니면 받침 없음으로 본다
   return code % 28 !== 0;

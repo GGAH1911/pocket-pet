@@ -15,11 +15,13 @@ export const EARN = {
 };
 
 // 매일 선물: 7칸. 하루 빠져도 처음으로 안 돌아가고 다음 칸이 이어진다.
-export const DAILY = [{ star: 30 }, { star: 30 }, { star: 40 }, { star: 40 }, { star: 50 }, { star: 60 }, { gem: 5 }];
+// 4일째는 새 마음 사탕 1개(2026-10-08 사용자 결정: 실수 지우기는 로그인 보상으로, 더 필요하면 하트 보석)
+export const DAILY = [{ star: 30 }, { star: 30 }, { star: 40 }, { candy: 1 }, { star: 50 }, { star: 60 }, { gem: 5 }];
 
 export function newEcon() {
   return {
     star: 0, gemPaid: 0, gemFree: 0,
+    candy: 0, // 새 마음 사탕(이번 단계 실수 지우기) 가진 수
     owned: {}, // 상품 id → 얻은 시각
     equipped: {}, // 칸 → 상품 id
     daily: { lastDay: null, idx: 0, total: 0 },
@@ -36,7 +38,7 @@ export function normalizeEcon(e) {
   if (!e || typeof e !== "object") return base;
   const num = (v) => (Number.isFinite(v) && v >= 0 ? Math.floor(v) : 0);
   return {
-    star: num(e.star), gemPaid: num(e.gemPaid), gemFree: num(e.gemFree),
+    star: num(e.star), gemPaid: num(e.gemPaid), gemFree: num(e.gemFree), candy: num(e.candy),
     owned: e.owned && typeof e.owned === "object" ? { ...e.owned } : {},
     equipped: e.equipped && typeof e.equipped === "object" ? { ...e.equipped } : {},
     daily: { ...base.daily, ...(e.daily || {}) },
@@ -45,6 +47,26 @@ export function normalizeEcon(e) {
     orders: e.orders && typeof e.orders === "object" ? { ...e.orders } : {},
     unlocks: e.unlocks && typeof e.unlocks === "object" ? { ...e.unlocks } : {},
   };
+}
+
+// ---- 새 마음 사탕: 이번 단계 돌봄 실수를 지움. 매일 선물 4일째에 1개, 더 필요하면 하트 보석으로 1개씩(사용자 결정 2026-10-08).
+// 단계마다 1번, 평생 실수·숨은 친구 조건은 그대로(경제 자문) ----
+export const FORGIVE = { id: "forgive", name: "새 마음 사탕", price: { gem: 30 } }; // price = 하트 보석으로 1개 살 때
+export const stageTag = (pet) => `${pet.stage}|${pet.branch || ""}|${pet.ageMin - pet.stageMin}`; // 지금 단계를 가리키는 값(진화하면 바뀜)
+export function forgiveState(e, pet) {
+  if (!pet || pet.ended || pet.stage === "egg") return { ok: false, reason: "egg" };
+  if ((pet.mistakes?.stage || 0) <= 0) return { ok: false, reason: "none" };
+  if (pet.forgiven === stageTag(pet)) return { ok: false, reason: "used" };
+  if ((e.candy || 0) <= 0) return { ok: false, reason: "nocandy", n: pet.mistakes.stage }; // 하트 보석으로 사서 먹일 수 있음
+  return { ok: true, n: pet.mistakes.stage };
+}
+export function forgiveStage(e, pet) {
+  const st = forgiveState(e, pet);
+  if (!st.ok) return st;
+  e.candy -= 1;
+  pet.mistakes.stage = 0; // 평생 실수(total)는 그대로: 숨은 친구는 정말 실수 없이 키워야
+  pet.forgiven = stageTag(pet);
+  return { ok: true, n: st.n };
 }
 
 // ---- 알(테마) 해금: 처음엔 점박이 알(동물)만, 무지개 알(상상)은 하트 보석으로 한 번 열면 계속(뽑기·세대마다 재구매 없음) ----
@@ -142,6 +164,7 @@ export function claimDaily(e, now) {
   if (!st.available) return null;
   const r = DAILY[st.idx];
   if (r.star) e.star += r.star; // 보석 칸(r.gem)은 서버 지갑에 적립 요청(호출하는 쪽)
+  if (r.candy) e.candy = (e.candy || 0) + r.candy;
   e.daily = { lastDay: dayKey(now), idx: (st.idx + 1) % DAILY.length, total: (e.daily.total || 0) + 1 };
   return { ...r, idx: st.idx };
 }

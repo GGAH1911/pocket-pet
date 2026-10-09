@@ -78,6 +78,11 @@ export const PACK = Object.fromEntries(PACKS.map((p) => [p.id, p]));
 // 알 해금(서버 지갑이 소유를 관리, 꾸미기 칸 없음). 무지개 알은 하트 보석으로 한 번 열면 계속(2026-10-06 사용자 결정, 경제 자문 가격 150 = 바다 알의 절반)
 export const UNLOCKS = [{ id: "theme_fantasy", theme: "fantasy", name: "무지개 알", price: { gem: 150 } }];
 export const UNLOCK = Object.fromEntries(UNLOCKS.map((u) => [u.id, u]));
+// 친구 부활권: 여행 떠난 친구를 도감 기록으로 다시 데려옴. 기록마다 한 번(서버 지갑 상품 id "revive_<태어난 시각>"). 2026-10-08 사용자 결정(유료), 경제 자문 가격 200
+export const REVIVE = { name: "친구 부활권", price: { gem: 200 } };
+export const candyItemId = (now) => `candy_${Math.floor(now)}`; // 새 마음 사탕 1개 사기(서버 지갑 상품, 살 때마다 새 id). 값은 economy FORGIVE.price
+export const reviveItemId = (rec) => `revive_${Math.floor(rec.bornAt || 0)}`;
+export const REVIVE_FREE_BEFORE = Date.parse("2026-10-09T00:00:00+09:00"); // 부활권이 생기기 전에 떠난 친구는 한 번 무료(사용자 요청: 아들 펫 살리기)
 
 // 곧 나올 상품(알·산책 탭에 미리 보여 주기만)
 export const SOON = [

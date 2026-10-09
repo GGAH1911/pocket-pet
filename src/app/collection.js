@@ -1,9 +1,10 @@
 // 도감: 본 적 있는 모습 표시, 지금까지 키운 펫 기록, 초상화 그리기
-import { FORMS, buildCreature, paintGrid, formKey, lookOf } from "../render/creature.js?v=bf34df8-1791372957";
-import { drawFace, POOLS } from "../render/face.js?v=bf34df8-1791372957";
-import { SPRITES, drawSprite } from "../render/sprites.js?v=bf34df8-1791372957";
-import { BRANCH, SECRET } from "../core/rules.js?v=bf34df8-1791372957";
-import { EGGS, foundCount } from "./eggs.js?v=bf34df8-1791372957";
+import { FORMS, buildCreature, paintGrid, formKey, lookOf } from "../render/creature.js?v=880f4fe-1791512088";
+import { drawFace, POOLS } from "../render/face.js?v=880f4fe-1791512088";
+import { SPRITES, drawSprite } from "../render/sprites.js?v=880f4fe-1791512088";
+import { BRANCH, SECRET } from "../core/rules.js?v=880f4fe-1791512088";
+import { EGGS, foundCount } from "./eggs.js?v=880f4fe-1791512088";
+import { canRevive } from "../core/revive.js?v=880f4fe-1791512088";
 
 export const THEME_KO = { animal: "동물", fantasy: "상상 속 생물" };
 export const HOW_KO = { journey: "여행을 떠남", runaway: "삐져서 떠남", star: "별이 됨", retired: "새 알에게 자리를 물려줌" };
@@ -244,8 +245,13 @@ export function renderCollection(box, profile, opts = {}) {
     const rowEl = el("button", { class: "pastrow" }, cv, el("div", {},
       el("b", { text: `${r.name} · ${r.form}` }),
       el("div", { class: "small", text: `${HOW_KO[r.how] || r.how} · ${r.ageDays}살 · 실수 ${r.mistakes} · ${SPEED_KO[r.speed] || ""}` }),
-      el("div", { class: "small dim", text: `${fmtDate(r.endedAt)} · 편지 보기 ›` }),
+      el("div", { class: "small dim", text: `${fmtDate(r.endedAt)} · 편지 보기 ›${r.returnedAt ? " · 돌아왔어요" : ""}` }),
     ));
+    if (opts.onRevive && canRevive(r)) { // 여행 떠난 친구 다시 데려오기
+      const rb = el("button", { class: "ghost small revive", text: "다시 데려오기" });
+      rb.addEventListener("click", (ev) => { ev.stopPropagation(); opts.onRevive(r); });
+      rowEl.append(rb);
+    }
     rowEl.addEventListener("click", () => showCard(r.key, r.look || { spot: "p" }, [
       { text: `${THEME_KO[r.theme] || ""} · ${r.form} · ${HOW_KO[r.how] || r.how}` },
       { text: `${fmtDate(r.bornAt)} ~ ${fmtDate(r.endedAt)} · ${r.ageDays}살 · 돌봄 실수 ${r.mistakes} · 몸무게 ${r.weight ?? "?"}g${r.look?.spot ? ` · ${EGG_COLOR_KO[r.look.spot] || ""} 무늬` : ""}` },

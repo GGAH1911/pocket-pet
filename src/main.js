@@ -1,31 +1,33 @@
 // 부팅 순서는 이 파일 한 곳에서만 정해요.
 // (지난 게임에서 파일 읽는 순서 때문에 저장 기본값이 빠지는 버그가 있었어요.)
 // 순서: 저장 불러오기 → 꺼져 있던 시간 계산 → 화면 시작 → 서비스 워커·알림 확인 → 알림 일정 올리기
-import { createPet } from "./core/state.js?v=bf34df8-1791372957";
-import { advance, feed, play, wash, walk, wakeFromNap, cleanPoop, toggleLight, giveMedicine, patPet, switchEndMode, retirePet } from "./core/sim.js?v=bf34df8-1791372957";
-import { predictNotifications } from "./core/notify.js?v=bf34df8-1791372957";
-import { josa } from "./core/josa.js?v=bf34df8-1791372957";
-import { drawRoom, drawIcon, roomLayout } from "./render/screen.js?v=bf34df8-1791372957";
-import { createAnimator, play as playAnim, frame as animFrame, addFx, DUR as ANIM_DUR } from "./render/anim.js?v=bf34df8-1791372957";
-import { pickGame, createGame, GAME_NAMES } from "./app/games.js?v=bf34df8-1791372957";
-import { EGGS, findEgg, createStreak, specialDay, SPECIAL_KO, HAT_OF, wishTime, MAKER_LETTER } from "./app/eggs.js?v=bf34df8-1791372957";
-import { earn, buy, equip, unequip, grant as grantItem, gems, canAfford, dailyStatus, claimDaily, DAILY, THEME_UNLOCK, themeOpen } from "./core/economy.js?v=bf34df8-1791372957";
-import { ITEMS, ITEM, SLOTS, TABS, PICKS, PACKS, SOON, BASIC_EQUIP, UNLOCK } from "./core/catalog.js?v=bf34df8-1791372957";
-import { renderShop, renderDeco, dailyCard, spriteCanvas } from "./app/shop-ui.js?v=bf34df8-1791372957";
-import { formKey, lookOf, FORMS as FORMS_REF, SPOT_COLORS, eggSpriteFor } from "./render/creature.js?v=bf34df8-1791372957";
-import { guessLocation, sunTimes, moonIllumination, moonPosition, moonPhaseName } from "./core/astro.js?v=bf34df8-1791372957";
-import { classifyWeather, weatherUrl, parseWeather } from "./core/weather.js?v=bf34df8-1791372957";
-import { createFacePicker, pickFace } from "./render/face.js?v=bf34df8-1791372957";
-import { SPRITES, drawSprite } from "./render/sprites.js?v=bf34df8-1791372957";
-import { loadProfile, saveProfile, freshProfile, exportCode, importCode, SAVE_KEYS, setSaveMirror, resetProfile } from "./app/store.js?v=bf34df8-1791372957";
-import * as native from "./app/native.js?v=bf34df8-1791372957";
-import * as cloud from "./app/cloud.js?v=bf34df8-1791372957";
-import { planReconcile, isPaid } from "./core/billing.js?v=bf34df8-1791372957";
-import { queueEarn, needsWallet, pendingGems, reconcileOwned } from "./core/wallet.js?v=bf34df8-1791372957";
-import * as wallet from "./app/wallet.js?v=bf34df8-1791372957";
-import { sfx, setSoundEnabled } from "./app/sound.js?v=bf34df8-1791372957";
-import { markSeen, recordPet, renderCollection, letterText, portrait, currentKey, HOW_KO, unlockedSet, REWARDS, nextGoal, adultsSeen, ADULT_KEYS, formOrder, EGG_COLOR_KO } from "./app/collection.js?v=bf34df8-1791372957";
-import { deviceInfo, registerSW, enablePush, ensurePush, uploadSchedule, sendTest, serverStatus, PUSH_SERVER } from "./app/push.js?v=bf34df8-1791372957";
+import { createPet } from "./core/state.js?v=880f4fe-1791512088";
+import { advance, feed, play, wash, walk, wakeFromNap, cleanPoop, toggleLight, giveMedicine, patPet, switchEndMode, retirePet } from "./core/sim.js?v=880f4fe-1791512088";
+import { predictNotifications } from "./core/notify.js?v=880f4fe-1791512088";
+import { josa } from "./core/josa.js?v=880f4fe-1791512088";
+import { drawRoom, drawIcon, roomLayout } from "./render/screen.js?v=880f4fe-1791512088";
+import { createAnimator, play as playAnim, frame as animFrame, addFx, DUR as ANIM_DUR } from "./render/anim.js?v=880f4fe-1791512088";
+import { pickGame, createGame, GAME_NAMES } from "./app/games.js?v=880f4fe-1791512088";
+import { EGGS, findEgg, createStreak, specialDay, SPECIAL_KO, HAT_OF, wishTime, MAKER_LETTER } from "./app/eggs.js?v=880f4fe-1791512088";
+import { earn, buy, equip, unequip, grant as grantItem, gems, canAfford, dailyStatus, claimDaily, DAILY, THEME_UNLOCK, themeOpen, forgiveStage, FORGIVE } from "./core/economy.js?v=880f4fe-1791512088";
+import { ITEMS, ITEM, SLOTS, TABS, PICKS, PACKS, SOON, BASIC_EQUIP, UNLOCK, REVIVE, reviveItemId, REVIVE_FREE_BEFORE, candyItemId } from "./core/catalog.js?v=880f4fe-1791512088";
+import { renderShop, renderDeco, dailyCard, spriteCanvas } from "./app/shop-ui.js?v=880f4fe-1791512088";
+import { formKey, lookOf, FORMS as FORMS_REF, SPOT_COLORS, eggSpriteFor } from "./render/creature.js?v=880f4fe-1791512088";
+import { guessLocation, sunTimes, moonIllumination, moonPosition, moonPhaseName } from "./core/astro.js?v=880f4fe-1791512088";
+import { classifyWeather, weatherUrl, parseWeather } from "./core/weather.js?v=880f4fe-1791512088";
+import { createFacePicker, pickFace } from "./render/face.js?v=880f4fe-1791512088";
+import { SPRITES, drawSprite } from "./render/sprites.js?v=880f4fe-1791512088";
+import { loadProfile, saveProfile, freshProfile, exportCode, importCode, SAVE_KEYS, setSaveMirror, resetProfile } from "./app/store.js?v=880f4fe-1791512088";
+import * as native from "./app/native.js?v=880f4fe-1791512088";
+import * as cloud from "./app/cloud.js?v=880f4fe-1791512088";
+import { planReconcile, isPaid } from "./core/billing.js?v=880f4fe-1791512088";
+import { queueEarn, needsWallet, pendingGems, reconcileOwned } from "./core/wallet.js?v=880f4fe-1791512088";
+import { SLEEP_START_OPTS, SLEEP_END_OPTS, sleepLength, sleepOk } from "./core/daytime.js?v=880f4fe-1791512088";
+import { lastRevivable, revivePet, canRevive } from "./core/revive.js?v=880f4fe-1791512088";
+import * as wallet from "./app/wallet.js?v=880f4fe-1791512088";
+import { sfx, setSoundEnabled } from "./app/sound.js?v=880f4fe-1791512088";
+import { markSeen, recordPet, renderCollection, letterText, portrait, currentKey, HOW_KO, unlockedSet, REWARDS, nextGoal, adultsSeen, ADULT_KEYS, formOrder, EGG_COLOR_KO } from "./app/collection.js?v=880f4fe-1791512088";
+import { deviceInfo, registerSW, enablePush, ensurePush, uploadSchedule, sendTest, serverStatus, PUSH_SERVER } from "./app/push.js?v=880f4fe-1791512088";
 
 const clock = { offset: 0, now() { return Date.now() + this.offset; } }; // offset은 개발 도구만 바꾼다
 
@@ -739,6 +741,7 @@ function showLetter() {
   const p = profile.pet; if (!p) return;
   $("ending-title").textContent = p.ended.type === "star" ? `${I(p.name)} 별이 됐어요` : p.ended.type === "retired" ? `${josa(p.name, "과", "와")} 작별해요` : `${p.name}의 편지`;
   $("ending-letter").textContent = letterText(p);
+  const back = $("btn-ending-back"); back.hidden = !["journey", "runaway"].includes(p.ended.type); back.textContent = `${josa(p.name, "을", "를")} 다시 데려오기`;
   $("ending-meta").textContent = `${(p.ageMin / 1440).toFixed(1)}살 · 돌봄 실수 ${p.mistakes.total} · ${HOW_KO[p.ended.type] || ""}`;
   portrait($("ending-portrait"), currentKey(p) || `${p.theme}.egg`, lookCache.look || lookOf(p));
   // 다음 알로 이어지게: 처음 끝까지 함께한 모습인지, 다음 보상까지 얼마나 남았는지
@@ -762,6 +765,54 @@ function finishEnding() {
   renderStats();
 }
 
+// 친구 부활권(하트 보석, 기록마다 한 번). 사기 전에 누가 어떤 모습으로 돌아오는지 보여 준다(경제 자문). 부활권이 생기기 전에 떠난 친구는 한 번 무료
+function offerRevive(rec) {
+  if (!canRevive(rec)) return;
+  const free = (rec.endedAt || 0) < REVIVE_FREE_BEFORE;
+  const cur = profile.pet && !profile.pet.ended && profile.pet.stage !== "egg" ? profile.pet : null;
+  document.querySelector(".dexcard.revivecard")?.remove();
+  const card = document.createElement("div"); card.className = "dexcard revivecard";
+  const when = rec.endedAt ? new Date(rec.endedAt).toLocaleDateString("ko-KR") : "";
+  card.innerHTML = `<div class="dexcard-in"><button class="x" aria-label="닫기">✕</button><b>${REVIVE.name}</b><canvas width="112" height="92" style="width:112px;height:92px;image-rendering:pixelated;display:block;margin:8px auto"></canvas>
+    <p class="small"><b></b> · <span></span></p><p class="small dim"></p>
+    <p class="small">이 친구가 그 모습 그대로 돌아와요. 돌아온 친구는 다시 여행을 떠나지 않아요(돌보지 않으면 삐져 떠날 수는 있어요).${cur ? ` 지금 키우는 친구는 도감에 남아요.` : ""}</p>
+    <button class="big" id="rv-go"></button></div>`;
+  portrait(card.querySelector("canvas"), rec.key, rec.look || {});
+  card.querySelector("p b").textContent = rec.name; card.querySelector("p span").textContent = rec.form || "";
+  card.querySelector("p.dim").textContent = `${when} ${rec.how === "runaway" ? "떠나 버렸어요" : "여행을 떠났어요"} · ${rec.ageDays}살 · 실수 ${rec.mistakes}`;
+  const go = card.querySelector("#rv-go");
+  go.textContent = free ? "무료로 데려오기 (부활권 생기기 전에 떠난 친구)" : `하트 보석 ${REVIVE.price.gem}개로 데려오기`;
+  card.querySelector(".x").addEventListener("click", () => card.remove());
+  card.addEventListener("click", (e) => { if (e.target === card) card.remove(); });
+  go.addEventListener("click", async () => {
+    if (free) { card.remove(); bringBack(rec); return; }
+    if (!navigator.onLine) { sfx("refuse"); say("하트 보석은 인터넷에 연결됐을 때만 쓸 수 있어요", 5000); return; }
+    if (gems(profile.econ) < REVIVE.price.gem) { sfx("refuse"); say(`하트 보석이 ${REVIVE.price.gem - gems(profile.econ)}개 더 필요해요`, 5000); card.remove(); openShop("gem"); return; }
+    if (gemBusy) return;
+    gemBusy = true; go.disabled = true; go.textContent = "데려오는 중…";
+    try {
+      const r = await wallet.spendGem(profile, wsave, reviveItemId(rec), REVIVE.price.gem);
+      if (!r.ok && r.data?.reason !== "owned") { sfx("refuse"); say(r.status === 0 ? "서버에 닿지 않아요. 다시 누르면 이어서 확인해요(두 번 빠지지 않아요)" : r.status === 402 ? "하트 보석이 모자라요" : r.data?.error || "지금은 데려올 수 없어요", 5000); go.disabled = false; go.textContent = `하트 보석 ${REVIVE.price.gem}개로 데려오기`; return; }
+      card.remove(); renderWallet(); bringBack(rec);
+    } finally { gemBusy = false; }
+  });
+  document.body.append(card);
+}
+// 여행 떠난 친구 다시 데려오기(도감 기록으로). 지금 키우는 친구가 있으면 그 친구는 도감에 남기고 바꾼다
+function bringBack(rec) {
+  if (!canRevive(rec)) return;
+  const cur = profile.pet;
+  if (cur && !cur.ended && cur.stage !== "egg") { retirePet(cur, clock.now(), S()); recordPet(profile, cur); }
+  profile.pet = revivePet(rec, clock.now());
+  rec.returnedAt = Date.now();
+  profile.ui.poopSlots = []; farewellShown = false;
+  persist(); markCloudDirty();
+  $("start").hidden = true; $("ending").hidden = true; closeSheet();
+  pickFace(faces, profile.pet, performance.now(), { force: true });
+  renderStats(); scheduleSync(500);
+  setTimeout(() => { playAnim(anim, "greetBig", performance.now()); sfx("greet"); say(`${I(rec.name)} 여행에서 돌아왔어요! 이제 계속 함께해요`, 6000); }, 400);
+}
+
 // "계속 살기"에서 직접 마무리
 function retireNow() {
   const p = profile.pet; if (!p) return;
@@ -773,7 +824,7 @@ function retireNow() {
 
 // ---------- 도감 ----------
 function renderDex() {
-  renderCollection($("dex-body"), profile, { pet: profile.pet, settings: profile.settings });
+  renderCollection($("dex-body"), profile, { pet: profile.pet, settings: profile.settings, onRevive: (r) => { closeSheet(); offerRevive(r); } });
   const p = profile.pet;
   const box = $("dex-retire");
   box.innerHTML = "";
@@ -832,6 +883,8 @@ function renderEggStep() {
 function showStart() {
   $("start").hidden = false;
   renderThemeLocks();
+  const rv = lastRevivable(profile), b = $("btn-revive");
+  b.hidden = !rv; if (rv) { b.textContent = `${rv.how === "runaway" ? "떠나 버린" : "여행 떠난"} ${josa(rv.name, "을", "를")} 다시 데려오기`; b.onclick = () => offerRevive(rv); }
   stepTo("theme");
 }
 // 알 고르기: 잠긴 알은 실루엣처럼 흐리게 + 가격을 미리 보여 줌(눌러서 바로 열 수 있게)
@@ -916,6 +969,25 @@ function renderShopUI() {
     gem: { online: gemOnline(), busy: gemBusy, buy: profile.wallet?.buy || "off", at: profile.wallet?.at || 0, pending: pendingGems(profile), has: !!profile.wallet?.created },
     onDeleteWallet: () => deleteWalletNow(),
     onUnlockTheme: (t) => openTheme(t),
+    pet: profile.pet,
+    onForgive: async (buy) => {
+      if (buy) { // 사탕이 없으면 하트 보석으로 1개 사서 바로 먹임(서버 지갑, 인터넷 필요)
+        if (!navigator.onLine) { sfx("refuse"); say("하트 보석은 인터넷에 연결됐을 때만 쓸 수 있어요", 5000); return; }
+        if (gems(profile.econ) < FORGIVE.price.gem) { sfx("refuse"); say(`하트 보석이 ${FORGIVE.price.gem - gems(profile.econ)}개 더 필요해요`, 4000); shopState.tab = "gem"; renderShopUI(); return; }
+        if (gemBusy || !confirm(`하트 보석 ${FORGIVE.price.gem}개로 ${FORGIVE.name}을 사서 먹일까요?`)) return;
+        gemBusy = true;
+        try {
+          const id = profile.candyOp?.id || candyItemId(Date.now()); profile.candyOp = { id }; wsave(); // 응답을 못 받아도 같은 id로 다시(두 번 안 빠짐)
+          const s = await wallet.spendGem(profile, wsave, id, FORGIVE.price.gem);
+          if (!s.ok && s.data?.reason !== "owned") { sfx("refuse"); say(s.status === 0 ? "서버에 닿지 않아요. 다시 누르면 이어서 확인해요" : s.status === 402 ? "하트 보석이 모자라요" : s.data?.error || "지금은 살 수 없어요", 5000); return; }
+          delete profile.candyOp; profile.econ.candy = (profile.econ.candy || 0) + 1;
+        } finally { gemBusy = false; renderWallet(); }
+      }
+      const r = forgiveStage(profile.econ, profile.pet);
+      if (!r.ok) { sfx("refuse"); renderShopUI(); return; }
+      persist(); renderWallet(); sfx("happy"); renderStats(); renderShopUI();
+      say(`${I(profile.pet.name)} ${FORGIVE.name}을 먹었어요. 이번 단계 실수 ${r.n}개가 지워졌어요`, 5000);
+    },
     rerender: renderShopUI,
     onSelect: (it) => { previewDeco = it ? { [it.slot]: it.id } : null; },
     onEquip: (it) => { equip(profile.econ, it); persist(); sfx("tap"); say(`${josa(it.name, "을", "를")} 끼웠어요`, 2500); renderShopUI(); },
@@ -1106,13 +1178,29 @@ function renderQuickSettings() {
     <div class="set">날씨<button class="tg ${s.weather !== false ? "on" : ""}" id="q-weather" aria-label="창밖 실제 날씨"></button></div>
     <div class="set">알림<button class="goarrow" id="q-notify">${notifyOn ? "켜짐" : "꺼짐"} ›</button></div>
     <div class="set">이어하기<button class="goarrow" id="q-cloud">${profile.cloud?.key ? "켜짐" : "꺼짐"} ›</button></div>
-    <div class="set">잠자는 시간<span class="r">${SLEEP_PRESETS.map(([a, , l]) => `<button class="seg ${s.sleep.start === a ? "on" : ""}" data-sleep="${a}">${l}</button>`).join("")}</span></div>
-    <p class="fine">자는 시간은 8시간이에요 (${s.sleep.start} → ${s.sleep.end}). 자는 동안엔 알림이 조용해요.</p>`;
+    <div class="set">잠자는 시간<span class="r">${SLEEP_PRESETS.map(([a, b, l]) => `<button class="seg ${s.sleep.start === a && s.sleep.end === b ? "on" : ""}" data-sleep="${a}">${l}</button>`).join("")}</span></div>
+    <p class="fine">${s.sleep.start}에 자고 ${s.sleep.end}에 일어나요 (${(sleepLength(s.sleep.start, s.sleep.end) / 60).toFixed(1).replace(".0", "")}시간). 자는 동안엔 알림이 조용해요. <button class="linkbtn" id="q-sleep-custom">직접 설정 ›</button></p>
+    <div class="set sleepcustom" id="q-sleep-box" hidden>
+      <select id="q-sleep-start" aria-label="자는 시각">${SLEEP_START_OPTS.map((t) => `<option ${t === s.sleep.start ? "selected" : ""}>${t}</option>`).join("")}</select> 에 자고
+      <select id="q-sleep-end" aria-label="일어나는 시각">${SLEEP_END_OPTS.map((t) => `<option ${t === s.sleep.end ? "selected" : ""}>${t}</option>`).join("")}</select> 에 일어나요
+      <button class="seg on" id="q-sleep-apply">적용</button>
+    </div>
+    <p class="fine" id="q-sleep-note" hidden></p>`;
   $("q-sound").addEventListener("click", () => { s.sound = !s.sound; setSoundEnabled(s.sound); if (s.sound) sfx("happy"); persist(); renderQuickSettings(); });
   $("q-notify").addEventListener("click", () => openSheet("notify"));
   // 날씨: 끄면 날씨 서비스로 아무것도 보내지 않음(처리방침 4절 약속, 디자인 자문 B2)
   $("q-weather").addEventListener("click", () => { s.weather = s.weather === false; persist(); updateWeather(true); sfx("tap"); say(s.weather ? "창밖에 실제 날씨를 보여 줘요" : "날씨를 껐어요. 날씨 서비스로 아무것도 보내지 않아요", 3000); renderQuickSettings(); });
   $("q-cloud").addEventListener("click", () => openSheet("cloud"));
+  const sNote = $("q-sleep-note"), sStart = $("q-sleep-start"), sEnd = $("q-sleep-end"), sApply = $("q-sleep-apply");
+  const sCheck = () => { const ok = sleepOk(sStart.value, sEnd.value), len = sleepLength(sStart.value, sEnd.value) / 60; sApply.disabled = !ok; sNote.hidden = false; sNote.textContent = ok ? `${len.toFixed(1).replace(".0", "")}시간 자요. 지금 적용하면 바로 잠들거나 깰 수 있어요.` : "6~10시간 사이로 설정할 수 있어요."; };
+  $("q-sleep-custom").addEventListener("click", () => { const bx = $("q-sleep-box"); bx.hidden = !bx.hidden; if (!bx.hidden) sCheck(); else sNote.hidden = true; });
+  sStart.addEventListener("change", sCheck); sEnd.addEventListener("change", sCheck);
+  sApply.addEventListener("click", () => {
+    if (!sleepOk(sStart.value, sEnd.value)) return;
+    s.sleep = { start: sStart.value, end: sEnd.value };
+    if (profile.pet) advance(profile.pet, clock.now(), S());
+    persist(); scheduleSync(500); renderQuickSettings(); sfx("tap"); say(`${s.sleep.start}에 자고 ${s.sleep.end}에 일어나요`, 3000);
+  });
   for (const b of box.querySelectorAll("[data-sleep]")) b.addEventListener("click", () => {
     const pr = SLEEP_PRESETS.find((x) => x[0] === b.dataset.sleep); s.sleep = { start: pr[0], end: pr[1] };
     if (profile.pet) advance(profile.pet, clock.now(), S());
@@ -1148,6 +1236,7 @@ function showDaily(force = false) {
     if (r) {
       gainFx({ star: r.star || 0 }); sfx("win");
       if (r.gem) { earnGem("daily"); say(navigator.onLine ? `오늘의 선물: 하트 보석 ${r.gem}개!` : `오늘의 선물: 하트 보석 ${r.gem}개는 인터넷이 연결되면 들어와요`, 5000); }
+      else if (r.candy) say(`오늘의 선물: ${FORGIVE.name} ${r.candy}개! 상점 추천 탭에서 먹여 이번 단계 실수를 지울 수 있어요`, 6000);
       else say(`오늘의 선물: 별사탕 ${r.star}개`, 4000);
     }
     $("gift-dot").hidden = true;
@@ -1346,6 +1435,10 @@ function boot() {
   $("btn-start").addEventListener("click", startGame);
   $("mg-quit").addEventListener("click", () => endMinigame(true));
   $("btn-ending").addEventListener("click", finishEnding);
+  $("btn-ending-back").addEventListener("click", () => { // 편지를 받자마자 붙잡기: 도감에 남기고 바로 데려옴
+    const p = profile.pet; if (!p?.ended) return;
+    const rec = recordPet(profile, p); profile.pet = null; persist(); $("ending").hidden = true; farewellShown = false; showStart(); offerRevive(rec);
+  });
   $("btn-export").addEventListener("click", doExport);
   $("btn-import").addEventListener("click", doImport);
   $("name-input").addEventListener("keydown", (e) => { if (e.key === "Enter") startGame(); });
@@ -1431,7 +1524,7 @@ function boot() {
   // 개발 도구(공개 배포에는 없음): ?dev 로 열기
   if (QS.has("dev")) {
     window.__pp = { clock, getProfile: () => profile, tick, anim, playAnim: (n, d) => playAnim(anim, n, performance.now(), d), mg: () => mg, layout: () => layout, forceGame: null, boxes: () => ({ windowBox, petBox, memoBox }), render: () => renderStats() };
-    import("./dev/panel.js?v=bf34df8-1791372957").then((m) => m.mount({ clock, getProfile: () => profile, tick, renderStats, syncNow, serverStatus })).catch(() => {});
+    import("./dev/panel.js?v=880f4fe-1791512088").then((m) => m.mount({ clock, getProfile: () => profile, tick, renderStats, syncNow, serverStatus })).catch(() => {});
   }
 }
 
