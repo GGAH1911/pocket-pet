@@ -1,13 +1,13 @@
 // 놀이방(2026-10-09 사용자 요청 "방이 더 있으면, 친구들과 놀 수 있는 방, 친구 초대", 디자인·아동 심리 자문 2·3단계).
 // "함께 사는 건 여럿, 돌보는 건 하나": 돌봄은 내 방에서만. 놀이방엔 마을 친구(시간 멈춘 손님)와 놀러 오기 코드로 온 손님이 놀러 온다.
 // 손님은 쓰다듬기만, 숫자는 안 바뀜. 지금 친구와 '같이 놀기'는 하루 한 번 기분 +10(돌봄이 필요하면 안 됨).
-import { memberCanvas } from "../render/screen.js?v=052c180-1791549664";
-import { drawPlay } from "../render/deco.js?v=052c180-1791549664";
-import { lookOf } from "../render/creature.js?v=052c180-1791549664";
-import { currentKey } from "./collection.js?v=052c180-1791549664";
-import { villageOf, careBlock } from "../core/village.js?v=052c180-1791549664";
-import { visitCode, addVisitor, pruneVisitors, readVisit, showVisit } from "../core/visit.js?v=052c180-1791549664";
-import { josa } from "../core/josa.js?v=052c180-1791549664";
+import { memberCanvas } from "../render/screen.js?v=dfce006-1791550024";
+import { drawPlay } from "../render/deco.js?v=dfce006-1791550024";
+import { lookOf } from "../render/creature.js?v=dfce006-1791550024";
+import { currentKey } from "./collection.js?v=dfce006-1791550024";
+import { villageOf, careBlock } from "../core/village.js?v=dfce006-1791550024";
+import { visitCode, addVisitor, pruneVisitors, readVisit, showVisit } from "../core/visit.js?v=dfce006-1791550024";
+import { josa } from "../core/josa.js?v=dfce006-1791550024";
 
 const W = 128, H = 112, FLOOR = 54;
 const dayKey = (ts) => new Date(ts).toDateString();
@@ -40,13 +40,12 @@ function drawScene(ctx, profile, list, t, hearts) {
   if (eq.playL) drawPlay(ctx, eq.playL, 24, FLOOR + 14, { now: t });
   if (eq.playM) drawPlay(ctx, eq.playM, 64, FLOOR + 10, { now: t });
   if (eq.playR) drawPlay(ctx, eq.playR, 104, FLOOR + 14, { now: t });
-  if (!eq.playL && !eq.playM && !eq.playR) { ctx.fillStyle = "rgba(59,44,53,.35)"; ctx.font = "6px system-ui"; ctx.textAlign = "center"; ctx.fillText("상점 놀이방 탭에서 놀이 기구를 놓아 보세요", W / 2, FLOOR + 18); }
   const pos = [];
   list.forEach((c, i) => {
     const n = list.length, x = Math.round(((i + 0.5) / n) * W), hop = c.sleep ? 0 : Math.max(0, Math.round(Math.sin(t / 380 + i * 1.7) * 3));
     const cv = memberCanvas(c.key, c.look); const base = H - 6 - (i % 2) * 4;
     if (cv) ctx.drawImage(cv, x - 38, base - 48 - hop);
-    if (c.sleep) { ctx.fillStyle = "#3b2c35"; ctx.font = "bold 7px system-ui"; ctx.fillText("z", x + 10, base - 30); }
+    if (c.sleep) { ctx.fillStyle = "#3b2c35"; const zx = x + 10, zy = base - 36; ctx.fillRect(zx, zy, 4, 1); ctx.fillRect(zx + 2, zy + 1, 1, 1); ctx.fillRect(zx + 1, zy + 2, 1, 1); ctx.fillRect(zx, zy + 3, 4, 1); } // 도트 z(글씨는 키우면 흐려짐)
     pos.push({ x, base, c });
   });
   for (const h of hearts) { const a = 1 - (t - h.at) / 1200; if (a <= 0) continue; ctx.globalAlpha = a; ctx.fillStyle = "#ff6b8b"; const y = h.y - (t - h.at) / 60; ctx.fillRect(h.x - 2, y, 2, 2); ctx.fillRect(h.x + 1, y, 2, 2); ctx.fillRect(h.x - 2, y + 2, 5, 2); ctx.fillRect(h.x - 1, y + 4, 3, 1); ctx.fillRect(h.x, y + 5, 1, 1); ctx.globalAlpha = 1; }
@@ -109,7 +108,9 @@ export function openPlayroom(deps) {
       profile.visitors = r.list; persist(); sfx("happy"); inp.value = ""; list = cast(profile, deps.now()); line.textContent = "친구가 놀러 왔어요! 하루 동안 있다가 집에 가요";
       refreshBtn();
     } })));
-  inner.append(x, el("h3", { text: "놀이방" }), cv, line, playBtn, codeBox);
+  const eq = profile.econ?.equipped || {};
+  const hint = !eq.playL && !eq.playM && !eq.playR ? el("p", { class: "fine", text: "상점 → 놀이방 탭에서 미끄럼틀·볼풀·그네 같은 놀이 기구를 놓을 수 있어요." }) : null;
+  inner.append(x, el("h3", { text: "놀이방" }), cv, line, playBtn, hint, codeBox);
   wrap.append(inner); document.body.append(wrap);
   const loop = (t) => { pos = drawScene(ctx, profile, list, t, hearts); if (open) open.raf = requestAnimationFrame(loop); };
   open = { raf: requestAnimationFrame(loop) };
