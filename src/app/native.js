@@ -114,6 +114,14 @@ export function payErrorKind(e) {
 export async function payAvailable() { if (!IS_APP) return false; try { return !!(await Pay.isBillingSupported()).isBillingSupported; } catch { return false; } }
 
 // ---------- 앱 생명주기·뒤로 가기 ----------
+// 설치된 앱 버전(플레이 versionCode). 새 버전 알림에 씀
+export async function appInfo() { if (!IS_APP) return null; try { const i = await App.getInfo(); return { code: Number(i.build) || 0, name: i.version || "" }; } catch { return null; } }
+// 플레이 스토어 앱의 알모찌 페이지 열기(웹뷰가 market:// 을 OS에 넘김, 안 열리면 https 주소로)
+export function openStore() {
+  const id = "kr.co.eggmochi.dotpet";
+  location.href = `market://details?id=${id}`;
+  setTimeout(() => { if (document.visibilityState === "visible") location.href = `https://play.google.com/store/apps/details?id=${id}`; }, 1500);
+}
 export function onAppEvents({ back, pause, resume }) {
   if (!IS_APP) return;
   if (back) App.addListener("backButton", back); // 등록하면 기본 동작(앱 종료)이 꺼진다
