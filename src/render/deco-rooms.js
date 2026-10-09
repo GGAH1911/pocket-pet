@@ -2,7 +2,7 @@
 // deco.js와 같은 규칙: 캔버스 논리 픽셀, 정수 좌표, 검정(k) 외곽선 1도트, 글씨 없음.
 // 가구·바닥 소품은 x = 가운데, base = 바닥에 닿는 y. 벽걸이(hang_*)는 base = 가운데 y.
 // 각 함수는 이 파일이 아는 id면 그리고 true, 모르면 아무것도 안 그리고 false.
-import { PALETTE } from "./palette.js?v=d5d27df-1791554661";
+import { PALETTE } from "./palette.js?v=2741bdf-1791555007";
 
 const P = PALETTE;
 const rect = (ctx, x, y, w, h, c) => { ctx.fillStyle = c; ctx.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h)); };

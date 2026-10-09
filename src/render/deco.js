@@ -1,8 +1,8 @@
 // 방 꾸미기 그림: 벽지·바닥·러그·커튼·가구. 상점 미리보기(작은 그림)도 같은 함수로 그린다.
 // 좌표는 캔버스 논리 픽셀. 가구는 x(가운데)·base(바닥에 닿는 y) 기준.
-import { PALETTE } from "./palette.js?v=d5d27df-1791554661";
-import { SPRITES, drawSprite, spriteSize } from "./sprites.js?v=d5d27df-1791554661";
-import { ROOM_WALLS, drawWallRoom, drawFloorRoom, drawRugRoom, CURTAIN_COLORS, drawCurtainExtra, FURN_HALF_ROOM, drawFurnRoom, drawSmallRoom } from "./deco-rooms.js?v=d5d27df-1791554661"; // 새 방 4개 그림(2026-10-09)
+import { PALETTE } from "./palette.js?v=2741bdf-1791555007";
+import { SPRITES, drawSprite, spriteSize } from "./sprites.js?v=2741bdf-1791555007";
+import { ROOM_WALLS, drawWallRoom, drawFloorRoom, drawRugRoom, CURTAIN_COLORS, drawCurtainExtra, FURN_HALF_ROOM, drawFurnRoom, drawSmallRoom } from "./deco-rooms.js?v=2741bdf-1791555007"; // 새 방 4개 그림(2026-10-09)
 
 export const HAT_SPRITE = { hat_ribbon: "hatRibbon", hat_straw: "hatStraw", hat_glasses: "hatGlasses", hat_crown: "hatCrown", hat_flower: "hatFlower" };
 
