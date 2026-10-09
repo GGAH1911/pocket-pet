@@ -23,6 +23,7 @@ export function newEcon() {
   return {
     star: 0, gemPaid: 0, gemFree: 0,
     candy: 0, // 새 마음 사탕(이번 단계 실수 지우기) 가진 수
+    candyBuys: 0, // 이번 주(마지막 주간 사탕 뒤) 보석으로 산 수 → 값 60·90·120
     owned: {}, // 상품 id → 얻은 시각
     equipped: {}, // 칸 → 상품 id
     daily: { lastDay: null, idx: 0, total: 0 },
@@ -39,7 +40,7 @@ export function normalizeEcon(e) {
   if (!e || typeof e !== "object") return base;
   const num = (v) => (Number.isFinite(v) && v >= 0 ? Math.floor(v) : 0);
   return {
-    star: num(e.star), gemPaid: num(e.gemPaid), gemFree: num(e.gemFree), candy: num(e.candy),
+    star: num(e.star), gemPaid: num(e.gemPaid), gemFree: num(e.gemFree), candy: num(e.candy), candyBuys: num(e.candyBuys),
     owned: e.owned && typeof e.owned === "object" ? { ...e.owned } : {},
     equipped: e.equipped && typeof e.equipped === "object" ? { ...e.equipped } : {},
     daily: { ...base.daily, ...(e.daily || {}) },
@@ -52,7 +53,10 @@ export function normalizeEcon(e) {
 
 // ---- 새 마음 사탕: 이번 단계 돌봄 실수를 지움. 매일 선물 4일째에 1개, 더 필요하면 하트 보석으로 1개씩(사용자 결정 2026-10-08).
 // 단계마다 1번, 평생 실수·숨은 친구 조건은 그대로(경제 자문) ----
-export const FORGIVE = { id: "forgive", name: "새 마음 사탕", price: { gem: 60 } }; // 60 = 상점 최저 유료가(30이면 갈림을 싸게 상시 확정할 수 있어 올림, 경제 자문) // price = 하트 보석으로 1개 살 때
+export const FORGIVE = { id: "forgive", name: "새 마음 사탕", price: { gem: 60 } }; // 60 = 상점 최저 유료가(30이면 갈림을 싸게 상시 확정할 수 있어 올림, 경제 자문)
+// 살수록 비싸짐: 60 → 90 → 120(그 뒤 120). 매주 사탕을 받을 때(매일 선물 7일째, 서버가 받아 준 때) 처음 값으로(2026-10-09 사용자 요청, 숫자는 경제 자문)
+export const CANDY_PRICES = [60, 90, 120];
+export const candyPrice = (buys) => CANDY_PRICES[Math.min(Math.max(0, buys | 0), CANDY_PRICES.length - 1)]; // price = 하트 보석으로 1개 살 때
 export const stageTag = (pet) => `${pet.stage}|${pet.branch || ""}|${pet.ageMin - pet.stageMin}`; // 지금 단계를 가리키는 값(진화하면 바뀜)
 export function forgiveState(e, pet) {
   if (!pet || pet.ended || pet.stage === "egg") return { ok: false, reason: "egg" };

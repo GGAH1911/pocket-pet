@@ -9,10 +9,15 @@ export const PER_HOUR_AWAKE = {
   mood: -8,
   energy: -4,
 };
+// 자는 동안(실제 시계 기준이라 속도를 곱하지 않는다). 2026-10-09 사용자 요청(12시간까지 잠) + 게임 디자인 자문 측정:
+// 배부름 -1 → -3, 기분 -1(새로) 하고, 자는 동안엔 25 아래로 안 내려가게(배고파 알림 20 → 잠만으로는 아침에 울지 않음).
+// 잘 챙긴 날 아침 배부름: 8시간 61, 12시간 49 = "아침밥 한 번 주면 딱 좋은" 정도
 export const PER_HOUR_ASLEEP = {
-  hunger: -1, // 잠은 실제 시계 기준이라 속도를 곱하지 않는다
+  hunger: -3,
+  mood: -1,
   energy: +15,
 };
+export const ASLEEP_FLOOR = { hunger: 25, mood: 25 };
 export const MOOD_PER_POOP_PER_HOUR = -2;
 export const HEALTH_PER_HOUR = {
   starving: -5, // 배부름 0

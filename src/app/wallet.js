@@ -1,8 +1,8 @@
 // 하트 보석 서버 지갑: 기기 쪽 네트워크(서버 /wallet…). 규칙은 core/wallet.js, 설계 docs/wallet.md
 // 지갑 열쇠는 기기가 만든 무작위 32바이트. 서버엔 해시만 간다. 보석은 서버에 닿을 때만 받고 쓸 수 있다.
-import { PUSH_SERVER } from "./push.js?v=7912b1f-1791515630";
-import { walletOf, applyServerWallet, migratePayload } from "../core/wallet.js?v=7912b1f-1791515630";
-import { CANDY_MAX } from "../core/economy.js?v=7912b1f-1791515630";
+import { PUSH_SERVER } from "./push.js?v=c4d73ca-1791537141";
+import { walletOf, applyServerWallet, migratePayload } from "../core/wallet.js?v=c4d73ca-1791537141";
+import { CANDY_MAX } from "../core/economy.js?v=c4d73ca-1791537141";
 
 const b64u = (bytes) => btoa(String.fromCharCode(...bytes)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 export const newWalletKey = () => b64u(crypto.getRandomValues(new Uint8Array(32)));
@@ -12,7 +12,7 @@ export const acctOf = async (key) => hex(await crypto.subtle.digest("SHA-256", n
 
 // 연결 상태: navigator.onLine만 믿지 않고 실제 요청 결과로 판단(capacitor-offline-first)
 export const net = { ok: false, at: 0 };
-export const APP_VER = "1.0.10"; // android/app/build.gradle versionName과 맞춤(결제 진단용)
+export const APP_VER = "1.0.11"; // android/app/build.gradle versionName과 맞춤(결제 진단용)
 const TIMEOUT_MS = 10_000;
 
 async function call(method, path, key, body, { extraHeaders = {}, timeout = TIMEOUT_MS } = {}) {
@@ -72,7 +72,7 @@ export async function flushEarn(profile, save) {
       const it = wl.queue[0];
       const r = await call("POST", "/wallet/earn", wl.key, { op: it.op, kind: it.kind, id: it.id || undefined });
       if (r.status === 0 || r.status >= 500 || r.status === 429) break;
-      if (r.status === 200 && !r.data.again) { got += r.data.gained || 0; if (it.candy) profile.econ.candy = Math.min(CANDY_MAX, (profile.econ.candy || 0) + it.candy); } // 사탕은 서버가 받아 준 매일 선물에만
+      if (r.status === 200 && !r.data.again) { got += r.data.gained || 0; if (it.candy) { profile.econ.candy = Math.min(CANDY_MAX, (profile.econ.candy || 0) + it.candy); profile.econ.candyBuys = 0; } } // 주간 사탕을 받으면 사탕 값이 처음(60)으로 // 사탕은 서버가 받아 준 매일 선물에만
       if (r.data?.w) applyServerWallet(profile, r.data);
       wl.queue.shift(); save();
     }

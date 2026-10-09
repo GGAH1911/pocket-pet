@@ -1,10 +1,10 @@
 // 상점·꾸미기·매일 선물 화면. 상태와 규칙은 core/economy.js·catalog.js, 여기는 DOM만.
-import { ITEMS, ITEM, SLOTS, TABS, PICKS, PACKS, SOON, UNLOCK, UNLOCKS } from "../core/catalog.js?v=7912b1f-1791515630";
-import { drawCourseThumb } from "../render/walk-courses.js?v=7912b1f-1791515630";
-import { canAfford, gems, DAILY, purchaseHistory, themeOpen, FORGIVE, forgiveState } from "../core/economy.js?v=7912b1f-1791515630";
-import { gemButtonState } from "../core/wallet.js?v=7912b1f-1791515630";
-import { drawThumb } from "../render/deco.js?v=7912b1f-1791515630";
-import { SPRITES, drawSprite, spriteSize } from "../render/sprites.js?v=7912b1f-1791515630";
+import { ITEMS, ITEM, SLOTS, TABS, PICKS, PACKS, SOON, UNLOCK, UNLOCKS } from "../core/catalog.js?v=c4d73ca-1791537141";
+import { drawCourseThumb } from "../render/walk-courses.js?v=c4d73ca-1791537141";
+import { canAfford, gems, DAILY, purchaseHistory, themeOpen, FORGIVE, forgiveState, candyPrice } from "../core/economy.js?v=c4d73ca-1791537141";
+import { gemButtonState } from "../core/wallet.js?v=c4d73ca-1791537141";
+import { drawThumb } from "../render/deco.js?v=c4d73ca-1791537141";
+import { SPRITES, drawSprite, spriteSize } from "../render/sprites.js?v=c4d73ca-1791537141";
 
 const el = (tag, attrs = {}, ...kids) => {
   const e = document.createElement(tag);
@@ -84,8 +84,8 @@ export function renderShop(tabsEl, bodyEl, ctx) {
       : fs.reason === "egg" ? "알에서 깨어나면 먹을 수 있어요."
       : "";
     bodyEl.append(el("div", { class: "banner" }, el("b", { text: `${FORGIVE.name} (가진 것 ${have}개)` }), document.createTextNode(note),
-      el("div", { class: "row", style: "margin-top:8px" }, el("span", { class: "small dim", style: "flex:1", text: "매일 선물 7일째에 1개(최대 3개) · 단계마다 한 번" }),
-        buyMode ? el("button", { onclick: () => ctx.onForgive?.(true) }, priceEl(FORGIVE.price), document.createTextNode(" 사서 먹이기"))
+      el("div", { class: "row", style: "margin-top:8px" }, el("span", { class: "small dim", style: "flex:1", text: "매일 선물 7일째에 1개(최대 3개) · 단계마다 한 번 · 살수록 비싸져요(주간 사탕 받으면 처음 값)" }),
+        buyMode ? el("button", { onclick: () => ctx.onForgive?.(true) }, priceEl({ gem: candyPrice(econ.candyBuys) }), document.createTextNode(" 사서 먹이기"))
           : el("button", { disabled: !fs.ok, onclick: () => ctx.onForgive?.(false) }, document.createTextNode("먹이기")))));
   }
   const tab = TABS.find((t) => t.id === state.tab);
@@ -118,6 +118,14 @@ export function renderShop(tabsEl, bodyEl, ctx) {
   bodyEl.append(bar);
 }
 
+// 하트 보석 묶음 그림: 많이 들수록 보석 무더기가 커진다(사용자 요청 2026-10-09). 60=1개, 330=3개, 720=5개, 1,500=8개
+const PILE = [[1, [[8, 5]]], [300, [[2, 9], [14, 9], [8, 2]]], [700, [[0, 11], [10, 11], [20, 11], [5, 4], [15, 4]]], [1400, [[0, 12], [9, 12], [18, 12], [27, 12], [4, 6], [13, 6], [22, 6], [9, 0]]]];
+function gemPile(n) {
+  const spots = [...PILE].reverse().find(([min]) => n >= min)[1];
+  const cv = el("canvas", { width: 44, height: 26, class: "pile" }); const c = cv.getContext("2d"); c.imageSmoothingEnabled = false;
+  for (const [x, y] of spots) drawSprite(c, SPRITES.coinGem, x, y, 2);
+  return cv;
+}
 function renderGemShop(box, ctx) {
   const { econ } = ctx;
   const g = ctx.gem || {};
@@ -130,7 +138,7 @@ function renderGemShop(box, ctx) {
       el("div", { class: "row", style: "margin-top:8px" }, el("span", { class: "small dim", style: "flex:1", text: "한 번만 살 수 있어요" }), el("button", { class: "krw", text: closed ? "준비 중" : won(st.krw), disabled: closed, onclick: () => ctx.onPack(st) }))));
   }
   for (const p of PACKS.filter((x) => !x.once)) {
-    box.append(el("button", { class: "pack", disabled: closed, onclick: () => ctx.onPack(p) }, spriteCanvas("coinGem", 32, 26), el("span", { class: "g" }, document.createTextNode(p.name), el("small", { text: p.bonus || "기본" })), el("span", { class: "krw", text: closed ? "준비 중" : won(p.krw) })));
+    box.append(el("button", { class: "pack", disabled: closed, onclick: () => ctx.onPack(p) }, gemPile(p.gems), el("span", { class: "g" }, document.createTextNode(p.name), el("small", { text: p.bonus || "기본" })), el("span", { class: "krw", text: closed ? "준비 중" : won(p.krw) })));
   }
   const dt = g.at ? new Date(g.at) : null;
   const seen = dt ? `${dt.getMonth() + 1}월 ${dt.getDate()}일 ${String(dt.getHours()).padStart(2, "0")}:${String(dt.getMinutes()).padStart(2, "0")}` : null;

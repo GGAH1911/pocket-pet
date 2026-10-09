@@ -3,12 +3,12 @@
 // - 깨어 있는 동안의 변화는 속도 배율(게임 분)을 곱하고, 잠·바쁜 시간은 실제 시계를 따른다.
 // - 무슨 일이 생겼는지(events)를 돌려준다 → "자리를 비운 동안" 요약과 알림 예측에 쓴다.
 import {
-  SPEEDS, PER_HOUR_AWAKE, PER_HOUR_ASLEEP, MOOD_PER_POOP_PER_HOUR, HEALTH_PER_HOUR, BUSY_FACTOR,
+  SPEEDS, PER_HOUR_AWAKE, PER_HOUR_ASLEEP, ASLEEP_FLOOR, MOOD_PER_POOP_PER_HOUR, HEALTH_PER_HOUR, BUSY_FACTOR,
   POOP, CLEAN, SICK, SNACK_BINGE, NAP_MIN, NAP_ENERGY_PER_HOUR, NAP_LIGHT_BELOW, ACTIONS, STAGE_MIN, BRANCH, MISTAKE, CALL, DEFAULT_SETTINGS, ENDING, SECRET,
-} from "./rules.js?v=7912b1f-1791515630";
-import { clampStat } from "./state.js?v=7912b1f-1791515630";
-import { nextRandom, randomInt } from "./rng.js?v=7912b1f-1791515630";
-import { isSleepTime, isBusyTime } from "./daytime.js?v=7912b1f-1791515630";
+} from "./rules.js?v=c4d73ca-1791537141";
+import { clampStat } from "./state.js?v=c4d73ca-1791537141";
+import { nextRandom, randomInt } from "./rng.js?v=c4d73ca-1791537141";
+import { isSleepTime, isBusyTime } from "./daytime.js?v=c4d73ca-1791537141";
 
 const MINUTE = 60000;
 const NEXT_STAGE = { egg: "baby", baby: "child", child: "teen", teen: "adult" };
@@ -115,7 +115,8 @@ export function tickMinute(pet, ts, settings = DEFAULT_SETTINGS, events = []) {
   }
 
   if (pet.asleep) {
-    s.hunger += PER_HOUR_ASLEEP.hunger / 60;
+    if (s.hunger > ASLEEP_FLOOR.hunger) s.hunger = Math.max(ASLEEP_FLOOR.hunger, s.hunger + PER_HOUR_ASLEEP.hunger / 60); // 바닥 아래로는 안 줄임(이미 낮으면 그대로)
+    if (s.mood > ASLEEP_FLOOR.mood) s.mood = Math.max(ASLEEP_FLOOR.mood, s.mood + PER_HOUR_ASLEEP.mood / 60);
     s.energy += PER_HOUR_ASLEEP.energy / 60;
     if (!pet.sick) s.health += HEALTH_PER_HOUR.recoverAsleep / 60;
     if (pet.lightOn && !pet.lightMistakeTonight && ts - pet.sleptAt > MISTAKE.lightGraceRealMin * MINUTE) {
