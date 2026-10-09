@@ -1,7 +1,7 @@
 // 방 여러 개(2026-10-09). econ.rooms[방id][칸] = 상품 id, econ.room = 지금 보는 방, econ.equipped = econ.rooms[econ.room](같은 객체).
 // 머리 장식·놀이방 칸은 방과 상관없이 따라다닌다(GLOBAL). 한 물건은 한 방에만.
 // 선물 방: 내 방 6칸(커튼·왼쪽·오른쪽·창가·벽걸이·바닥 소품)이 다 차고 매일 선물을 3번 이상 받았으면 한 번(econ.roomGift). 나머지는 보석 200(UNLOCKS room_*, 서버 지갑)
-import { ROOMS, ROOM, ITEM } from "./catalog.js?v=8143ed3-1791554505";
+import { ROOMS, ROOM, ITEM } from "./catalog.js?v=d5d27df-1791554661";
 export const GLOBAL_SLOTS = ["hat", "playL", "playM", "playR"];
 export const FULL_SLOTS = ["curtain", "furnL", "furnR", "sill", "wallR", "prop"];
 export const GIFT_MIN_DAYS = 3;

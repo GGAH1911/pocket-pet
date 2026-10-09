@@ -1,10 +1,10 @@
 // 도감: 본 적 있는 모습 표시, 지금까지 키운 펫 기록, 초상화 그리기
-import { FORMS, buildCreature, paintGrid, formKey, lookOf } from "../render/creature.js?v=8143ed3-1791554505";
-import { drawFace, POOLS } from "../render/face.js?v=8143ed3-1791554505";
-import { SPRITES, drawSprite } from "../render/sprites.js?v=8143ed3-1791554505";
-import { BRANCH, SECRET } from "../core/rules.js?v=8143ed3-1791554505";
-import { EGGS, foundCount } from "./eggs.js?v=8143ed3-1791554505";
-import { canRevive } from "../core/revive.js?v=8143ed3-1791554505";
+import { FORMS, buildCreature, paintGrid, formKey, lookOf } from "../render/creature.js?v=d5d27df-1791554661";
+import { drawFace, POOLS } from "../render/face.js?v=d5d27df-1791554661";
+import { SPRITES, drawSprite } from "../render/sprites.js?v=d5d27df-1791554661";
+import { BRANCH, SECRET } from "../core/rules.js?v=d5d27df-1791554661";
+import { EGGS, foundCount } from "./eggs.js?v=d5d27df-1791554661";
+import { canRevive } from "../core/revive.js?v=d5d27df-1791554661";
 
 export const THEME_KO = { animal: "동물", fantasy: "상상 속 생물" };
 export const HOW_KO = { journey: "여행을 떠남", runaway: "서운해서 할머니 댁에 감", star: "별이 됨", retired: "친구 마을로 이사" };
