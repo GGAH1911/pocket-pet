@@ -5,7 +5,7 @@
 // 상세 근거: docs/plan-v2-release.md 1절
 // 2026-10-06부터 하트 보석은 서버 지갑이 관리한다(docs/wallet.md): 여기서는 보석을 늘리거나 줄이지 않고 "받을 보석 수"만 돌려준다.
 // gemFree/gemPaid는 서버 값의 사본. 보석 상품 사기·무료 보석 적립·결제 지급은 app/wallet.js가 서버를 거쳐 한다.
-import { takeFromOtherRooms, normalizeRooms } from "./rooms.js?v=f886a20-1791619738";
+import { takeFromOtherRooms, normalizeRooms } from "./rooms.js?v=0b650fa-1791619903";
 
 export const EARN = {
   care: { meal: 5, wash: 5, poop: 3, lightOff: 10, medicine: 5 }, // 필요한 돌봄을 했을 때만(판단은 호출하는 쪽)

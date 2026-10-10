@@ -1,11 +1,11 @@
 // 방 화면 그리기. 게임 규칙은 모르고 받은 상태만 그린다.
 // 캔버스는 "도트 해상도"로 그리고 CSS가 정수배로 키운다.
-import { PALETTE } from "./palette.js?v=f886a20-1791619738";
-import { SPRITES, drawSprite, spriteSize } from "./sprites.js?v=f886a20-1791619738";
-import { buildCreature, paintGrid, formKey, eggSpriteFor } from "./creature.js?v=f886a20-1791619738";
-import { drawFace, POOLS } from "./face.js?v=f886a20-1791619738";
-import { drawSky } from "./sky.js?v=f886a20-1791619738";
-import { drawWall, drawFloor, drawRug, drawCurtain, drawFurniture, drawLampGlow, drawSmall, HAT_SPRITE, FURN_HALF } from "./deco.js?v=f886a20-1791619738";
+import { PALETTE } from "./palette.js?v=0b650fa-1791619903";
+import { SPRITES, drawSprite, spriteSize } from "./sprites.js?v=0b650fa-1791619903";
+import { buildCreature, paintGrid, formKey, eggSpriteFor } from "./creature.js?v=0b650fa-1791619903";
+import { drawFace, POOLS } from "./face.js?v=0b650fa-1791619903";
+import { drawSky } from "./sky.js?v=0b650fa-1791619903";
+import { drawWall, drawFloor, drawRug, drawCurtain, drawFurniture, drawLampGlow, drawSmall, HAT_SPRITE, FURN_HALF } from "./deco.js?v=0b650fa-1791619903";
 
 // 방 배치(그리기와 동작이 같은 좌표를 쓰게 한 곳에서 계산)
 export function roomLayout(w, h, deco = {}) {
@@ -23,8 +23,8 @@ export function roomLayout(w, h, deco = {}) {
   };
   return { floorY, cx: Math.round(w / 2), rugY, baseY: rugY + 4, furnBase, furnPos, smallPos };
 }
-import { WALK_STOPS as WALK_STOPS_REF, walkDist as walkDistRef } from "./anim.js?v=f886a20-1791619738";
-import { drawCourseBg, drawCourseThing, isSplash } from "./walk-courses.js?v=f886a20-1791619738";
+import { WALK_STOPS as WALK_STOPS_REF, walkDist as walkDistRef } from "./anim.js?v=0b650fa-1791619903";
+import { drawCourseBg, drawCourseThing, isSplash } from "./walk-courses.js?v=0b650fa-1791619903";
 const clamp01 = (x) => Math.max(0, Math.min(1, x));
 
 const FLOOR = "#f5b98c";
