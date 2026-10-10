@@ -2,17 +2,24 @@
 // 그릴 물체·펫 자세·안내 문구를 돌려준다. main.js가 이어 붙이고, 결과(승/패)는 sim.play로 넘긴다.
 // L(배치): { w, h, cx, baseY, headY } — 캔버스 논리 좌표. 물체 x는 가운데, y는 바닥 기준.
 
-export const GAMES = ["side", "bubbles", "hide", "catch"];
-export const GAME_NAMES = { side: "어느 쪽?", bubbles: "비눗방울 톡톡", hide: "숨바꼭질", catch: "공 받기" };
+export const GAMES = ["side", "bubbles", "hide", "catch"]; // 기본(무료)
+// 산 놀이(2026-10-09 사용자 "놀이 종류를 더 넣어줘, 구매 가능한 상품", 게임·경제·아동 심리 자문): 모두 '보이는 것 중 하나를 탭' 5판 3승
+export const EXTRA_GAMES = ["snack", "face", "odd", "tidy", "count"];
+export const GAME_NAMES = { side: "어느 쪽?", bubbles: "비눗방울 톡톡", hide: "숨바꼭질", catch: "공 받기",
+  snack: "좋아하는 간식", face: "표정 맞히기", odd: "다른 걸 찾아요", tidy: "제자리 찾아 주기", count: "몇 개일까요?" };
+export const GAME_DESC = {
+  snack: "친구가 생각하는 간식을 골라 줘요", face: "친구 표정을 보고 기분을 맞혀요", odd: "하나만 다른 별을 찾아 톡",
+  tidy: "장난감은 장난감 통, 책은 책장으로", count: "별이 몇 개인지 세어 봐요",
+};
 
-// 바로 앞 놀이는 연달아 안 나오게 무작위로 고른다
-export function pickGame(last, rnd = Math.random) {
-  const pool = GAMES.filter((g) => g !== last);
+// 바로 앞 놀이는 연달아 안 나오게 무작위로 고른다. extra = 산 놀이 목록(무작위에 섞임)
+export function pickGame(last, rnd = Math.random, extra = []) {
+  const pool = [...GAMES, ...extra].filter((g) => g !== last);
   return pool[Math.min(pool.length - 1, Math.floor(rnd() * pool.length))];
 }
 
 export function createGame(kind, now, rnd = Math.random) {
-  const make = { side: sideGame, bubbles: bubbleGame, hide: hideGame, catch: catchGame }[kind];
+  const make = { side: sideGame, bubbles: bubbleGame, hide: hideGame, catch: catchGame, snack: snackGame, face: faceGame, odd: oddGame, tidy: tidyGame, count: countGame }[kind];
   if (!make) throw new Error(`없는 놀이: ${kind}`);
   return make(now, rnd);
 }
@@ -221,4 +228,116 @@ function catchGame(start, rnd) {
     return { center: true };
   };
   return g;
+}
+
+// ---------- 산 놀이 5종 공통 틀: 5판, 판마다 보기 중 하나 고르기, 3번 맞히면 승리 ----------
+// round(rnd) → { answer, ...판 정보 }. 버튼(labels) 또는 캔버스 탭(hitTest)으로 고름
+function pickRounds(kind, start, rnd, { labels, intro, makeRound, objects, pet, hitTest, right = "맞았어요!", wrong }) {
+  const g = { kind, buttons: labels || [], results: [], round: null, waitUntil: start + 900, msg: "", pick: -1 };
+  const next = () => { g.round = makeRound(rnd, g.round); g.pick = -1; };
+  next();
+  g.press = (i, now) => {
+    if (now < g.waitUntil || g.results.length >= 5) return null;
+    const ok = i === g.round.answer; g.results.push(ok); g.pick = i; g.waitUntil = now + 1300; g.doneAt = now;
+    g.msg = ok ? right : wrong(g.round);
+    return { sfx: ok ? "right" : "wrong", anim: ok ? ["mgHop", {}] : null };
+  };
+  if (hitTest) g.tap = (x, y, now, L) => { const i = hitTest(g, x, y, L); return i >= 0 ? g.press(i, now) : null; };
+  const settle = (now) => { if (g.pick >= 0 && now >= g.waitUntil && g.results.length < 5) next(); };
+  g.status = (now) => {
+    settle(now);
+    const n = g.results.length, correct = g.results.filter(Boolean).length;
+    const text = now < g.waitUntil && g.pick >= 0 ? g.msg : n >= 5 ? "다 했어요!" : n === 0 && now < start + 900 ? intro : `${n + 1}번째 · ${intro}`;
+    return { text, dots: dots(5, g.results), done: n >= 5 && now >= g.waitUntil, win: correct >= 3, score: `${correct}번 맞혔어요`, enabled: now >= g.waitUntil && n < 5 };
+  };
+  g.objects = (now, L) => { settle(now); return objects(g, now, L); };
+  g.pet = (now, L) => { settle(now); return pet ? pet(g, now, L) : { center: true }; };
+  return g;
+}
+// 앞 판과 다른 것 고르기(반복문 없이: 무작위가 같은 값만 내도 멈추지 않게)
+const other = (n, prev, r) => { if (prev == null || n < 2) return Math.floor(r() * n); const k = Math.floor(r() * (n - 1)); return k >= prev ? k + 1 : k; };
+const shuffle = (arr, rnd) => { const a = [...arr]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+
+// 좋아하는 간식: 생각 말풍선 속 간식을 버튼으로 고름
+const SNACKS = [{ label: "사과", sprite: "apple" }, { label: "당근", sprite: "carrot" }, { label: "사탕", sprite: "candy" }];
+function snackGame(start, rnd) {
+  return pickRounds("snack", start, rnd, {
+    labels: SNACKS.map((x) => x.label), intro: "무엇이 먹고 싶을까요?",
+    makeRound: (r, prev) => ({ answer: r() < 0.3 ? Math.floor(r() * 3) : other(3, prev?.answer, r) }), // 가끔은 같은 간식이 또
+    wrong: (rd) => `${SNACKS[rd.answer].label}${rd.answer === 1 ? "이" : "가"} 먹고 싶었대요`,
+    objects: (g, now, L) => {
+      const bx = L.cx + 26, by = L.headY - 6, out = [{ sprite: "thinkBubble", x: bx, y: by, scale: 2 }];
+      out.push({ sprite: SNACKS[g.round.answer].sprite, x: bx - 1, y: by - 6, scale: 2 });
+      if (g.pick >= 0 && g.pick === g.round.answer && now < g.waitUntil) out.push({ sprite: "heart", x: L.cx, y: L.headY - 12 - ((now - g.doneAt) / 40), scale: 2, alpha: 1 - (now - g.doneAt) / 1300 });
+      return out;
+    },
+    pet: (g, now) => (g.pick >= 0 && now < g.waitUntil ? { center: true, eyes: g.pick === g.round.answer ? "happy" : "closed", mouth: g.pick === g.round.answer ? "open" : "flat" } : { center: true, mouth: "o" }),
+  });
+}
+
+// 표정 맞히기: 친구가 짓는 표정을 보고 버튼으로
+const FACES = [{ label: "기뻐요", eyes: "happy", mouth: "bigsmile" }, { label: "슬퍼요", eyes: null, mouth: "wavy", tears: true }, { label: "졸려요", eyes: "sleep", mouth: "o" }, { label: "놀랐어요", eyes: "sparkle", mouth: "o" }];
+function faceGame(start, rnd) {
+  return pickRounds("face", start, rnd, {
+    labels: FACES.map((x) => x.label), intro: "지금 어떤 기분일까요?",
+    makeRound: (r, prev) => ({ answer: other(FACES.length, prev?.answer, r) }),
+    right: "맞아요, 그 기분이에요!", wrong: (rd) => `${FACES[rd.answer].label} 표정이었어요`,
+    objects: () => [],
+    pet: (g, now) => {
+      if (g.pick >= 0 && now < g.waitUntil) return { center: true, eyes: "happy", mouth: "smile" };
+      const f = FACES[g.round.answer]; return { center: true, eyes: f.eyes, mouth: f.mouth, tears: !!f.tears };
+    },
+  });
+}
+
+// 다른 걸 찾아요: 별 4개 중 하나만 색이 달라요(캔버스 탭)
+const STARS = ["starYellow", "starPink", "starBlue"];
+const oddX = (i, L) => L.cx + (i - 1.5) * L.w * 0.2;
+function oddGame(start, rnd) {
+  return pickRounds("odd", start, rnd, {
+    intro: "하나만 다른 별을 톡!",
+    makeRound: (r) => { const [same, diff] = shuffle(STARS, r); return { answer: Math.floor(r() * 4), same, diff }; },
+    wrong: () => "앗, 다른 별을 다시 찾아봐요",
+    hitTest: (g, x, y, L) => { for (let i = 0; i < 4; i++) if (Math.abs(x - oddX(i, L)) <= 11 && y <= L.headY - 4 && y >= L.headY - 32) return i; return -1; },
+    objects: (g, now, L) => {
+      const out = [];
+      for (let i = 0; i < 4; i++) {
+        const bob = Math.round(Math.sin(now / 300 + i) * 1.5), hit = g.pick === i && now < g.waitUntil;
+        out.push({ sprite: i === g.round.answer ? g.round.diff : g.round.same, x: oddX(i, L), y: L.headY - 8 + bob - (hit ? 4 : 0), scale: 2 });
+        if (hit && i === g.round.answer) out.push({ sprite: "sparkle", x: oddX(i, L), y: L.headY - 26, scale: 2 });
+      }
+      return out;
+    },
+  });
+}
+
+// 제자리 찾아 주기: 물건을 장난감 통(왼쪽)이나 책장(오른쪽)으로
+const TIDY = [{ sprite: "ball", to: 0 }, { sprite: "duck", to: 0 }, { sprite: "book", to: 1 }, { sprite: "letter", to: 1 }];
+function tidyGame(start, rnd) {
+  return pickRounds("tidy", start, rnd, {
+    labels: ["◀ 장난감 통", "책장 ▶"], intro: "어디에 넣을까요?",
+    makeRound: (r, prev) => { const t = other(TIDY.length, prev?.t, r); return { t, answer: TIDY[t].to }; },
+    right: "깔끔해요!", wrong: (rd) => `${rd.answer === 0 ? "장난감 통" : "책장"}에 넣는 거였어요`,
+    hitTest: (g, x, y, L) => (y > L.baseY - 34 && y <= L.baseY + 4 ? (x < L.cx - L.w * 0.22 ? 0 : x > L.cx + L.w * 0.22 ? 1 : -1) : -1),
+    objects: (g, now, L) => {
+      const lx = L.cx - L.w * 0.34, rx = L.cx + L.w * 0.34, out = [{ sprite: "toybox", x: lx, y: L.baseY + 2, scale: 2 }, { sprite: "bookshelf", x: rx, y: L.baseY + 2, scale: 2 }];
+      const it = TIDY[g.round.t];
+      if (g.pick >= 0 && now < g.waitUntil) { // 고른 쪽으로 쏙 날아감
+        const k = clamp01((now - g.doneAt) / 450), tx = g.pick === 0 ? lx : rx;
+        out.push({ sprite: it.sprite, x: L.cx + (tx - L.cx) * k, y: L.headY - 14 + (L.baseY - 14 - (L.headY - 14)) * k - Math.sin(k * Math.PI) * 14, scale: 2, alpha: 1 - Math.max(0, k - 0.85) * 6 });
+      } else out.push({ sprite: it.sprite, x: L.cx, y: L.headY - 14 + Math.round(Math.sin(now / 250) * 1.5), scale: 2 });
+      return out;
+    },
+  });
+}
+
+// 몇 개일까요?: 별 2~5개를 세어 숫자 버튼
+function countGame(start, rnd) {
+  return pickRounds("count", start, rnd, {
+    labels: ["2", "3", "4", "5"], intro: "별이 몇 개일까요?",
+    makeRound: (r, prev) => { const a = other(4, prev?.answer, r), n = a + 2; const spots = shuffle([0, 1, 2, 3, 4, 5, 6, 7], r).slice(0, n); return { answer: a, spots, color: STARS[Math.floor(r() * 3)] }; },
+    wrong: (rd) => `${rd.answer + 2}개였어요`,
+    objects: (g, now, L) => g.round.spots.map((s, i) => ({ sprite: g.round.color, x: L.cx + ((s % 4) - 1.5) * L.w * 0.18, y: L.headY - 8 - Math.floor(s / 4) * 20 + Math.round(Math.sin(now / 320 + i) * 1.5), scale: 2 })),
+    pet: () => ({ center: true, eyes: null, mouth: "o" }),
+  });
 }

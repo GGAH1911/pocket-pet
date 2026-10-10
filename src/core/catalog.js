@@ -140,7 +140,7 @@ export const TABS = [
   { id: "furn", name: "가구", slots: ["furnL", "furnR", "sill", "wallR", "prop"] },
   { id: "play", name: "놀이방", slots: ["playL", "playM", "playR"] },
   { id: "hat", name: "옷", slots: ["hat"] },
-  { id: "soon", name: "알·산책" },
+  { id: "soon", name: "알·산책·놀이" },
   { id: "gem", name: "하트 보석" },
 ];
 export const PICKS = ["sofa", "wall_berry", "lamp", "hat_ribbon", "rug_rainbow", "fishbowl"]; // 추천 탭
@@ -178,7 +178,15 @@ export const UNLOCKS = [
   { id: "room_kitchen", room: "kitchen", name: "냠냠 부엌", price: { gem: 200 } },
   { id: "room_bath", room: "bath", name: "보글 욕실", price: { gem: 200 } },
   { id: "room_garden", room: "garden", name: "햇살 온실", price: { gem: 200 } },
+  // 새 놀이(2026-10-09, 게임·경제 자문): 보석 100씩(방·산책보다 쌈). '몇 개일까요?'는 별사탕 400으로(돈 없이도 모아서 살 수 있게) → GAME_STAR
+  { id: "game_snack", game: "snack", name: "좋아하는 간식", price: { gem: 100 } },
+  { id: "game_face", game: "face", name: "표정 맞히기", price: { gem: 100 } },
+  { id: "game_odd", game: "odd", name: "다른 걸 찾아요", price: { gem: 100 } },
+  { id: "game_tidy", game: "tidy", name: "제자리 찾아 주기", price: { gem: 100 } },
 ];
+// 별사탕으로 사는 놀이(기기 안, 서버 지갑 아님)
+export const GAME_STAR = [{ id: "game_count", game: "count", name: "몇 개일까요?", price: { star: 400 } }];
+export const GAME_UNLOCK = Object.fromEntries([...UNLOCKS.filter((u) => u.game), ...GAME_STAR].map((u) => [u.game, u]));
 export const WALK_UNLOCK = { beach: "walk_beach", mountain: "walk_mountain", lake: "walk_lake" }; // 공원은 늘 열림
 export const UNLOCK = Object.fromEntries(UNLOCKS.map((u) => [u.id, u]));
 // 친구 부활권: 여행 떠난 친구를 도감 기록으로 다시 데려옴. 기록마다 한 번(서버 지갑 상품 id "revive_<태어난 시각>"). 2026-10-08 사용자 결정(유료), 경제 자문 가격 200

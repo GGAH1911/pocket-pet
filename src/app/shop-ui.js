@@ -1,11 +1,15 @@
 // 상점·꾸미기·매일 선물 화면. 상태와 규칙은 core/economy.js·catalog.js, 여기는 DOM만.
-import { ITEMS, ITEM, SLOTS, TABS, PICKS, PACKS, SOON, UNLOCK, UNLOCKS, STAR_SWAPS, STAR_SWAP_WEEK_GEMS, ROOM, ROOMS } from "../core/catalog.js?v=0b650fa-1791619903";
-import { placedElsewhere } from "../core/rooms.js?v=0b650fa-1791619903";
-import { drawCourseThumb } from "../render/walk-courses.js?v=0b650fa-1791619903";
-import { canAfford, gems, DAILY, purchaseHistory, themeOpen, FORGIVE, forgiveState, candyPrice } from "../core/economy.js?v=0b650fa-1791619903";
-import { gemButtonState } from "../core/wallet.js?v=0b650fa-1791619903";
-import { drawThumb } from "../render/deco.js?v=0b650fa-1791619903";
-import { SPRITES, drawSprite, spriteSize } from "../render/sprites.js?v=0b650fa-1791619903";
+import { ITEMS, ITEM, SLOTS, TABS, PICKS, PACKS, SOON, UNLOCK, UNLOCKS, STAR_SWAPS, STAR_SWAP_WEEK_GEMS, ROOM, ROOMS } from "../core/catalog.js?v=5d8fb36-1791637734";
+import { placedElsewhere } from "../core/rooms.js?v=5d8fb36-1791637734";
+import { EXTRA_GAMES, GAME_NAMES, GAME_DESC } from "./games.js?v=5d8fb36-1791637734";
+import { GAME_UNLOCK } from "../core/catalog.js?v=5d8fb36-1791637734";
+const GAME_THUMB = { snack: ["apple", "candy"], face: ["heart"], odd: ["starYellow", "starPink"], tidy: ["ball", "book"], count: ["starBlue", "starBlue", "starBlue"] };
+function drawGameThumb(cv, k) { const c = cv.getContext("2d"); c.imageSmoothingEnabled = false; c.fillStyle = "#fbefe3"; c.fillRect(0, 0, cv.width, cv.height); const sp = GAME_THUMB[k] || []; sp.forEach((n, i) => { const s = SPRITES[n]; if (s) drawSprite(c, s, 4 + i * 12, 10, 2); }); }
+import { drawCourseThumb } from "../render/walk-courses.js?v=5d8fb36-1791637734";
+import { canAfford, gems, DAILY, purchaseHistory, themeOpen, FORGIVE, forgiveState, candyPrice } from "../core/economy.js?v=5d8fb36-1791637734";
+import { gemButtonState } from "../core/wallet.js?v=5d8fb36-1791637734";
+import { drawThumb } from "../render/deco.js?v=5d8fb36-1791637734";
+import { SPRITES, drawSprite, spriteSize } from "../render/sprites.js?v=5d8fb36-1791637734";
 
 const el = (tag, attrs = {}, ...kids) => {
   const e = document.createElement(tag);
@@ -69,6 +73,17 @@ export function renderShop(tabsEl, bodyEl, ctx) {
       bodyEl.append(el("div", { class: "banner course" }, cv, el("div", { class: "cinfo" }, el("b", { text: u.name }), el("div", { class: "small", text: u.desc }),
         el("div", { class: "row", style: "margin-top:6px" }, el("span", { class: "small dim", style: "flex:1", text: have ? "열렸어요. 놀기 → 산책에서 골라요" : "한 번 열면 계속" }),
           have ? null : el("button", { disabled: st2.disabled, onclick: () => ctx.onUnlockWalk?.(u) }, priceEl(u.price), document.createTextNode(st2.label === "사기" ? " 열기" : " " + st2.label))))));
+    }
+    // 새 놀이(2026-10-09): 한 번 체험(보상 없음) + 사기
+    bodyEl.append(el("h3", { class: "sec", text: "놀이" }));
+    for (const k of EXTRA_GAMES) {
+      const u = GAME_UNLOCK[k], have = !!econ.owned[u.id], tried = !!(ctx.trials || {})[k];
+      const st3 = u.price.gem ? gemButtonState({ online: !!g.online, busy: !!g.busy, total: gems(econ), price: u.price.gem }) : { disabled: econ.star < u.price.star, label: "사기" };
+      const cv = el("canvas", { width: 40, height: 32, class: "gamethumb" }); drawGameThumb(cv, k);
+      bodyEl.append(el("div", { class: "banner course" }, cv, el("div", { class: "cinfo" }, el("b", { text: GAME_NAMES[k] }), el("div", { class: "small", text: GAME_DESC[k] }),
+        el("div", { class: "row", style: "margin-top:6px;gap:6px" }, el("span", { class: "small dim", style: "flex:1", text: have ? "가지고 있어요. 놀기에서 골라요" : "한 번 사면 계속" }),
+          have || tried ? null : el("button", { class: "ghost", text: "먼저 해 보기", onclick: () => ctx.onTryGame?.(k) }),
+          have ? null : el("button", { disabled: st3.disabled, onclick: () => ctx.onUnlockGame?.(u) }, priceEl(u.price), document.createTextNode(st3.label === "사기" ? " 사기" : " " + st3.label))))));
     }
     const cards = el("div", { class: "cards" });
     for (const s of SOON) cards.append(el("div", { class: "card" }, el("canvas", { width: 56, height: 46 }), el("span", { class: "nm", text: s.name }), el("span", { class: "small dim", text: "곧 나와요" })));

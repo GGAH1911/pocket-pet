@@ -1,7 +1,7 @@
 // 하트 보석 서버 지갑: 기기 쪽 순수 규칙(네트워크 없음). 설계 docs/wallet.md
 // 보석 잔액과 보석·결제로 얻은 꾸미기는 서버가 정한다. 기기의 econ.gemFree/gemPaid는 서버 값의 사본(마지막으로 받은 값)일 뿐이다.
-import { ITEM, ITEMS, PACKS, BASIC_EQUIP, UNLOCK, UNLOCKS, REVIVE, starSwapOf } from "./catalog.js?v=0b650fa-1791619903";
-import { roomBasic } from "./rooms.js?v=0b650fa-1791619903";
+import { ITEM, ITEMS, PACKS, BASIC_EQUIP, UNLOCK, UNLOCKS, REVIVE, starSwapOf } from "./catalog.js?v=5d8fb36-1791637734";
+import { roomBasic } from "./rooms.js?v=5d8fb36-1791637734";
 
 export const gemPriceOf = (id) => { const sw = starSwapOf(id); if (sw) return sw.gem; if (/^revive_\d{10,14}(_\d{1,14})?$/.test(String(id))) return REVIVE.price.gem; if (/^candy_\d{10,14}(_\d{10,14})?(_[a-z0-9]{1,12})?$/.test(String(id))) return 60; const it = ITEM[id] || UNLOCK[id]; return it?.price?.gem > 0 ? it.price.gem : null; };
 // 서버가 소유를 관리하는 상품: 보석 가격 상품 + 꾸러미로만 얻는 상품
