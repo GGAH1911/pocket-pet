@@ -1,11 +1,11 @@
 // 방 화면 그리기. 게임 규칙은 모르고 받은 상태만 그린다.
 // 캔버스는 "도트 해상도"로 그리고 CSS가 정수배로 키운다.
-import { PALETTE } from "./palette.js?v=97f3d68-1791768439";
-import { SPRITES, drawSprite, spriteSize } from "./sprites.js?v=97f3d68-1791768439";
-import { buildCreature, paintGrid, formKey, eggSpriteFor } from "./creature.js?v=97f3d68-1791768439";
-import { drawFace, POOLS } from "./face.js?v=97f3d68-1791768439";
-import { drawSky } from "./sky.js?v=97f3d68-1791768439";
-import { drawWall, drawFloor, drawRug, drawCurtain, drawFurniture, drawLampGlow, drawSmall, HAT_SPRITE, FURN_HALF } from "./deco.js?v=97f3d68-1791768439";
+import { PALETTE } from "./palette.js?v=19d3990-1791798234";
+import { SPRITES, drawSprite, spriteSize } from "./sprites.js?v=19d3990-1791798234";
+import { buildCreature, paintGrid, formKey, eggSpriteFor } from "./creature.js?v=19d3990-1791798234";
+import { drawFace, POOLS } from "./face.js?v=19d3990-1791798234";
+import { drawSky } from "./sky.js?v=19d3990-1791798234";
+import { drawWall, drawFloor, drawRug, drawCurtain, drawFurniture, drawLampGlow, drawSmall, HAT_SPRITE, FURN_HALF } from "./deco.js?v=19d3990-1791798234";
 
 // 방 배치(그리기와 동작이 같은 좌표를 쓰게 한 곳에서 계산)
 export function roomLayout(w, h, deco = {}) {
@@ -23,14 +23,15 @@ export function roomLayout(w, h, deco = {}) {
   };
   return { floorY, cx: Math.round(w / 2), rugY, baseY: rugY + 4, furnBase, furnPos, smallPos };
 }
-import { WALK_STOPS as WALK_STOPS_REF, walkDist as walkDistRef } from "./anim.js?v=97f3d68-1791768439";
-import { drawCourseBg, drawCourseThing, isSplash } from "./walk-courses.js?v=97f3d68-1791768439";
+import { WALK_STOPS as WALK_STOPS_REF, walkDist as walkDistRef } from "./anim.js?v=19d3990-1791798234";
+import { drawCourseBg, drawCourseThing, isSplash } from "./walk-courses.js?v=19d3990-1791798234";
 const clamp01 = (x) => Math.max(0, Math.min(1, x));
 
 const FLOOR = "#f5b98c";
 const FLOOR_LINE = "#e9a274";
 const BASEBOARD = "#e8a37e";
 
+let PET_BUF = null; // 원근으로 줄인 펫을 그릴 때 쓰는 따로 캔버스
 export function drawRoom(ctx, { w, h, now, scene, f, wall = Date.now(), loc = { lat: 37.57, lon: 126.98 }, weather = null }) {
   if (f && f.walk) return drawWalk(ctx, { w, h, now, scene, f, wall, loc, weather }); // 산책 중엔 바깥 장면
   const floorY = Math.round(h * 0.5);
@@ -83,9 +84,18 @@ export function drawRoom(ctx, { w, h, now, scene, f, wall = Date.now(), loc = { 
   else if (kk === 1) box = drawPet(ctx, sc, fr, { cx, baseY, now });
   else {
     const ax = cx + Math.round(fr.pose.dx), ay = baseY + Math.round(fr.pose.dy);
-    ctx.save(); ctx.translate(ax, ay); ctx.scale(kk, kk); ctx.translate(-ax, -ay);
-    const b = drawPet(ctx, sc, fr, { cx, baseY, now });
-    ctx.restore();
+    let b;
+    if (typeof document === "undefined") { ctx.save(); ctx.translate(ax, ay); ctx.scale(kk, kk); ctx.translate(-ax, -ay); b = drawPet(ctx, sc, fr, { cx, baseY, now }); ctx.restore(); } // node 시험
+    else {
+      // 캔버스를 그냥 scale하면 1.5px 같은 칸이 생겨 가장자리가 반투명하게 번졌음(2026-10-09 사용자: "빈투명해서 변신하는 것 같아") → 따로 그린 뒤 도트 그대로 줄임
+      const W0 = ctx.canvas.width, H0 = ctx.canvas.height;
+      if (!PET_BUF || PET_BUF.width !== W0 || PET_BUF.height !== H0) { PET_BUF = document.createElement("canvas"); PET_BUF.width = W0; PET_BUF.height = H0; }
+      const bc = PET_BUF.getContext("2d"); bc.clearRect(0, 0, W0, H0); bc.imageSmoothingEnabled = false;
+      b = drawPet(bc, sc, fr, { cx, baseY, now });
+      const sm = ctx.imageSmoothingEnabled; ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(PET_BUF, 0, 0, W0, H0, Math.round(ax - ax * kk), Math.round(ay - ay * kk), Math.round(W0 * kk), Math.round(H0 * kk));
+      ctx.imageSmoothingEnabled = sm;
+    }
     box = b && { ...b, x: ax + (b.x - ax) * kk, y: ay + (b.y - ay) * kk, w: b.w * kk, h: b.h * kk, ox: ax + (b.ox - ax) * kk, oy: ay + (b.oy - ay) * kk };
   }
   if (fr.onSofa && deco.furnR === "sofa") drawFurniture(ctx, "sofa", furnPos.furnR, furnBase, { front: true }); // 소파에 앉은 모습: 좌석 앞면·팔걸이를 펫 앞에
@@ -578,7 +588,7 @@ function drawPet(ctx, scene, fr, { cx, baseY, now }) {
   const { built, faceInfo } = cached;
   const bed = fr.silhouette ? 0 : fr.bed || 0;
   const bodyW = Math.round(built.P.rx * 2 * CELL);
-  const x = cx + Math.round(pose.dx);
+  const x0 = cx + Math.round(pose.dx), x = x0 + Math.round(pose.sway || 0); // sway: 몸만 흔들(욕조·쿠션은 x0 제자리)
   if (bed > 0) drawCushion(ctx, x, baseY, bodyW, bed, scene.theme);
   const lift = Math.round(5 * Math.min(1, bed * 1.6)); // 쿠션 위에 올라앉음
   const base = baseY + Math.round(pose.dy) - lift;
@@ -602,7 +612,7 @@ function drawPet(ctx, scene, fr, { cx, baseY, now }) {
   const blanketK = fr.silhouette ? 0 : fr.blanket || 0; // 밤잠 이불(0 → 1): 아래에서 올라와 몸 아래쪽을 덮음
   if (blanketK > 0) drawBlanket(ctx, x, base, box, built.P, bodyW, blanketK, now, scene.theme, built); // 큰 침대는 침대 이불로
   if (!fr.silhouette && (fr.foam || 0) > 0) drawFoam(ctx, box, fr.foam, now); // 머리 위 거품
-  if (!fr.silhouette && (fr.tub || 0) > 0) drawTub(ctx, x, base, box, built.P, bodyW, fr.tub, now); // 욕조(몸 아래쪽 앞)
+  if (!fr.silhouette && (fr.tub || 0) > 0) drawTub(ctx, x0, base, box, built.P, bodyW, fr.tub, now); // 욕조(몸 아래쪽 앞)
 
   if (faceInfo) {
     // 눈물

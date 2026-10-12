@@ -1,4 +1,4 @@
-import { WALK_REACT } from "./walk-courses.js?v=97f3d68-1791768439";
+import { WALK_REACT } from "./walk-courses.js?v=19d3990-1791798234";
 // 애니메이션 엔진. 게임 규칙과는 무관하게 "지금 화면에 어떻게 보일지"만 계산한다.
 // - 한 번 재생(행동 반응, 부화, 진화): play(type, data)
 // - 평소 움직임(깜빡임, 걸어 다니기, 숨쉬기)과 상태 표현(눈물, 어지러움, Zzz)은 매 프레임 계산
@@ -37,6 +37,7 @@ export function play(a, type, now, data = {}) {
   // 쿠션이 나타나는/사라지는 도중에 반대 동작이 오면, 지금 보이는 크기에서 이어서(두 번 생겼다 사라지는 것처럼 보이지 않게)
   if (BED_ANIMS.has(type) && a.cur && BED_ANIMS.has(a.cur.type) && busy(a, now)) data = { ...data, fromBed: a.lastBed ?? null, fromBlanket: a.lastBlanket ?? null };
   a.cur = { type, start: now, dur: DUR[type] || 1000, data };
+  if (a.sofa && type !== "pet") a.sofa.until = 0; // 소파에서 쉬다가 씻기·밥 등이 오면 내려와서(2026-10-09: 소파 위에서 씻던 버그)
 }
 
 export function busy(a, now) {
@@ -109,11 +110,14 @@ export function frame(a, now, scene, { roam = 20 } = {}) {
     if (now > a.water.nextAt) { a.water.nextAt = now + 70000 + hash(now * 1.9) * 50000; play(a, "water", now); }
   }
   const goTo = roomSpot(a, now, scene);
-  if (goTo != null) { w.x += (goTo - w.x) * Math.min(1, dt / 110); w.target = w.x; w.nextAt = now + 2500; }
+  if (goTo != null) { w.x += (goTo - w.x) * Math.min(1, dt / 240); w.target = w.x; w.nextAt = now + 2500; }
   // 원근: 가구로 가면(식탁·욕조·화분·소파·침대) 뒤로 가며 작아짐(0.5배), 돌아오면 다시 커짐
   const back = goTo != null || (a.sofa && now < a.sofa.until && scene.sofaDx != null) || (scene.asleep && scene.bedDx != null);
-  a.depth = (a.depth || 0) + ((back ? 1 : 0) - (a.depth || 0)) * Math.min(1, dt / 260);
-  if (a.depth < 0.02) a.depth = 0; if (a.depth > 0.98) a.depth = 1;
+  // 깊이는 일정한 속도로(0.75초) 바뀌고, 바뀌는 동안은 통통 걸음. 앞으로 나올 때는 가운데 쪽으로 걸어 나오며 커짐(제자리에서 커지면 변신처럼 보였음)
+  const d0 = a.depth || 0, step = dt / 750;
+  a.depth = back ? Math.min(1, d0 + step) : Math.max(0, d0 - step);
+  a.walkingDepth = a.depth > 0 && a.depth < 1;
+  if (!back && d0 > 0) { w.target = w.x * 0.55; w.nextAt = now + 2500; a.rushUntil = now + 300; } // 앞으로 걸어 나옴
   const diff = w.target - w.x;
   if (Math.abs(diff) > 0.3) {
     const step = Math.sign(diff) * Math.min(Math.abs(diff), (dt / 1000) * (a.rushUntil > now ? 110 : 14)); // 방을 옮길 때는 빨리
@@ -121,6 +125,7 @@ export function frame(a, now, scene, { roam = 20 } = {}) {
     p.dy -= Math.abs(Math.sin(now / 90)) * 1.5; // 통통 걷기
   }
   p.dx = w.x; p.facing = w.facing;
+  if (a.walkingDepth && !busy(a, now)) p.dy -= Math.abs(Math.sin(now / 90)) * 2; // 오가는 동안 통통
   p.k = 1 - 0.5 * a.depth; p.depthDy = (scene.depthDy || 0) * a.depth; p.dy += p.depthDy; // 뒤(가구 줄)로 갈수록 작고 위로
   f.onSofa = !!(a.sofa && now < a.sofa.until && scene.sofaDx != null && Math.abs(w.x - scene.sofaDx) < 1.5 && calm);
   if (f.onSofa) { p.dy += (scene.sofaLift != null ? scene.sofaLift : -9) - p.depthDy; p.facing = -1; if (!p.eyes) p.eyes = Math.floor(now / 1600) % 4 === 0 ? "closed" : "happy"; p.mouth = p.mouth || "smile"; } // 소파 위에서 쉬기
@@ -385,12 +390,13 @@ function applyOneShot(f, c, t, now, scene) {
       // 욕조 등장 → 거품 몽글몽글·오리 동동·음표 → 샤워로 헹굼 → 욕조 사라짐 → 부르르 털기 → 반짝 "뽀득!"
       const tubIn = ease(t / 0.1), tubOut = 1 - ease((t - 0.66) / 0.08);
       f.tub = Math.min(tubIn, tubOut);
+      if (scene.tubDx != null) f.tub = 0; // 방에 욕조가 있으면 작은 욕조는 끝까지 안 나옴(나올 때 따라 움직이던 것)
       if (scene.tubDx != null && t < 0.66) { f.tub = 0; f.inTub = true; p.dy += ((scene.tubLift || 0) - (p.depthDy || 0)) * tubIn; } // 욕실: 방에 놓인 욕조에 들어감(욕조는 펫 앞에 다시 그림)
       f.foam = t < 0.12 ? 0 : t < 0.5 ? ease((t - 0.12) / 0.16) : 1 - ease((t - 0.5) / 0.14);
       if (t < 0.66) { // 욕조 안
         p.eyes = t < 0.5 ? (Math.floor(now / 900) % 3 ? "happy" : "closed") : "closed";
         p.mouth = t < 0.5 ? (Math.floor(now / 500) % 2 ? "smile" : "cat") : "o";
-        p.dx += Math.sin(now / 320) * 1.5; // 흔들흔들
+        p.sway = Math.sin(now / 320) * 1.5; // 흔들흔들(몸만, 욕조는 제자리: screen.js drawPet)
         p.sx *= 1 + Math.sin(now / 320) * 0.02;
         if (t > 0.14 && t < 0.5) { // 비눗방울 둥실, 음표
           for (let i = 0; i < 5; i++) { const ph = (t * 2.4 + hash(i + 10)) % 1; f.props.push({ sprite: "bubble", x: (hash(i + 20) * 2 - 1) * 22 + Math.sin(now / 200 + i) * 2, y: -24 - ph * 30, scale: 1, alpha: Math.sin(ph * Math.PI) }); }

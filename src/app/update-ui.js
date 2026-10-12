@@ -1,6 +1,6 @@
 // 새 버전 알림 창. 앱: latest.json(플레이에 올린 버전)과 설치된 versionCode 비교 → 플레이 스토어 열기. 웹: version.txt가 바뀌면 새로고침.
-import { updateState, webOutdated, SNOOZE_MS } from "../core/update.js?v=97f3d68-1791768439";
-import * as native from "./native.js?v=97f3d68-1791768439";
+import { updateState, webOutdated, SNOOZE_MS } from "../core/update.js?v=19d3990-1791798234";
+import * as native from "./native.js?v=19d3990-1791798234";
 const SITE = "https://ggah1911.github.io/pocket-pet/";
 const SNOOZE_KEY = "pocket-pet:update-snooze";
 const CHECK_GAP = 30 * 60 * 1000;
