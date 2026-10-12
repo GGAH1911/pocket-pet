@@ -5,14 +5,14 @@
 // 상세 근거: docs/plan-v2-release.md 1절
 // 2026-10-06부터 하트 보석은 서버 지갑이 관리한다(docs/wallet.md): 여기서는 보석을 늘리거나 줄이지 않고 "받을 보석 수"만 돌려준다.
 // gemFree/gemPaid는 서버 값의 사본. 보석 상품 사기·무료 보석 적립·결제 지급은 app/wallet.js가 서버를 거쳐 한다.
-import { takeFromOtherRooms, normalizeRooms } from "./rooms.js?v=a896b09-1791637877";
+import { takeFromOtherRooms, normalizeRooms } from "./rooms.js?v=de0bd0c-1791768275";
 
 export const EARN = {
   care: { meal: 5, wash: 5, poop: 3, lightOff: 10, medicine: 5 }, // 필요한 돌봄을 했을 때만(판단은 호출하는 쪽)
   careCap: 60, // 돌봄 별사탕 하루 상한(연타 방지)
   playWin: 18, playLose: 8, walk: 20, // 평범한 하루 평균 150~250개가 되도록(시험: economy.test 하루 시나리오)
   playCap: 10, // 놀이·산책 보상은 하루 10번까지
-  evolve: 30, dexNew: 20, eggFound: 15, eggFoundGem: 5, farewell: 100,
+  evolve: 30, dexNew: 20, eggFound: 15, eggFoundGem: 5, farewell: 100, together: 100, // together: 어른으로 7일 함께(옛 '끝까지 함께' 보상을 떠남에서 떼어 냄)
 };
 
 // 매일 선물: 7칸. 하루 빠져도 처음으로 안 돌아가고 다음 칸이 이어진다.

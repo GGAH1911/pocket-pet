@@ -1,10 +1,10 @@
 // 도감: 본 적 있는 모습 표시, 지금까지 키운 펫 기록, 초상화 그리기
-import { FORMS, buildCreature, paintGrid, formKey, lookOf } from "../render/creature.js?v=a896b09-1791637877";
-import { drawFace, POOLS } from "../render/face.js?v=a896b09-1791637877";
-import { SPRITES, drawSprite } from "../render/sprites.js?v=a896b09-1791637877";
-import { BRANCH, SECRET } from "../core/rules.js?v=a896b09-1791637877";
-import { EGGS, foundCount } from "./eggs.js?v=a896b09-1791637877";
-import { canRevive } from "../core/revive.js?v=a896b09-1791637877";
+import { FORMS, buildCreature, paintGrid, formKey, lookOf } from "../render/creature.js?v=de0bd0c-1791768275";
+import { drawFace, POOLS } from "../render/face.js?v=de0bd0c-1791768275";
+import { SPRITES, drawSprite } from "../render/sprites.js?v=de0bd0c-1791768275";
+import { BRANCH, SECRET } from "../core/rules.js?v=de0bd0c-1791768275";
+import { EGGS, foundCount } from "./eggs.js?v=de0bd0c-1791768275";
+import { canRevive } from "../core/revive.js?v=de0bd0c-1791768275";
 
 export const THEME_KO = { animal: "동물", fantasy: "상상 속 생물" };
 export const HOW_KO = { journey: "여행을 떠남", runaway: "서운해서 할머니 댁에 감", star: "별이 됨", retired: "친구 마을로 이사" };
@@ -130,6 +130,7 @@ export function recordPet(profile, pet) {
     how: pet.ended?.type || "retired", bornAt: pet.bornAt, endedAt: pet.ended?.at || Date.now(),
     ageDays: Math.round((pet.ageMin / 1440) * 10) / 10, mistakes: pet.mistakes.total, speed: pet.speed, weight: pet.weight,
     look: lookOf(pet), letter: letterText(pet),
+    ...(pet.ended?.manual ? { manual: true } : {}), // 직접 여행 보낸 기록(부활권 유료). 표시 없는 옛 여행 기록은 한 번 무료
   };
   profile.collection.push(rec);
   return rec;

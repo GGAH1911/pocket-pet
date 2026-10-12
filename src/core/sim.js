@@ -5,10 +5,10 @@
 import {
   SPEEDS, PER_HOUR_AWAKE, PER_HOUR_ASLEEP, ASLEEP_FLOOR, MOOD_PER_POOP_PER_HOUR, HEALTH_PER_HOUR, BUSY_FACTOR,
   POOP, CLEAN, SICK, SNACK_BINGE, NAP_MIN, NAP_ENERGY_PER_HOUR, NAP_LIGHT_BELOW, ACTIONS, STAGE_MIN, BRANCH, MISTAKE, CALL, DEFAULT_SETTINGS, ENDING, SECRET,
-} from "./rules.js?v=a896b09-1791637877";
-import { clampStat } from "./state.js?v=a896b09-1791637877";
-import { nextRandom, randomInt } from "./rng.js?v=a896b09-1791637877";
-import { isSleepTime, isBusyTime } from "./daytime.js?v=a896b09-1791637877";
+} from "./rules.js?v=de0bd0c-1791768275";
+import { clampStat } from "./state.js?v=de0bd0c-1791768275";
+import { nextRandom, randomInt } from "./rng.js?v=de0bd0c-1791768275";
+import { isSleepTime, isBusyTime } from "./daytime.js?v=de0bd0c-1791768275";
 
 const MINUTE = 60000;
 const NEXT_STAGE = { egg: "baby", baby: "child", child: "teen", teen: "adult" };
@@ -48,7 +48,8 @@ function growUp(pet, ts, events) {
 // 어른이 떠나는 시점(게임 분, 어른 단계 기준). 끝 방식을 도중에 바꾸면 적어도 하루는 더 함께한다.
 export function departureAt(pet, mode) {
   if (pet.stage !== "adult" || pet.returned) return null; // 여행에서 돌아온 친구는 다시 떠나지 않음(core/revive.js)
-  let at = mode === "journey" ? ENDING.journeyAdultMin : mode === "classic" ? pet.lifespan || ENDING.classicLifeMin[0] : null;
+  // 2026-10-09 사용자 결정: 수명 없음. 여행은 플레이어가 고를 때만(sendOnJourney). 원작(classic)만 옛 규칙
+  let at = mode === "classic" ? pet.lifespan || ENDING.classicLifeMin[0] : null;
   if (at === null) return null;
   const sw = pet.endSwitch;
   if (sw && sw.mode === mode && sw.stage === "adult") at = Math.max(at, sw.at + ENDING.switchGraceMin);
@@ -75,6 +76,11 @@ function checkEnding(pet, ts, settings, events, dGame) {
       return;
     }
   } else pet.zeroHealthMin = 0;
+  // 어른으로 오래 함께: 7일에 '정들었어요' 보상 한 번, 3일에 새 알 소식 한 번(조르지 않음)
+  if (pet.stage === "adult" && mode !== "classic") {
+    if (!pet.togetherGiven && pet.stageMin >= ENDING.journeyAdultMin) { pet.togetherGiven = ts; events.push({ t: ts, type: "together" }); }
+    if (!pet.eggOffered && pet.stageMin >= ENDING.eggOfferAdultMin) { pet.eggOffered = ts; events.push({ t: ts, type: "eggOffer" }); }
+  }
   // 수명·여행
   const dep = departureAt(pet, mode);
   if (dep !== null) {
@@ -351,6 +357,13 @@ export function switchEndMode(pet, mode, now, settings) {
 }
 
 // "계속 살기"에서 직접 마무리하고 새 알 받기
+// 여행 보내기(플레이어가 고름, 2026-10-09). 돌봄이 필요하면 호출하는 쪽이 막음(careBlock)
+export function sendOnJourney(pet, now, settings) {
+  advance(pet, now, settings);
+  if (pet.ended || pet.stage !== "adult") return false;
+  pet.ended = { type: "journey", at: now, manual: true };
+  return true;
+}
 export function retirePet(pet, now, settings) {
   advance(pet, now, settings);
   if (!pet.ended) pet.ended = { type: "retired", at: now };

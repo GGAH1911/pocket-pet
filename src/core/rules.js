@@ -52,7 +52,8 @@ export const ACTIONS = {
 export const STAGE_MIN = { egg: 10, baby: 120, child: 1440, teen: 2880 };
 // 끝 방식(GDD 8절). 단위: 게임 분
 export const ENDING = {
-  journeyAdultMin: 7 * 1440, // 여행: 어른 7일 뒤 떠남
+  journeyAdultMin: 7 * 1440, // (2026-10-09부터 자동 여행 없음) 어른 7일 함께하면 '정들었어요' 보상 시점으로만 씀
+  eggOfferAdultMin: 3 * 1440, // 어른 3일 뒤 "알 하나가 찾아왔어요" 한 번(조르지 않음)
   classicLifeMin: [10 * 1440, 16 * 1440], // 원작: 어른 10~16일 사이 별이 됨
   neglectMin: 12 * 60, // 건강 0인 채로 12시간이면(여행: 삐져서 떠남, 원작: 별이 됨, 계속 살기: 앓아누움)
   warnBeforeMin: 1440, // 하루 전 이별 예고

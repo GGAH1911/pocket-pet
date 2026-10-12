@@ -1,14 +1,15 @@
 // 놀이방(2026-10-09 사용자 요청 "방이 더 있으면, 친구들과 놀 수 있는 방, 친구 초대", 디자인·아동 심리 자문 2·3단계).
 // "함께 사는 건 여럿, 돌보는 건 하나": 돌봄은 내 방에서만. 놀이방엔 마을 친구(시간 멈춘 손님)와 놀러 오기 코드로 온 손님이 놀러 온다.
 // 손님은 쓰다듬기만, 숫자는 안 바뀜. 지금 친구와 '같이 놀기'는 하루 한 번 기분 +10(돌봄이 필요하면 안 됨).
-import { memberCanvas } from "../render/screen.js?v=a896b09-1791637877";
-import { drawPlay } from "../render/deco.js?v=a896b09-1791637877";
-import { lookOf } from "../render/creature.js?v=a896b09-1791637877";
-import { currentKey } from "./collection.js?v=a896b09-1791637877";
-import { villageOf, careBlock } from "../core/village.js?v=a896b09-1791637877";
-import { visitCode, addVisitor, pruneVisitors, readVisit, showVisit } from "../core/visit.js?v=a896b09-1791637877";
-import { josa } from "../core/josa.js?v=a896b09-1791637877";
-import { planShow, poseAt, toyOpts, actAt, ACT_KO, SPOT, K, homeOf } from "./playshow.js?v=a896b09-1791637877";
+import { memberCanvas } from "../render/screen.js?v=de0bd0c-1791768275";
+import { drawPlay } from "../render/deco.js?v=de0bd0c-1791768275";
+import { lookOf } from "../render/creature.js?v=de0bd0c-1791768275";
+import { currentKey } from "./collection.js?v=de0bd0c-1791768275";
+import { villageOf, careBlock } from "../core/village.js?v=de0bd0c-1791768275";
+import { visitCode, addVisitor, pruneVisitors, readVisit, showVisit } from "../core/visit.js?v=de0bd0c-1791768275";
+import { josa } from "../core/josa.js?v=de0bd0c-1791768275";
+import { planShow, poseAt, toyOpts, actAt, ACT_KO, SPOT, K, homeOf } from "./playshow.js?v=de0bd0c-1791768275";
+import { createPlayNet } from "./playnet.js?v=de0bd0c-1791768275"; // 두 휴대폰 같이 놀기(던전 모험 같이 하기 연결을 옮겨 씀, 2026-10-09)
 
 const W = 256, H = 200, FLOOR = 96; // playshow.js PW·PH와 같음
 const dayKey = (ts) => new Date(ts).toDateString();
@@ -41,7 +42,7 @@ function drawScene(ctx, profile, list, t, hearts, show = null) {
   ctx.fillStyle = "#f6cf86"; for (let y = FLOOR + 5, g = 5; y < H; g += 3, y += g) ctx.fillRect(0, y, W, 1);
   for (let k = -6; k <= 6; k++) { const xb = W / 2 + k * 44, xt = W / 2 + k * 14; for (let y = FLOOR; y < H; y += 1) { const f = (y - FLOOR) / (H - FLOOR); ctx.fillRect(Math.round(xt + (xb - xt) * f), y, 1, 1); } }
   ctx.fillStyle = "rgba(255,143,171,.28)"; for (let i = -18; i <= 18; i++) { const hw = Math.round(Math.sqrt(1 - (i / 19) ** 2) * 70); ctx.fillRect(128 - hw, 160 + i, hw * 2, 1); } // 가운데 동그란 놀이 매트
-  const eq = profile.econ?.equipped || {};
+  const eq = show?.equipped || profile.econ?.equipped || {}; // 두 휴대폰으로 놀 때는 방장 놀이방 기구
   // 기구와 친구를 함께 '아래(가까운) 것이 앞'으로 정렬해 그린다(입체감)
   const items = [];
   const shadow = (x, base, rx) => { ctx.fillStyle = "rgba(120,80,40,.18)"; for (let i = -2; i <= 2; i++) { const hw = Math.round(Math.sqrt(1 - (i / 3) ** 2) * rx); ctx.fillRect(x - hw, base + i, hw * 2, 1); } };
@@ -91,11 +92,13 @@ export function openPlayroom(deps) {
   const ctx = cv.getContext("2d");
   const line = el("p", { class: "small pr-line", text: "" });
   const hearts = [];
-  let show = null, round = 0;
-  let list = cast(profile, now), pos = [];
+  let show = null, round = 0, online = null, pn = null;
+  // 두 휴대폰으로 연결된 친구는 두 번째 자리(주인공)에
+  const castAll = (t) => { const l = cast(profile, t); if (online && l.length) l.splice(1, 0, { who: "online", name: null, key: online.key, look: online.look }); return l.slice(0, 5); };
+  let list = castAll(now), pos = [];
   const me = profile.pet && !profile.pet.ended && profile.pet.stage !== "egg" ? profile.pet : null;
 
-  const close = () => { cancelAnimationFrame(open?.raf); wrap.remove(); open = null; deps.onChange?.(); };
+  const close = () => { try { pn?.leave(); } catch { /* 무시 */ } cancelAnimationFrame(open?.raf); wrap.remove(); open = null; deps.onChange?.(); };
   const x = el("button", { class: "x", text: "✕", "aria-label": "닫기", onclick: close });
   const desc = list.length > 1 ? `친구 ${list.length - (me ? 1 : 0)}명이 놀러 왔어요. 친구를 누르면 쓰다듬어요.` : "친구 마을 친구나 놀러 오기 코드로 온 친구가 여기서 놀아요.";
   line.textContent = desc;
@@ -113,13 +116,20 @@ export function openPlayroom(deps) {
     if (me.asleep) { sfx("refuse"); line.textContent = `${josa(me.name, "이", "가")} 자고 있어요. 깨어 있을 때 같이 놀아요`; return; }
     const blk = careBlock(me);
     if (blk) { sfx("refuse"); line.textContent = `${josa(me.name, "이", "가")} ${blk}. 먼저 돌봐 준 뒤에 놀아요`; return; }
-    const bonus = profile.playroomDay !== today;
-    if (bonus) { me.stats.mood = Math.min(100, (me.stats.mood || 0) + PLAY_MOOD); profile.playroomDay = today; persist(); } // 시작할 때 줌(중간에 닫아도 잃지 않게)
-    const plan = planShow(profile.econ?.equipped || {}, round++);
-    show = { plan, start: performance.now(), bonus, hAt: {}, lastAct: null };
-    playBtn.disabled = true; playBtn.textContent = "노는 중…"; sfx("happy");
+    if (pn && online) { pn.startShow(round++); playBtn.disabled = true; playBtn.textContent = "곧 시작해요…"; return; } // 두 휴대폰: 양쪽이 같은 장면을 동시에
+    begin(round++, profile.econ?.equipped || {}, performance.now());
   } });
+  // 장면 시작(혼자든 두 휴대폰이든). 기분 보너스는 하루 한 번, 내 친구가 놀 수 있을 때만
+  function begin(r, equipped, startPerf) {
+    if (show) return;
+    const ok = me && !me.asleep && !careBlock(me);
+    const bonus = ok && profile.playroomDay !== today;
+    if (bonus) { me.stats.mood = Math.min(100, (me.stats.mood || 0) + PLAY_MOOD); profile.playroomDay = today; persist(); } // 시작할 때 줌(중간에 닫아도 잃지 않게)
+    show = { plan: planShow(equipped, r), start: startPerf, equipped, bonus, hAt: {}, lastAct: null };
+    playBtn.disabled = true; playBtn.textContent = "노는 중…"; sfx("happy");
+  }
   const refreshBtn = () => {
+    list = castAll(deps.now());
     const done = profile.playroomDay === today, alone = list.length < 2;
     playBtn.disabled = !me || alone || !!show;
     playBtn.textContent = !me ? "알이 깨어나면 같이 놀 수 있어요" : alone ? "같이 놀 친구가 오면 놀 수 있어요" : done ? "또 같이 놀기 (기분은 하루 한 번 올라요)" : `${josa(me.name, "과", "와")} 같이 놀기 (기분 +${PLAY_MOOD}, 하루 한 번)`;
@@ -128,7 +138,7 @@ export function openPlayroom(deps) {
   const finish = () => {
     const b = show.bonus; show = null;
     sfx("win"); for (const p of pos) hearts.push({ x: p.x, y: p.base - 34, at: performance.now() });
-    line.textContent = b ? `다 같이 신나게 놀았어요! ${josa(me.name, "이", "가")} 기분 +${PLAY_MOOD}` : "다 같이 또 신나게 놀았어요!";
+    line.textContent = b && me ? `다 같이 신나게 놀았어요! ${josa(me.name, "이", "가")} 기분 +${PLAY_MOOD}` : "다 같이 또 신나게 놀았어요!";
     refreshBtn();
   };
   refreshBtn();
@@ -143,15 +153,44 @@ export function openPlayroom(deps) {
     el("div", { class: "row", style: "gap:8px;margin-top:6px" }, inp, el("button", { class: "krw", text: "부르기", onclick: () => {
       const r = addVisitor(profile.visitors, inp.value, deps.now());
       if (!r.ok) { sfx("refuse"); line.textContent = r.reason === "here" ? "이미 놀러 와 있어요" : "숫자 6자리를 다시 확인해 주세요"; return; }
-      profile.visitors = r.list; persist(); sfx("happy"); inp.value = ""; list = cast(profile, deps.now()); line.textContent = "친구가 놀러 왔어요! 하루 동안 있다가 집에 가요";
+      profile.visitors = r.list; persist(); sfx("happy"); inp.value = ""; list = castAll(deps.now()); line.textContent = "친구가 놀러 왔어요! 하루 동안 있다가 집에 가요";
       refreshBtn();
     } })));
+  // ---- 두 휴대폰으로 같이 놀기: 방 번호 6자리(방장이 들여보내야 들어옴), 겉모습만 주고받음 ----
+  const netLine = el("p", { class: "small", text: "한 사람이 방을 만들고, 다른 사람이 방 번호를 넣어요. 같이 놀기를 누르면 두 휴대폰에서 같은 장면이 나와요." });
+  const askRow = el("div", { class: "row", style: "gap:8px;margin-top:6px", hidden: "" });
+  const roomInp = el("input", { class: "giftcode", placeholder: "방 번호 6자리", maxlength: "7", inputmode: "numeric", autocomplete: "off" });
+  const ensure = () => pn || (pn = createPlayNet({
+    getMe: () => (me ? { key: currentKey(me), look: lookOf(me) } : { key: null, look: {} }),
+    getEquipped: () => profile.econ?.equipped || {},
+    onFriend: (f) => { online = f ? { key: f.key, look: f.look } : null; list = castAll(deps.now()); refreshBtn(); netLine.textContent = f ? "친구와 연결됐어요! 같이 놀기를 눌러 봐요" : "친구와 연결이 끊겼어요"; if (f) sfx("happy"); },
+    onShow: ({ start, round: r, equipped }) => begin(r, equipped, performance.now() + (start - Date.now())),
+    onState: (t) => { if (t) netLine.textContent = t; },
+    onAsk: (req) => {
+      askRow.innerHTML = ""; askRow.hidden = !req;
+      if (!req) return;
+      sfx("tap"); netLine.textContent = "새 친구가 들어오려고 해요. 들여보낼까요?";
+      askRow.append(el("button", { class: "krw", text: "들여보내기", onclick: () => { pn.answer(req.id, true); askRow.hidden = true; } }), el("button", { class: "ghost", text: "아니요", onclick: () => { pn.answer(req.id, false); askRow.hidden = true; } }));
+    },
+  }));
+  const netBox = el("details", { class: "giftbox" }, el("summary", { text: "두 휴대폰으로 같이 놀기" }), netLine, askRow,
+    el("div", { class: "row", style: "gap:8px;margin-top:6px" },
+      el("button", { class: "krw", text: "방 만들기", onclick: async () => { if (!me) { netLine.textContent = "알이 깨어나면 같이 놀 수 있어요"; return; } try { netLine.textContent = "방을 만드는 중…"; const code = await ensure().host(); netLine.textContent = `방 번호 ${code.slice(0, 3)} ${code.slice(3)} · 친구에게 알려 주세요`; } catch (e) { netLine.textContent = e?.text || "방을 만들지 못했어요. 다시 해 봐요"; } } }),
+      el("button", { class: "ghost", text: "나가기", onclick: () => { try { pn?.leave(); } catch { /* 무시 */ } pn = null; online = null; list = castAll(deps.now()); refreshBtn(); netLine.textContent = "같이 놀기를 끝냈어요"; } })),
+    el("div", { class: "row", style: "gap:8px;margin-top:6px" }, roomInp, el("button", { class: "krw", text: "들어가기", onclick: async () => {
+      const c = String(roomInp.value).replace(/\D/g, "");
+      if (!me) { netLine.textContent = "알이 깨어나면 같이 놀 수 있어요"; return; }
+      if (c.length !== 6) { sfx("refuse"); netLine.textContent = "방 번호 6자리를 넣어 주세요"; return; }
+      try { netLine.textContent = "들어가는 중… 방장이 들여보내 주면 연결돼요"; await ensure().join(c); } catch (e) { sfx("refuse"); netLine.textContent = e?.text || "들어가지 못했어요"; }
+    } })),
+    el("p", { class: "fine", text: "주고받는 건 친구 겉모습뿐이에요(이름·글·채팅 없음). 모르는 사람에게는 방 번호를 알려 주지 마세요." }));
   const eq = profile.econ?.equipped || {};
   const hint = !eq.playL && !eq.playM && !eq.playR ? el("p", { class: "fine", text: "상점 → 놀이방 탭에서 미끄럼틀·볼풀·그네 같은 놀이 기구를 놓을 수 있어요." }) : null;
-  inner.append(x, el("h3", { text: "놀이방" }), cv, line, playBtn, hint, codeBox);
+  inner.append(...[x, el("h3", { text: "놀이방" }), cv, line, playBtn, hint, netBox, codeBox].filter(Boolean)); // hint가 없으면 "null" 글자가 붙던 것 막기
   wrap.append(inner); document.body.append(wrap);
   const loop = (t) => {
     if (show && t - show.start >= show.plan.total) finish();
+    if (show && t < show.start) line.textContent = "곧 시작해요!";
     if (show) { const { act } = actAt(show.plan, t - show.start); if (act && act !== show.lastAct) { show.lastAct = act; line.textContent = `${ACT_KO[act.kind]}!`; } } // 막마다 제목
     pos = drawScene(ctx, profile, list, t, hearts, show);
     if (open) open.raf = requestAnimationFrame(loop);
