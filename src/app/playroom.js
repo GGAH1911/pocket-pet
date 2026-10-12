@@ -1,15 +1,15 @@
 // 놀이방(2026-10-09 사용자 요청 "방이 더 있으면, 친구들과 놀 수 있는 방, 친구 초대", 디자인·아동 심리 자문 2·3단계).
 // "함께 사는 건 여럿, 돌보는 건 하나": 돌봄은 내 방에서만. 놀이방엔 마을 친구(시간 멈춘 손님)와 놀러 오기 코드로 온 손님이 놀러 온다.
 // 손님은 쓰다듬기만, 숫자는 안 바뀜. 지금 친구와 '같이 놀기'는 하루 한 번 기분 +10(돌봄이 필요하면 안 됨).
-import { memberCanvas } from "../render/screen.js?v=19d3990-1791798234";
-import { drawPlay } from "../render/deco.js?v=19d3990-1791798234";
-import { lookOf } from "../render/creature.js?v=19d3990-1791798234";
-import { currentKey } from "./collection.js?v=19d3990-1791798234";
-import { villageOf, careBlock } from "../core/village.js?v=19d3990-1791798234";
-import { visitCode, addVisitor, pruneVisitors, readVisit, showVisit } from "../core/visit.js?v=19d3990-1791798234";
-import { josa } from "../core/josa.js?v=19d3990-1791798234";
-import { planShow, poseAt, toyOpts, actAt, ACT_KO, SPOT, K, homeOf } from "./playshow.js?v=19d3990-1791798234";
-import { createPlayNet } from "./playnet.js?v=19d3990-1791798234"; // 두 휴대폰 같이 놀기(던전 모험 같이 하기 연결을 옮겨 씀, 2026-10-09)
+import { memberCanvas } from "../render/screen.js?v=6018b31-1791798364";
+import { drawPlay } from "../render/deco.js?v=6018b31-1791798364";
+import { lookOf } from "../render/creature.js?v=6018b31-1791798364";
+import { currentKey } from "./collection.js?v=6018b31-1791798364";
+import { villageOf, careBlock } from "../core/village.js?v=6018b31-1791798364";
+import { visitCode, addVisitor, pruneVisitors, readVisit, showVisit } from "../core/visit.js?v=6018b31-1791798364";
+import { josa } from "../core/josa.js?v=6018b31-1791798364";
+import { planShow, poseAt, toyOpts, actAt, ACT_KO, SPOT, K, homeOf } from "./playshow.js?v=6018b31-1791798364";
+import { createPlayNet } from "./playnet.js?v=6018b31-1791798364"; // 두 휴대폰 같이 놀기(던전 모험 같이 하기 연결을 옮겨 씀, 2026-10-09)
 
 const W = 256, H = 200, FLOOR = 96; // playshow.js PW·PH와 같음
 const dayKey = (ts) => new Date(ts).toDateString();
