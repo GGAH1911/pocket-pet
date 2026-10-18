@@ -1,15 +1,17 @@
 // 상점·꾸미기·매일 선물 화면. 상태와 규칙은 core/economy.js·catalog.js, 여기는 DOM만.
-import { ITEMS, ITEM, SLOTS, TABS, PICKS, PACKS, SOON, UNLOCK, UNLOCKS, STAR_SWAPS, STAR_SWAP_WEEK_GEMS, ROOM, ROOMS } from "../core/catalog.js?v=f8bf84f-1792288456";
-import { placedElsewhere } from "../core/rooms.js?v=f8bf84f-1792288456";
-import { EXTRA_GAMES, GAME_NAMES, GAME_DESC } from "./games.js?v=f8bf84f-1792288456";
-import { GAME_UNLOCK } from "../core/catalog.js?v=f8bf84f-1792288456";
+import { ITEMS, ITEM, SLOTS, TABS, PICKS, PACKS, SOON, UNLOCK, UNLOCKS, STAR_SWAPS, STAR_SWAP_WEEK_GEMS, ROOM, ROOMS } from "../core/catalog.js?v=9f53720-1792289610";
+import { placedElsewhere } from "../core/rooms.js?v=9f53720-1792289610";
+import { eggSpriteFor } from "../render/creature.js?v=9f53720-1792289610";
+import { THEME_KO } from "./collection.js?v=9f53720-1792289610";
+import { EXTRA_GAMES, GAME_NAMES, GAME_DESC } from "./games.js?v=9f53720-1792289610";
+import { GAME_UNLOCK } from "../core/catalog.js?v=9f53720-1792289610";
 const GAME_THUMB = { snack: ["apple", "candy"], face: ["heart"], odd: ["starYellow", "starPink"], tidy: ["ball", "book"], count: ["starBlue", "starBlue", "starBlue"] };
 function drawGameThumb(cv, k) { const c = cv.getContext("2d"); c.imageSmoothingEnabled = false; c.fillStyle = "#fbefe3"; c.fillRect(0, 0, cv.width, cv.height); const sp = GAME_THUMB[k] || []; sp.forEach((n, i) => { const s = SPRITES[n]; if (s) drawSprite(c, s, 4 + i * 12, 10, 2); }); }
-import { drawCourseThumb } from "../render/walk-courses.js?v=f8bf84f-1792288456";
-import { canAfford, gems, DAILY, purchaseHistory, themeOpen, FORGIVE, forgiveState, candyPrice } from "../core/economy.js?v=f8bf84f-1792288456";
-import { gemButtonState } from "../core/wallet.js?v=f8bf84f-1792288456";
-import { drawThumb } from "../render/deco.js?v=f8bf84f-1792288456";
-import { SPRITES, drawSprite, spriteSize } from "../render/sprites.js?v=f8bf84f-1792288456";
+import { drawCourseThumb } from "../render/walk-courses.js?v=9f53720-1792289610";
+import { canAfford, gems, DAILY, purchaseHistory, themeOpen, FORGIVE, forgiveState, candyPrice } from "../core/economy.js?v=9f53720-1792289610";
+import { gemButtonState } from "../core/wallet.js?v=9f53720-1792289610";
+import { drawThumb } from "../render/deco.js?v=9f53720-1792289610";
+import { SPRITES, drawSprite, spriteSize } from "../render/sprites.js?v=9f53720-1792289610";
 
 const el = (tag, attrs = {}, ...kids) => {
   const e = document.createElement(tag);
@@ -56,14 +58,18 @@ export function renderShop(tabsEl, bodyEl, ctx) {
   bodyEl.innerHTML = "";
   if (state.tab === "gem") return renderGemShop(bodyEl, ctx);
   if (state.tab === "soon") {
-    // 알 열기: 무지개 알(상상 속 생물)은 하트 보석으로 한 번 열면 다음 알부터 계속 고를 수 있음(서버 지갑, 인터넷 필요)
-    const open = themeOpen(econ, "fantasy"), price = UNLOCK.theme_fantasy.price;
+    // 알 열기: 무지개·바닷가·숲속 알은 하트 보석으로 한 번 열면 다음 알부터 계속 고를 수 있음(서버 지갑, 인터넷 필요)
     const g = ctx.gem || {};
-    const st = gemButtonState({ online: !!g.online, busy: !!g.busy, total: gems(econ), price: price.gem });
-    bodyEl.append(el("div", { class: "banner" }, el("b", { text: "무지개 알 · 상상 속 생물" }), document.createTextNode("말랑이 → 아기 용·꼬마 구름 → 무지개 용, 구름 고래… 새 친구 8종과 숨은 친구"),
-      el("div", { class: "row", style: "margin-top:8px" }, el("span", { class: "small dim", style: "flex:1", text: open ? "열렸어요. 새 알을 받을 때 고를 수 있어요" : "한 번 열면 계속 고를 수 있어요" }),
-        open ? null : st.poor ? el("button", { class: "ghost", text: "하트 보석 사기", onclick: () => ctx.onGoGem() }) : null,
-        open ? null : el("button", { disabled: st.disabled, onclick: () => ctx.onUnlockTheme?.("fantasy") }, priceEl(price), document.createTextNode(st.label === "사기" ? " 열기" : " " + st.label)))));
+    const EGG_INFO = { fantasy: "말랑이 → 아기 용·꼬마 구름 → 무지개 용, 구름 고래… 새 친구 8종과 숨은 친구" };
+    for (const u of UNLOCKS.filter((x) => x.theme)) {
+      const open = themeOpen(econ, u.theme), price = u.price;
+      const st = gemButtonState({ online: !!g.online, busy: !!g.busy, total: gems(econ), price: price.gem });
+      const cv = el("canvas", { width: 32, height: 40, class: "eggthumb" }); { const c = cv.getContext("2d"); c.imageSmoothingEnabled = false; drawSprite(c, eggSpriteFor(SPRITES, u.theme, null), 0, 0, 2); }
+      bodyEl.append(el("div", { class: "banner course" }, cv, el("div", { class: "cinfo" }, el("b", { text: `${u.name} · ${THEME_KO[u.theme]}` }), el("div", { class: "small", text: u.desc || EGG_INFO[u.theme] || "" }),
+        el("div", { class: "row", style: "margin-top:8px" }, el("span", { class: "small dim", style: "flex:1", text: open ? "열렸어요. 새 알을 받을 때 고를 수 있어요" : "한 번 열면 계속 고를 수 있어요" }),
+          open ? null : st.poor ? el("button", { class: "ghost", text: "하트 보석 사기", onclick: () => ctx.onGoGem() }) : null,
+          open ? null : el("button", { disabled: st.disabled, onclick: () => ctx.onUnlockTheme?.(u.theme) }, priceEl(price), document.createTextNode(st.label === "사기" ? " 열기" : " " + st.label))))));
+    }
     // 산책 코스: 미리 보기 그림 + 하트 보석으로 열기(서버 지갑, 인터넷 필요)
     bodyEl.append(el("h3", { class: "sec", text: "산책 코스" }));
     for (const u of UNLOCKS.filter((x) => x.walk)) {
@@ -87,7 +93,7 @@ export function renderShop(tabsEl, bodyEl, ctx) {
     }
     const cards = el("div", { class: "cards" });
     for (const s of SOON) cards.append(el("div", { class: "card" }, el("canvas", { width: 56, height: 46 }), el("span", { class: "nm", text: s.name }), el("span", { class: "small dim", text: "곧 나와요" })));
-    bodyEl.append(el("p", { class: "fine", text: "새 알(새 친구 9종)을 만들고 있어요." }), cards);
+    if (SOON.length) bodyEl.append(el("p", { class: "fine", text: "곧 나와요" }), cards);
     for (const [i, s] of SOON.entries()) { const cv = cards.children[i].querySelector("canvas"); const c = cv.getContext("2d"); c.fillStyle = "#fbefe3"; c.fillRect(0, 0, 56, 46); const sp = SPRITES[s.id.startsWith("egg") ? "eggRainbow" : "ball"]; if (sp) drawSprite(c, sp, 20, 12, 1); c.fillStyle = "#3b2c35"; c.font = "bold 9px system-ui"; c.textAlign = "center"; c.fillText("준비 중", 28, 42); }
     return;
   }

@@ -1,12 +1,12 @@
 // 펫 상태의 단일 정의. 화면·저장 코드는 이 모양만 믿어요.
-import { SPEEDS, POOP } from "./rules.js?v=f8bf84f-1792288456";
+import { SPEEDS, POOP } from "./rules.js?v=9f53720-1792289610";
 
 export const SAVE_VERSION = 3;
 
 export const STAT_KEYS = ["hunger", "mood", "clean", "energy", "health"];
 export const STAT_MIN = 0;
 export const STAT_MAX = 100;
-export const THEMES = ["animal", "fantasy"];
+export const THEMES = ["animal", "fantasy", "sea", "forest"];
 
 export function clampStat(v) {
   return Math.min(STAT_MAX, Math.max(STAT_MIN, v));

@@ -1,12 +1,12 @@
 // 도감: 본 적 있는 모습 표시, 지금까지 키운 펫 기록, 초상화 그리기
-import { FORMS, buildCreature, paintGrid, formKey, lookOf } from "../render/creature.js?v=f8bf84f-1792288456";
-import { drawFace, POOLS } from "../render/face.js?v=f8bf84f-1792288456";
-import { SPRITES, drawSprite } from "../render/sprites.js?v=f8bf84f-1792288456";
-import { BRANCH, SECRET } from "../core/rules.js?v=f8bf84f-1792288456";
-import { EGGS, foundCount } from "./eggs.js?v=f8bf84f-1792288456";
-import { canRevive } from "../core/revive.js?v=f8bf84f-1792288456";
+import { FORMS, buildCreature, paintGrid, formKey, lookOf, SEA_EGG, FOREST_EGG } from "../render/creature.js?v=9f53720-1792289610";
+import { drawFace, POOLS } from "../render/face.js?v=9f53720-1792289610";
+import { SPRITES, drawSprite } from "../render/sprites.js?v=9f53720-1792289610";
+import { BRANCH, SECRET } from "../core/rules.js?v=9f53720-1792289610";
+import { EGGS, foundCount } from "./eggs.js?v=9f53720-1792289610";
+import { canRevive } from "../core/revive.js?v=9f53720-1792289610";
 
-export const THEME_KO = { animal: "동물", fantasy: "상상 속 생물" };
+export const THEME_KO = { animal: "동물", fantasy: "상상 속 생물", sea: "바닷가 친구들", forest: "숲속 친구들" };
 export const HOW_KO = { journey: "여행을 떠남", runaway: "서운해서 할머니 댁에 감", star: "별이 됨", retired: "친구 마을로 이사" };
 const SPEED_KO = { slow: "느긋", normal: "보통", fast: "빠름" };
 
@@ -26,7 +26,7 @@ export function markSeen(profile, pet, now = Date.now()) {
 }
 
 // ---------- 모으기: 어른 수·보상·힌트·진행 예측 ----------
-export const THEMES_ALL = ["animal", "fantasy"];
+export const THEMES_ALL = ["animal", "fantasy", "sea", "forest"];
 export const ADULT_KEYS = THEMES_ALL.flatMap((t) => ["A", "B", "C", "D", "S"].map((b) => `${t}.adult.${b}`));
 export const adultsSeen = (profile) => ADULT_KEYS.filter((k) => profile.seen[k]);
 const themeABCD = (profile, theme) => ["A", "B", "C", "D"].every((b) => profile.seen[`${theme}.adult.${b}`]);
@@ -38,7 +38,7 @@ export const REWARDS = [
   { id: "eggColor", need: 3, label: "알 색 고르기", desc: "새 알을 받을 때 무늬 색을 골라요. 커서도 귀 끝·점 색으로 남아요" },
   { id: "starRug", need: 5, label: "별 러그", desc: "밤하늘 별무늬 러그를 받아요(꾸미기에서 깔기)" },
   { id: "goldEgg", secret: true, label: "금빛 알", desc: "알 색 고르기에 금색이 생겨요 (숨은 친구를 만나면)" },
-  { id: "goldFrame", need: ADULT_KEYS.length, label: "반짝 사진틀", desc: "어른 10종을 다 만나면 사진 액자 테두리가 금색이 돼요" },
+  { id: "goldFrame", need: 10, label: "반짝 사진틀", desc: "어른 10종을 만나면 사진 액자 테두리가 금색이 돼요" }, // 계통이 늘어도 10종 그대로(이미 받은 사람이 잃지 않게)
 ];
 export function rewardOpen(profile, r) {
   if (r.secret) return ADULT_KEYS.some((k) => k.endsWith(".S") && profile.seen[k]);
@@ -53,7 +53,7 @@ export function nextGoal(profile) {
 export const hasCrown = (profile, theme) => themeABCD(profile, theme);
 
 // 한 줄 소개
-export const BLURB = {
+export const BLURB_BASE = {
   "animal.baby": "동그란 솜털 공. 아직 눈만 깜빡여요",
   "animal.child": "늘어진 귀가 귀여운 아기 강아지",
   "animal.teen.good": "귀가 반쯤 선 꼬마 강아지. 칭찬을 먹고 자라요",
@@ -73,6 +73,7 @@ export const BLURB = {
   "fantasy.adult.D": "찌릿찌릿 번개를 품은 장난꾸러기 구름",
   "fantasy.adult.S": "정을 듬뿍 받은 친구에게만 나타나는 별 유니콘",
 };
+export const BLURB = { ...BLURB_BASE, ...Object.fromEntries(Object.entries(FORMS).filter(([k, v]) => v.desc && !BLURB_BASE[k]).map(([k, v]) => [k, v.desc])) }; // 바닷가·숲속은 FORMS desc
 
 // 못 만난 친구를 만나는 방법(실제 규칙 그대로)
 export function hintFor(key, profile) {
@@ -150,7 +151,7 @@ export function portrait(canvas, key, look = {}, { silhouette = false, face = PO
   const ctx = canvas.getContext("2d");
   ctx.imageSmoothingEnabled = false;
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  if (!key || key.endsWith(".egg")) { drawSprite(ctx, key && key.startsWith("fantasy") ? SPRITES.eggRainbow : SPRITES.egg, canvas.width / 2 - 8, canvas.height - 22, 1); return; }
+  if (!key || key.endsWith(".egg")) { drawSprite(ctx, key && key.startsWith("fantasy") ? SPRITES.eggRainbow : key && key.startsWith("sea") ? SEA_EGG : key && key.startsWith("forest") ? FOREST_EGG : SPRITES.egg, canvas.width / 2 - 8, canvas.height - 22, 1); return; }
   const b = buildCreature(key, { look, silhouette: silhouette ? "L" : null });
   if (!b) return;
   if (!silhouette) drawFace(b.g, b.P, face);

@@ -2,7 +2,7 @@
 // 몸 모양(타원·물방울·구름) + 귀·뿔·날개·꼬리·발·무늬를 도트 격자(칸)에 칠하고,
 // 바깥 테두리와 그림자를 자동으로 입힌다. 자세(늘어남·찌그러짐·바라보는 방향)는 매 프레임 반영된다.
 // 얼굴(표정)은 face.js 가 이 격자 위에 따로 얹는다.
-import { PALETTE } from "./palette.js?v=f8bf84f-1792288456";
+import { PALETTE } from "./palette.js?v=9f53720-1792289610";
 
 const GW = 76, GH = 50; // 격자 크기(칸): 가장 큰 형태가 통통+늘어남이어도 안 잘리게
 
@@ -87,6 +87,8 @@ function highlight(g, P) {
   put(g, P.cx - P.rx * 0.5, P.cy - P.ry * 0.55, "w"); put(g, P.cx - P.rx * 0.5 + 1, P.cy - P.ry * 0.62, "w");
 }
 
+import { FORMS_SEA, SEA_EGG } from "./creature-sea.js?v=9f53720-1792289610";
+import { FORMS_FOREST, FOREST_EGG } from "./creature-forest.js?v=9f53720-1792289610";
 export const FORMS = {
   // ===== 동물 =====
   "animal.baby": { name: "털뭉치", size: [7.5, 7], draw(g, P) {
@@ -360,6 +362,11 @@ export function paintGrid(ctx, g, x, base, s, { alpha = 1, tint = null } = {}) {
 // 알 그림: 무늬 색을 펫 색으로. 상상 테마는 기본이 무지개 알이고, 알 색을 고른 경우만 그 색 무늬
 export function eggSpriteFor(SPRITES, theme, l) {
   if (theme === "fantasy" && !(l && l.chosen)) return SPRITES.eggRainbow;
-  if (!l || !l.spot) return SPRITES.egg;
-  return SPRITES.egg.map((row) => row.replace(/p/g, "#").replace(/g/g, l.spot2 || "g").replace(/#/g, l.spot));
+  const base = theme === "sea" ? SEA_EGG : theme === "forest" ? FOREST_EGG : SPRITES.egg; // 바닷가·숲속 알(2026-10-09)
+  if (!l || !l.spot || (base !== SPRITES.egg && !l.chosen)) return base;
+  return base.map((row) => row.replace(/p/g, "#").replace(/g/g, l.spot2 || "g").replace(/#/g, l.spot));
 }
+
+// 바닷가·숲속 친구들(2026-10-09 사용자 승인 시안, creature-sea.js·creature-forest.js)
+Object.assign(FORMS, FORMS_SEA, FORMS_FOREST);
+export { SEA_EGG, FOREST_EGG };

@@ -5,7 +5,7 @@
 // 상세 근거: docs/plan-v2-release.md 1절
 // 2026-10-06부터 하트 보석은 서버 지갑이 관리한다(docs/wallet.md): 여기서는 보석을 늘리거나 줄이지 않고 "받을 보석 수"만 돌려준다.
 // gemFree/gemPaid는 서버 값의 사본. 보석 상품 사기·무료 보석 적립·결제 지급은 app/wallet.js가 서버를 거쳐 한다.
-import { takeFromOtherRooms, normalizeRooms } from "./rooms.js?v=f8bf84f-1792288456";
+import { takeFromOtherRooms, normalizeRooms } from "./rooms.js?v=9f53720-1792289610";
 
 export const EARN = {
   care: { meal: 5, wash: 5, poop: 3, lightOff: 10, medicine: 5 }, // 필요한 돌봄을 했을 때만(판단은 호출하는 쪽)
@@ -80,7 +80,7 @@ export function forgiveStage(e, pet) {
 // ---- 알(테마) 해금: 처음엔 점박이 알(동물)만, 무지개 알(상상)은 하트 보석으로 한 번 열면 계속(뽑기·세대마다 재구매 없음) ----
 // 사용자 결정(2026-10-06): 유료 화폐. 사기는 서버 지갑(catalog UNLOCKS 'theme_fantasy', 보석 150)이 하고, 산 것은 econ.owned에 서버 목록으로 맞춰진다.
 // econ.unlocks[테마]는 잠금 전부터 그 테마를 키운 사람의 소급 해금(기기 기록)
-export const THEME_UNLOCK = { fantasy: "theme_fantasy" };
+export const THEME_UNLOCK = { fantasy: "theme_fantasy", sea: "theme_sea", forest: "theme_forest" };
 export const themeOpen = (e, theme) => !THEME_UNLOCK[theme] || !!e.unlocks?.[theme] || !!e.owned?.[THEME_UNLOCK[theme]];
 
 // 현지 날짜 키(하루 경계는 기기 시각 자정)

@@ -4,11 +4,12 @@
 export const VISIT_KEYS = [
   "animal.baby", "animal.child", "animal.teen.good", "animal.teen.normal", "animal.adult.A", "animal.adult.B", "animal.adult.C", "animal.adult.D", "animal.adult.S",
   "fantasy.baby", "fantasy.child", "fantasy.teen.good", "fantasy.teen.normal", "fantasy.adult.A", "fantasy.adult.B", "fantasy.adult.C", "fantasy.adult.D", "fantasy.adult.S",
+  ...["sea", "forest"].flatMap((t) => ["baby", "child", "teen.good", "teen.normal", "adult.A", "adult.B", "adult.C", "adult.D", "adult.S"].map((s) => `${t}.${s}`)), // 2026-10-09
 ];
 const SPOTS = ["p", "g", "b", "y", "v", "r", "Y"];
 // 숫자 6자리(2026-10-09 사용자: "영문으로 하면 안 돼, 던전 모험처럼 숫자 6자리"). 아이가 말로 불러 주고 숫자판으로 넣기 쉽게.
 // 모습 18 × 무늬 7 × 통통 6 × 꼬질 2 = 1,512가지 × 확인값 661 = 999,432 < 1,000,000. 아무 숫자나 넣으면 약 0.15%만 통과.
-const COMBOS = VISIT_KEYS.length * SPOTS.length * 6 * 2, CHECK = 661;
+const COMBOS = VISIT_KEYS.length * SPOTS.length * 6 * 2, CHECK = 330; // 모습 36가지 × 84 = 3,024 × 330 = 997,920 < 100만(바닷가·숲속 추가로 661 → 330, 아무 숫자 통과 약 0.3%)
 export const VISIT_HOURS = 24;
 export const VISIT_MAX = 2;
 const check = (n) => { let h = Math.imul(n + 7919, 2654435761) >>> 0; h ^= h >>> 13; h = Math.imul(h, 0x5bd1e995) >>> 0; h ^= h >>> 15; return (h >>> 0) % CHECK; }; // XOR 결과는 부호 있는 정수라 >>> 0 으로 양수로

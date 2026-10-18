@@ -1,8 +1,8 @@
 // 하트 보석 서버 지갑: 기기 쪽 네트워크(서버 /wallet…). 규칙은 core/wallet.js, 설계 docs/wallet.md
 // 지갑 열쇠는 기기가 만든 무작위 32바이트. 서버엔 해시만 간다. 보석은 서버에 닿을 때만 받고 쓸 수 있다.
-import { PUSH_SERVER } from "./push.js?v=f8bf84f-1792288456";
-import { walletOf, applyServerWallet, migratePayload } from "../core/wallet.js?v=f8bf84f-1792288456";
-import { CANDY_MAX } from "../core/economy.js?v=f8bf84f-1792288456";
+import { PUSH_SERVER } from "./push.js?v=9f53720-1792289610";
+import { walletOf, applyServerWallet, migratePayload } from "../core/wallet.js?v=9f53720-1792289610";
+import { CANDY_MAX } from "../core/economy.js?v=9f53720-1792289610";
 
 const b64u = (bytes) => btoa(String.fromCharCode(...bytes)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 export const newWalletKey = () => b64u(crypto.getRandomValues(new Uint8Array(32)));
@@ -12,7 +12,7 @@ export const acctOf = async (key) => hex(await crypto.subtle.digest("SHA-256", n
 
 // 연결 상태: navigator.onLine만 믿지 않고 실제 요청 결과로 판단(capacitor-offline-first)
 export const net = { ok: false, at: 0 };
-export const APP_VER = "1.0.26"; // android/app/build.gradle versionName과 맞춤(결제 진단용)
+export const APP_VER = "1.0.27"; // android/app/build.gradle versionName과 맞춤(결제 진단용)
 const TIMEOUT_MS = 10_000;
 
 async function call(method, path, key, body, { extraHeaders = {}, timeout = TIMEOUT_MS } = {}) {

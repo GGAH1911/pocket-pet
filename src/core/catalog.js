@@ -169,6 +169,9 @@ export const PACK = Object.fromEntries(PACKS.map((p) => [p.id, p]));
 // 알 해금(서버 지갑이 소유를 관리, 꾸미기 칸 없음). 무지개 알은 하트 보석으로 한 번 열면 계속(2026-10-06 사용자 결정, 경제 자문 가격 150 = 바다 알의 절반)
 export const UNLOCKS = [
   { id: "theme_fantasy", theme: "fantasy", name: "무지개 알", price: { gem: 150 } },
+  // 바닷가·숲속 알(2026-10-09): 예고했던 값 보석 300(무지개 알 150 = 바다 알의 절반으로 잡았던 경제 자문 기준), 한 번 열면 계속
+  { id: "theme_sea", theme: "sea", name: "바닷가 알", desc: "솜방울 → 물범·펭귄 → 돌고래, 통통 물범, 멋쟁이 펭귄… 새 친구 8종과 숨은 친구", price: { gem: 300 } },
+  { id: "theme_forest", theme: "forest", name: "숲속 알", desc: "도토리 털뭉치 → 청설모·고슴도치 → 날다람쥐, 꽃 고슴도치… 새 친구 8종과 숨은 친구", price: { gem: 300 } },
   // 산책 코스(2026-10-08 사용자 요청). 공원은 기본. 가격은 곧 나올 상품으로 예고했던 산책 장소 값(보석 200)
   { id: "walk_beach", walk: "beach", name: "바닷가 산책", desc: "꽃게·조개껍데기·밀려오는 파도", price: { gem: 200 } },
   { id: "walk_mountain", walk: "mountain", name: "산길 산책", desc: "다람쥐·버섯·개울(겨울엔 눈 덮인 산)", price: { gem: 200 } },
@@ -197,7 +200,6 @@ export const REVIVE_FREE_BEFORE = 0; // 무료 데려오기 없음(2026-10-09 �
 
 // 곧 나올 상품(알·산책 탭에 미리 보여 주기만)
 export const SOON = [
-  { id: "egg_sea", name: "바다 친구들 알", desc: "새 계통 9종 + 숨은 친구", price: { gem: 300 } },
 ];
 
 // 기본 상품을 가진 상태로 만든다(새 저장·옛 저장 모두)
