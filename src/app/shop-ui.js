@@ -1,17 +1,17 @@
 // 상점·꾸미기·매일 선물 화면. 상태와 규칙은 core/economy.js·catalog.js, 여기는 DOM만.
-import { ITEMS, ITEM, SLOTS, TABS, PICKS, PACKS, SOON, UNLOCK, UNLOCKS, STAR_SWAPS, STAR_SWAP_WEEK_GEMS, ROOM, ROOMS } from "../core/catalog.js?v=524913c-1792306756";
-import { placedElsewhere } from "../core/rooms.js?v=524913c-1792306756";
-import { eggSpriteFor } from "../render/creature.js?v=524913c-1792306756";
-import { THEME_KO } from "./collection.js?v=524913c-1792306756";
-import { EXTRA_GAMES, GAME_NAMES, GAME_DESC } from "./games.js?v=524913c-1792306756";
-import { GAME_UNLOCK } from "../core/catalog.js?v=524913c-1792306756";
+import { ITEMS, ITEM, SLOTS, TABS, PICKS, PACKS, SOON, UNLOCK, UNLOCKS, STAR_SWAPS, STAR_SWAP_WEEK_GEMS, ROOM, ROOMS } from "../core/catalog.js?v=bcd1d7c-1792306867";
+import { placedElsewhere } from "../core/rooms.js?v=bcd1d7c-1792306867";
+import { eggSpriteFor } from "../render/creature.js?v=bcd1d7c-1792306867";
+import { THEME_KO } from "./collection.js?v=bcd1d7c-1792306867";
+import { EXTRA_GAMES, GAME_NAMES, GAME_DESC } from "./games.js?v=bcd1d7c-1792306867";
+import { GAME_UNLOCK } from "../core/catalog.js?v=bcd1d7c-1792306867";
 const GAME_THUMB = { snack: ["apple", "candy"], face: ["heart"], odd: ["starYellow", "starPink"], tidy: ["ball", "book"], count: ["starBlue", "starBlue", "starBlue"] };
 function drawGameThumb(cv, k) { const c = cv.getContext("2d"); c.imageSmoothingEnabled = false; c.fillStyle = "#fbefe3"; c.fillRect(0, 0, cv.width, cv.height); const sp = GAME_THUMB[k] || []; sp.forEach((n, i) => { const s = SPRITES[n]; if (s) drawSprite(c, s, 4 + i * 12, 10, 2); }); }
-import { drawCourseThumb } from "../render/walk-courses.js?v=524913c-1792306756";
-import { canAfford, gems, DAILY, purchaseHistory, themeOpen, FORGIVE, forgiveState, candyPrice } from "../core/economy.js?v=524913c-1792306756";
-import { gemButtonState } from "../core/wallet.js?v=524913c-1792306756";
-import { drawThumb } from "../render/deco.js?v=524913c-1792306756";
-import { SPRITES, drawSprite, spriteSize } from "../render/sprites.js?v=524913c-1792306756";
+import { drawCourseThumb } from "../render/walk-courses.js?v=bcd1d7c-1792306867";
+import { canAfford, gems, DAILY, purchaseHistory, themeOpen, FORGIVE, forgiveState, candyPrice } from "../core/economy.js?v=bcd1d7c-1792306867";
+import { gemButtonState } from "../core/wallet.js?v=bcd1d7c-1792306867";
+import { drawThumb } from "../render/deco.js?v=bcd1d7c-1792306867";
+import { SPRITES, drawSprite, spriteSize } from "../render/sprites.js?v=bcd1d7c-1792306867";
 
 const el = (tag, attrs = {}, ...kids) => {
   const e = document.createElement(tag);
