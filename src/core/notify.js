@@ -1,10 +1,10 @@
 // 알림 일정 예측. "지금부터 아무도 안 돌보면 언제 무슨 일이 생기나"를 계산해 알림 목록으로 만든다.
 // 휴대폰이 이 목록을 알림 서버에 올리고, 서버는 시각이 되면 보내기만 한다.
 // 규칙은 GDD 7-1절. 공정성 원칙(알림 없이 돌봄 실수가 생기지 않음)은 test/notify.test.mjs 가 지킨다.
-import { advance } from "./sim.js?v=b227817-1792321808";
-import { isBusyTime } from "./daytime.js?v=b227817-1792321808";
-import { DEFAULT_SETTINGS } from "./rules.js?v=b227817-1792321808";
-import { josa } from "./josa.js?v=b227817-1792321808";
+import { advance } from "./sim.js?v=7cb4c0e-1792323451";
+import { isBusyTime } from "./daytime.js?v=7cb4c0e-1792323451";
+import { DEFAULT_SETTINGS } from "./rules.js?v=7cb4c0e-1792323451";
+import { josa } from "./josa.js?v=7cb4c0e-1792323451";
 
 const I = (n) => josa(n, "이", "가"); // 주격
 const EUL = (n) => josa(n, "을", "를"); // 목적격
@@ -87,12 +87,21 @@ export function eventsToNotifications(events, { asleepAtStart = false, settings 
     });
     if (!kinds.length) continue;
     for (const k of kinds) lastByKind[k] = e.t;
+    // 15분 안의 일은 하나로 묶되, 묶음은 그 안의 '마지막 일' 시각에 보낸다(2026-10-09 사용자: 알림이 실제보다 빨리 옴).
+    // 예전엔 첫 일 시각에 보내 뒤의 일(똥·놀아 달래요 등)이 최대 15분 먼저 알려졌음. 급한 알림이 든 묶음은 늦추지 않으므로 뒤의 일을 끌어오지 않음
     const g = groups[groups.length - 1];
-    if (g && e.t - g.at <= MERGE_WINDOW_MS) {
+    const urgentG = g && g.kinds.some((k) => KINDS[k].urgent);
+    if (g && e.t - g.first <= MERGE_WINDOW_MS && !urgentG) {
       for (const k of kinds) if (!g.kinds.includes(k)) { g.kinds.push(k); g.src[k] = e; }
+      g.at = e.t; // 늦출 수만 있고(급하지 않은 것 최대 15분) 앞당기지 않음
+    } else if (g && e.t === g.at) {
+      for (const k of kinds) if (!g.kinds.includes(k)) { g.kinds.push(k); g.src[k] = e; } // 같은 순간에 생긴 일은 급한 묶음에도
     } else {
       const src = {}; for (const k of kinds) src[k] = e;
-      groups.push({ at: e.t, kinds: [...kinds], src });
+      // 급한 알림 바로 뒤(15분 안)의 급하지 않은 일은 15분이 지난 뒤로 미룸(연달아 울리지 않게, 앞당기지는 않음)
+      const defer = urgentG && e.t - g.at <= MERGE_WINDOW_MS && !kinds.some((k) => KINDS[k].urgent);
+      const at = defer ? g.at + MERGE_WINDOW_MS + MIN : e.t;
+      groups.push({ at, first: at, kinds: [...kinds], src });
     }
   }
   return groups.map((g) => {
