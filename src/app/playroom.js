@@ -1,15 +1,15 @@
 // 놀이방(2026-10-09 사용자 요청 "방이 더 있으면, 친구들과 놀 수 있는 방, 친구 초대", 디자인·아동 심리 자문 2·3단계).
 // "함께 사는 건 여럿, 돌보는 건 하나": 돌봄은 내 방에서만. 놀이방엔 마을 친구(시간 멈춘 손님)와 놀러 오기 코드로 온 손님이 놀러 온다.
 // 손님은 쓰다듬기만, 숫자는 안 바뀜. 지금 친구와 '같이 놀기'는 하루 한 번 기분 +10(돌봄이 필요하면 안 됨).
-import { memberCanvas } from "../render/screen.js?v=bcd1d7c-1792306867";
-import { drawPlay } from "../render/deco.js?v=bcd1d7c-1792306867";
-import { lookOf } from "../render/creature.js?v=bcd1d7c-1792306867";
-import { currentKey } from "./collection.js?v=bcd1d7c-1792306867";
-import { villageOf, careBlock } from "../core/village.js?v=bcd1d7c-1792306867";
-import { visitCode, addVisitor, pruneVisitors, readVisit, showVisit } from "../core/visit.js?v=bcd1d7c-1792306867";
-import { josa } from "../core/josa.js?v=bcd1d7c-1792306867";
-import { planShow, poseAt, toyOpts, actAt, ACT_KO, SPOT, K, homeOf } from "./playshow.js?v=bcd1d7c-1792306867";
-import { createPlayNet } from "./playnet.js?v=bcd1d7c-1792306867"; // 두 휴대폰 같이 놀기(던전 모험 같이 하기 연결을 옮겨 씀, 2026-10-09)
+import { memberCanvas } from "../render/screen.js?v=3431a6f-1792321568";
+import { drawPlay } from "../render/deco.js?v=3431a6f-1792321568";
+import { lookOf } from "../render/creature.js?v=3431a6f-1792321568";
+import { currentKey } from "./collection.js?v=3431a6f-1792321568";
+import { villageOf, careBlock } from "../core/village.js?v=3431a6f-1792321568";
+import { visitCode, addVisitor, pruneVisitors, readVisit, showVisit } from "../core/visit.js?v=3431a6f-1792321568";
+import { josa } from "../core/josa.js?v=3431a6f-1792321568";
+import { planShow, poseAt, toyOpts, actAt, ACT_KO, SPOT, K, homeOf } from "./playshow.js?v=3431a6f-1792321568";
+import { createPlayNet } from "./playnet.js?v=3431a6f-1792321568"; // 두 휴대폰 같이 놀기(던전 모험 같이 하기 연결을 옮겨 씀, 2026-10-09)
 
 const W = 256, H = 200, FLOOR = 96; // playshow.js PW·PH와 같음
 const dayKey = (ts) => new Date(ts).toDateString();
@@ -81,13 +81,16 @@ function drawScene(ctx, profile, list, t, hearts, show = null) {
   return pos;
 }
 
-// deps: { profile, persist, say, sfx, now(), onChange() }
+// deps: { profile, persist, say, sfx, now(), onChange(), container }
+// 2026-10-09 사용자 "놀이방에 그냥 들어가게": 창이 아니라 방처럼(방 이름 막대 ◀▶로 들어감). container(#stage) 위에 전체로 깔림. 돌아가면 closePlayroom()
+export function closePlayroom() { open?.close?.(); }
+export const playroomOpen = () => !!open;
 export function openPlayroom(deps) {
-  if (open) return;
+  if (open) return open;
   const { profile, persist, say, sfx } = deps;
   const now = deps.now();
-  const wrap = el("div", { class: "dexcard playroom" });
-  const inner = el("div", { class: "dexcard-in" });
+  const wrap = el("div", { class: "playview" });
+  const inner = el("div", { class: "pv-in" });
   const cv = el("canvas", { width: W, height: H, class: "pr-canvas" });
   const ctx = cv.getContext("2d");
   const line = el("p", { class: "small pr-line", text: "" });
@@ -98,8 +101,7 @@ export function openPlayroom(deps) {
   let list = castAll(now), pos = [];
   const me = profile.pet && !profile.pet.ended && profile.pet.stage !== "egg" ? profile.pet : null;
 
-  const close = () => { try { pn?.leave(); } catch { /* 무시 */ } cancelAnimationFrame(open?.raf); wrap.remove(); open = null; deps.onChange?.(); };
-  const x = el("button", { class: "x", text: "✕", "aria-label": "닫기", onclick: close });
+  const close = () => { if (!open) return; try { pn?.leave(); } catch { /* 무시 */ } cancelAnimationFrame(open.raf); wrap.remove(); open = null; deps.onChange?.(); };
   const desc = list.length > 1 ? `친구 ${list.length - (me ? 1 : 0)}명이 놀러 왔어요. 친구를 누르면 쓰다듬어요.` : "친구 마을 친구나 놀러 오기 코드로 온 친구가 여기서 놀아요.";
   line.textContent = desc;
   cv.onclick = (ev) => {
@@ -186,8 +188,11 @@ export function openPlayroom(deps) {
     el("p", { class: "fine", text: "주고받는 건 친구 겉모습뿐이에요(이름·글·채팅 없음). 모르는 사람에게는 방 번호를 알려 주지 마세요." }));
   const eq = profile.econ?.equipped || {};
   const hint = !eq.playL && !eq.playM && !eq.playR ? el("p", { class: "fine", text: "상점 → 놀이방 탭에서 미끄럼틀·볼풀·그네 같은 놀이 기구를 놓을 수 있어요." }) : null;
-  inner.append(...[x, el("h3", { text: "놀이방" }), cv, line, playBtn, hint, netBox, codeBox].filter(Boolean)); // hint가 없으면 "null" 글자가 붙던 것 막기
-  wrap.append(inner); document.body.append(wrap);
+  // 친구 부르기(두 휴대폰·놀러 오기 코드)는 접어 둔 칸에
+  const more = el("div", { class: "pv-more", hidden: "" }, ...[hint, netBox, codeBox].filter(Boolean));
+  const moreBtn = el("button", { class: "ghost small pv-morebtn", text: "친구 부르기 ▾", onclick: () => { more.hidden = !more.hidden; moreBtn.textContent = more.hidden ? "친구 부르기 ▾" : "접기 ▴"; } });
+  inner.append(cv, line, el("div", { class: "pv-row" }, playBtn, moreBtn), more);
+  wrap.append(inner); (deps.container || document.body).append(wrap);
   const loop = (t) => {
     if (show && t - show.start >= show.plan.total) finish();
     if (show && t < show.start) line.textContent = "곧 시작해요!";
@@ -195,5 +200,6 @@ export function openPlayroom(deps) {
     pos = drawScene(ctx, profile, list, t, hearts, show);
     if (open) open.raf = requestAnimationFrame(loop);
   };
-  open = { raf: requestAnimationFrame(loop) };
+  open = { raf: requestAnimationFrame(loop), close };
+  return open;
 }

@@ -105,6 +105,11 @@
     .roomcard { background: #fff; border-radius: 12px; padding: 8px; display: flex; flex-direction: column; gap: 3px; text-align: left; box-shadow: 0 2px 0 var(--line); }
     .roomcard.on { outline: 3px solid var(--accent, #e86a8a); } .roomcard.lock .roomthumb { filter: saturate(.55) opacity(.75); } .roomcard small { font-size: 11px; opacity: .8; line-height: 1.35; }
     .dexcard-in canvas.roomthumb { width: 100%; height: auto; margin: 0 0 4px; border-radius: 8px; }
+    .playview { position: absolute; inset: 0; z-index: 1; background: #fff6ec; overflow: auto; padding: 40px 10px 10px; }
+    .playview .pv-in { max-width: 520px; margin: 0 auto; text-align: center; }
+    .playview canvas.pr-canvas { width: 100%; height: auto; image-rendering: pixelated; border-radius: 12px; border: 2px solid var(--line); display: block; cursor: pointer; }
+    .playview .pv-row { display: flex; gap: 8px; align-items: center; } .playview .pv-row .big { flex: 1; margin: 0; } .playview .pv-morebtn { white-space: nowrap; padding: 10px 12px; }
+    .playview .pv-more { text-align: left; margin-top: 8px; } .playview .pr-line { min-height: 1.4em; margin: 6px 0; }
     .playroom .dexcard-in { max-width: 420px; max-height: 92vh; overflow: auto; } .playroom .dexcard-in canvas.pr-canvas { width: 100%; height: auto; image-rendering: pixelated; border-radius: 12px; border: 2px solid var(--line); display: block; margin: 6px 0; cursor: pointer; } .pr-line { min-height: 1.4em; }
     .giftbox { background: #fff; border-radius: 14px; padding: 10px 12px; margin: 10px 0; box-shadow: 0 2px 0 var(--line); } .giftbox summary { font-weight: 800; cursor: pointer; }
     .giftcode { flex: 1; min-width: 0; font: 700 17px ui-monospace, monospace; letter-spacing: 2px; text-transform: uppercase; padding: 8px 10px; border: 2px solid var(--line); border-radius: 10px; }
@@ -359,6 +364,6 @@
       </div>
     </div>
   </div>
-  <script type="module" src="src/main.js?v=bcd1d7c-1792306867"></script>
+  <script type="module" src="src/main.js?v=3431a6f-1792321568"></script>
 </body>
 </html>
