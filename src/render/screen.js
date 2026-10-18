@@ -1,11 +1,11 @@
 // 방 화면 그리기. 게임 규칙은 모르고 받은 상태만 그린다.
 // 캔버스는 "도트 해상도"로 그리고 CSS가 정수배로 키운다.
-import { PALETTE } from "./palette.js?v=6018b31-1791798364";
-import { SPRITES, drawSprite, spriteSize } from "./sprites.js?v=6018b31-1791798364";
-import { buildCreature, paintGrid, formKey, eggSpriteFor } from "./creature.js?v=6018b31-1791798364";
-import { drawFace, POOLS } from "./face.js?v=6018b31-1791798364";
-import { drawSky } from "./sky.js?v=6018b31-1791798364";
-import { drawWall, drawFloor, drawRug, drawCurtain, drawFurniture, drawLampGlow, drawSmall, HAT_SPRITE, FURN_HALF } from "./deco.js?v=6018b31-1791798364";
+import { PALETTE } from "./palette.js?v=9d75d6b-1792288297";
+import { SPRITES, drawSprite, spriteSize } from "./sprites.js?v=9d75d6b-1792288297";
+import { buildCreature, paintGrid, formKey, eggSpriteFor } from "./creature.js?v=9d75d6b-1792288297";
+import { drawFace, POOLS } from "./face.js?v=9d75d6b-1792288297";
+import { drawSky } from "./sky.js?v=9d75d6b-1792288297";
+import { drawWall, drawFloor, drawRug, drawCurtain, drawFurniture, drawLampGlow, drawSmall, HAT_SPRITE, FURN_HALF } from "./deco.js?v=9d75d6b-1792288297";
 
 // 방 배치(그리기와 동작이 같은 좌표를 쓰게 한 곳에서 계산)
 export function roomLayout(w, h, deco = {}) {
@@ -23,8 +23,8 @@ export function roomLayout(w, h, deco = {}) {
   };
   return { floorY, cx: Math.round(w / 2), rugY, baseY: rugY + 4, furnBase, furnPos, smallPos };
 }
-import { WALK_STOPS as WALK_STOPS_REF, walkDist as walkDistRef } from "./anim.js?v=6018b31-1791798364";
-import { drawCourseBg, drawCourseThing, isSplash } from "./walk-courses.js?v=6018b31-1791798364";
+import { WALK_STOPS as WALK_STOPS_REF, walkDist as walkDistRef } from "./anim.js?v=9d75d6b-1792288297";
+import { drawCourseBg, drawCourseThing, isSplash } from "./walk-courses.js?v=9d75d6b-1792288297";
 const clamp01 = (x) => Math.max(0, Math.min(1, x));
 
 const FLOOR = "#f5b98c";
@@ -75,7 +75,6 @@ export function drawRoom(ctx, { w, h, now, scene, f, wall = Date.now(), loc = { 
   const sc = scene || { stage: "egg" };
   const fr = f || { pose: { dx: 0, dy: 0, sx: 1, sy: 1, eyes: null, mouth: null, facing: 1 }, props: [], texts: [], fx: [], darkness: sc.lightOn === false ? 0.62 : sc.asleep ? 0.18 : 0, flash: 0 };
   const baseY = rugY + 4;
-  const poopRects = drawPoops(ctx, sc.poopSlots || [], { cx, rugY, w, pop: fr.poopPop || 0 });
   // 원근(2026-10-09 사용자: "가구를 키우지 말고 상호작용할 때 펫 크기를 줄여, 뒤로 갈 때 작아져도 되잖아"):
   // pose.k(1 앞 → 0.5 뒤)만큼 발밑을 기준으로 줄여 그린다. 0.5면 도트 한 칸이 정확히 1px라 선명
   const kk = fr.pose.k || 1;
@@ -101,6 +100,8 @@ export function drawRoom(ctx, { w, h, now, scene, f, wall = Date.now(), loc = { 
   if (fr.onSofa && deco.furnR === "sofa") drawFurniture(ctx, "sofa", furnPos.furnR, furnBase, { front: true }); // 소파에 앉은 모습: 좌석 앞면·팔걸이를 펫 앞에
   if (fr.inTub && deco.furnR) drawFurniture(ctx, deco.furnR, furnPos.furnR, furnBase, { now }); // 욕실: 욕조를 펫 앞에 다시 그려 몸이 욕조 안에
   if (fr.inBed && (deco.furnR === "bed_wood" || deco.furnR === "bed_star")) drawFurniture(ctx, deco.furnR, furnPos.furnR, furnBase, { front: true, now }); // 침대에서 잘 때: 이불 앞부분·발판을 펫 앞에
+  // 똥은 펫 앞에(2026-10-09: 울거나 아파서 펫이 멈춰 서면 그 자리 똥이 몸에 가려 안 보였고, 껐다 켜야 펫이 가운데로 돌아가 보였음). 똥은 러그 앞줄이라 앞에 그리는 게 맞음
+  const poopRects = drawPoops(ctx, sc.poopSlots || [], { cx, rugY, w, pop: fr.poopPop || 0 });
   const px = cx + Math.round(fr.pose.dx);
   for (const pr of fr.props) {
     const sp = SPRITES[pr.sprite]; if (!sp || pr.alpha <= 0) continue;
