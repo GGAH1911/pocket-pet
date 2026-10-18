@@ -1,4 +1,4 @@
-import { WALK_REACT } from "./walk-courses.js?v=a156b83-1792289797";
+import { WALK_REACT } from "./walk-courses.js?v=524913c-1792306756";
 // 애니메이션 엔진. 게임 규칙과는 무관하게 "지금 화면에 어떻게 보일지"만 계산한다.
 // - 한 번 재생(행동 반응, 부화, 진화): play(type, data)
 // - 평소 움직임(깜빡임, 걸어 다니기, 숨쉬기)과 상태 표현(눈물, 어지러움, Zzz)은 매 프레임 계산
@@ -83,8 +83,10 @@ export function frame(a, now, scene, { roam = 20 } = {}) {
   // ---- 평소 움직임 ----
   // 숨쉬기
   const breath = Math.sin(now / 420);
-  p.sy = 1 + breath * 0.025; p.sx = 1 - breath * 0.02;
-  if (scene.napping && !scene.asleep) { p.sy = 1 + Math.sin(now / 900) * 0.04; p.sx = 1 - Math.sin(now / 900) * 0.03; }
+  if (scene.deco && scene.deco.hat) p.dy -= breath > 0.4 ? 1 : 0; // 모자를 썼으면 늘이지 않고 1px 위아래(뿔이 모자 옆으로 들락날락하지 않게)
+  else { p.sy = 1 + breath * 0.025; p.sx = 1 - breath * 0.02; }
+  // 낮잠: 몸을 늘였다 줄이면 무지개 용의 금빛 뿔이 왕관 옆으로 들락날락해 왕관이 좌우로 움직이는 것처럼 보였음(2026-10-09) → 몸 전체를 1px 위아래로(모자도 같이)
+  if (scene.napping && !scene.asleep) { p.sy = 1; p.sx = 1; p.dy -= Math.sin(now / 900) > 0.3 ? 1 : 0; }
   if (scene.asleep) { p.sy = 1; p.sx = 1; } // 밤잠(이불 덮음): 몸이 늘었다 줄면 이불 윗선이 따라 움직여 꿈틀거려 보임(사용자 지적 2026-10-09) → 가만히, 숨은 Zzz로
   // 깜빡임
   if (now > a.blink.nextAt) { a.blink.until = now + 130; a.blink.nextAt = now + 2200 + hash(now) * 3000; }
