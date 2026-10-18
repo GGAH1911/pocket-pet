@@ -1,10 +1,10 @@
 // 도감: 본 적 있는 모습 표시, 지금까지 키운 펫 기록, 초상화 그리기
-import { FORMS, buildCreature, paintGrid, formKey, lookOf, SEA_EGG, FOREST_EGG } from "../render/creature.js?v=3431a6f-1792321568";
-import { drawFace, POOLS } from "../render/face.js?v=3431a6f-1792321568";
-import { SPRITES, drawSprite } from "../render/sprites.js?v=3431a6f-1792321568";
-import { BRANCH, SECRET } from "../core/rules.js?v=3431a6f-1792321568";
-import { EGGS, foundCount } from "./eggs.js?v=3431a6f-1792321568";
-import { canRevive } from "../core/revive.js?v=3431a6f-1792321568";
+import { FORMS, buildCreature, paintGrid, formKey, lookOf, SEA_EGG, FOREST_EGG } from "../render/creature.js?v=b227817-1792321808";
+import { drawFace, POOLS } from "../render/face.js?v=b227817-1792321808";
+import { SPRITES, drawSprite } from "../render/sprites.js?v=b227817-1792321808";
+import { BRANCH, SECRET } from "../core/rules.js?v=b227817-1792321808";
+import { EGGS, foundCount } from "./eggs.js?v=b227817-1792321808";
+import { canRevive } from "../core/revive.js?v=b227817-1792321808";
 
 export const THEME_KO = { animal: "동물", fantasy: "상상 속 생물", sea: "바닷가 친구들", forest: "숲속 친구들" };
 export const HOW_KO = { journey: "여행을 떠남", runaway: "서운해서 할머니 댁에 감", star: "별이 됨", retired: "친구 마을로 이사" };
