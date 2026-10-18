@@ -10,9 +10,9 @@
 //   pn.leave();
 //
 // 메시지(작게): me {t:"me",k,s,c,m,o} / 시계 맞추기 {t:"tq",a} → {t:"ts",a,h} / 친구가 시작 요청 {t:"want",r} / 시작 {t:"go",at,r,e:[L,M,R]}
-import { NetSession, NET_CODE_LEN } from "./net.js?v=7cb4c0e-1792323451";
-import { VISIT_KEYS } from "../core/visit.js?v=7cb4c0e-1792323451";
-import { ITEM } from "../core/catalog.js?v=7cb4c0e-1792323451";
+import { NetSession, NET_CODE_LEN } from "./net.js?v=7fbf949-1792323726";
+import { VISIT_KEYS } from "../core/visit.js?v=7fbf949-1792323726";
+import { ITEM } from "../core/catalog.js?v=7fbf949-1792323726";
 
 export const SHOW_LEAD_MS = 1200;          // 누르고 이만큼 뒤에 시작
 const SPOTS = ["p", "g", "b", "y", "v", "r", "Y"];
