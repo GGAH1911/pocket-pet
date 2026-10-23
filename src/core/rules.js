@@ -62,6 +62,29 @@ export const ENDING = {
 // 숨은 어른: 평생 돌봄 실수 0 + 쓰다듬기 30번 이상
 export const SECRET = { maxMistakes: 0, minPats: 30 };
 
+// 2026-10-23 테마별 어른 갈림: 청소년 좋음 → A/B 비교와 숨은 어른(S) 조건이 테마마다 다르다.
+// 청소년이 될 때 pet.growV = GROW_V 표시를 남기고, 표시 없는 친구(업데이트 전)는 옛 규칙(동물과 같음)을 쓴다.
+// a/b: 단계 카운터(pet.counts, 청소년 동안만 셈) 비교 — a ≥ b 이면 A, 아니면 B
+// secret: 평생 누적 카운터(pet.<이름>)가 min 이상(+ 돌봄 실수 SECRET.maxMistakes 이하)이면 S
+export const GROW_V = 2;
+export const WASH_COUNT_BELOW = 80; // 깨끗함이 이 값 이하일 때 씻긴 것만 센다(연타로 횟수 채우기 방지)
+export const THEME_GROW = {
+  animal: { a: "plays", b: "snacks", secret: { key: "pats", min: SECRET.minPats } },
+  fantasy: { a: "plays", b: "naps", secret: { key: "darkNights", min: 3 } }, // 잠들기 전에 불을 미리 꺼 둔 밤
+  sea: { a: "washes", b: "snacks", secret: { key: "washes", min: 15 } },
+  forest: { a: "walks", b: "snacks", secret: { key: "walks", min: 5 } },
+};
+export const GROW_LEGACY = THEME_GROW.animal;
+export const growRule = (pet) => (pet.growV >= GROW_V ? THEME_GROW[pet.theme] || GROW_LEGACY : GROW_LEGACY);
+export const GROW_LABEL = { plays: "놀이", snacks: "간식", naps: "낮잠", washes: "씻기", walks: "산책" };
+// 알 고르기·도감에 보여 줄 "좋아하는 것" 한 줄(숨은 조건은 드러내지 않음)
+export const THEME_LIKES = {
+  animal: "놀아 주면 씩씩하게 커요",
+  fantasy: "많이 놀면 무지개 용, 낮잠을 많이 자면 통통 용",
+  sea: "물놀이(씻기)를 좋아해요",
+  forest: "산책을 좋아해요",
+};
+
 export const BRANCH = {
   childGoodMaxMistakes: 1, // 어린이 기간 실수 0~1 → 청소년 좋음
   teenFreeMaxMistakes: 3, // 청소년 보통에서 실수 0~3 → C, 4+ → D

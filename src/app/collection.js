@@ -1,10 +1,16 @@
 // 도감: 본 적 있는 모습 표시, 지금까지 키운 펫 기록, 초상화 그리기
-import { FORMS, buildCreature, paintGrid, formKey, lookOf, SEA_EGG, FOREST_EGG } from "../render/creature.js?v=7fbf949-1792323726";
-import { drawFace, POOLS } from "../render/face.js?v=7fbf949-1792323726";
-import { SPRITES, drawSprite } from "../render/sprites.js?v=7fbf949-1792323726";
-import { BRANCH, SECRET } from "../core/rules.js?v=7fbf949-1792323726";
-import { EGGS, foundCount } from "./eggs.js?v=7fbf949-1792323726";
-import { canRevive } from "../core/revive.js?v=7fbf949-1792323726";
+import { FORMS, buildCreature, paintGrid, formKey, lookOf, SEA_EGG, FOREST_EGG } from "../render/creature.js?v=a964465-1792756245";
+import { drawFace, POOLS } from "../render/face.js?v=a964465-1792756245";
+import { SPRITES, drawSprite } from "../render/sprites.js?v=a964465-1792756245";
+import { BRANCH, SECRET, THEME_GROW, THEME_LIKES, GROW_LABEL, growRule } from "../core/rules.js?v=a964465-1792756245";
+
+// 숨은 어른 조건 문장(친구 4종을 다 만난 뒤에만 도감에 열림)
+const SECRET_TEXT = { animal: `쓰다듬기(펫을 톡) ${THEME_GROW.animal.secret.min}번`, fantasy: `잠들기 전에 불을 미리 꺼 둔 밤 ${THEME_GROW.fantasy.secret.min}번`, sea: `씻기 ${THEME_GROW.sea.secret.min}번`, forest: `산책 ${THEME_GROW.forest.secret.min}번` };
+const SECRET_SHORT = { animal: "쓰다듬기", fantasy: "불 미리 끈 밤", sea: "씻기", forest: "산책" };
+const ruleFor = (pet) => (pet.stage === "teen" || pet.stage === "adult" ? growRule(pet) : THEME_GROW[pet.theme]);
+export const likesOf = (theme) => THEME_LIKES[theme] || "";
+import { EGGS, foundCount } from "./eggs.js?v=a964465-1792756245";
+import { canRevive } from "../core/revive.js?v=a964465-1792756245";
 
 export const THEME_KO = { animal: "동물", fantasy: "상상 속 생물", sea: "바닷가 친구들", forest: "숲속 친구들" };
 export const HOW_KO = { journey: "여행을 떠남", runaway: "서운해서 할머니 댁에 감", star: "별이 됨", retired: "친구 마을로 이사" };
@@ -83,12 +89,14 @@ export function hintFor(key, profile) {
   if (stage === "teen") return br === "good"
     ? `어린이 시절에 돌봄 실수를 ${BRANCH.childGoodMaxMistakes}번 이하로 꼼꼼히 챙겨 주면`
     : `어린이 시절에 조금 느슨하게(돌봄 실수 ${BRANCH.childGoodMaxMistakes + 1}번 이상) 키우면`;
-  if (br === "A") return `${teenGood} 시절에 간식보다 놀이를 더 많이(같아도 돼요) 해 주면`;
-  if (br === "B") return `${teenGood} 시절에 놀이보다 간식을 더 많이 주면`;
+  const g = THEME_GROW[theme], la = GROW_LABEL[g.a], lb = GROW_LABEL[g.b];
+  const obj = (w) => w + ("놀이씻기".includes(w) ? "를" : "을"); // 받침 없음: 놀이·씻기 / 있음: 간식·낮잠·산책
+  if (br === "A") return `${teenGood} 시절에 ${lb}보다 ${obj(la)} 더 많이(같아도 돼요) 해 주면`;
+  if (br === "B") return `${teenGood} 시절에 ${la}보다 ${obj(lb)} 더 많이 해 주면`;
   if (br === "C") return `${teenNormal} 시절에 돌봄 실수를 ${BRANCH.teenFreeMaxMistakes}번 이하로 지키면`;
   if (br === "D") return `${teenNormal} 시절에 돌봄 실수가 ${BRANCH.teenFreeMaxMistakes + 1}번 이상이면(장난꾸러기!)`;
   if (br === "S") {
-    if (themeABCD(profile, theme)) return `태어나서부터 돌봄 실수 ${SECRET.maxMistakes}번 + 쓰다듬기(펫을 톡) ${SECRET.minPats}번 이상이면, 청소년이 어느 쪽이든 나타나요`;
+    if (themeABCD(profile, theme)) return `태어나서부터 돌봄 실수 ${SECRET.maxMistakes}번 + ${SECRET_TEXT[theme]} 이상이면, 청소년이 어느 쪽이든 나타나요`;
     if (themeAdults(profile, theme) >= 1) return "정을 듬뿍 준 친구에게만 나타난대요. 이 테마 어른 4종을 다 만나면 정확한 조건이 열려요";
     return "아직 비밀이에요";
   }
@@ -100,19 +108,19 @@ export function outlook(pet, profile) {
   if (!pet || pet.ended) return null;
   const th = pet.theme, nm = (k) => FORMS[k]?.name || "";
   const tag = (k) => (profile.seen[k] ? "" : " · 아직 못 만난 친구예요!");
-  const m = pet.mistakes.stage, c = pet.counts || { plays: 0, snacks: 0 };
+  const m = pet.mistakes.stage, c = pet.counts || { plays: 0, snacks: 0 }, rule = ruleFor(pet), sk = rule.secret.key, smin = rule.secret.min;
   const secretOpen = themeABCD(profile, th);
   const secretOk = pet.mistakes.total <= SECRET.maxMistakes;
-  const secretLine = secretOpen && secretOk ? ` (숨은 친구 조건: 실수 0 유지 중, 쓰다듬기 ${Math.min(pet.pats || 0, SECRET.minPats)}/${SECRET.minPats})` : "";
+  const secretLine = secretOpen && secretOk ? ` (숨은 친구 조건: 실수 0 유지 중, ${SECRET_SHORT[pet.theme]} ${Math.min(pet[sk] || 0, smin)}/${smin})` : "";
   if (pet.stage === "egg" || pet.stage === "baby") return { text: `${nm(`${th}.child`) || "어린이"}가 되면 갈림길이 시작돼요`, target: null };
   if (pet.stage === "child") {
     const k = m <= BRANCH.childGoodMaxMistakes ? `${th}.teen.good` : `${th}.teen.normal`;
     return { text: `어린이 · 이번 시기 돌봄 실수 ${m}번 → 이대로면 ${nm(k)}${tag(k)}${secretLine}`, target: k };
   }
   if (pet.stage === "teen") {
-    if (secretOpen && secretOk && (pet.pats || 0) >= SECRET.minPats) { const k = `${th}.adult.S`; return { text: `조건을 다 채웠어요 → 이대로면 ${nm(k)}${tag(k)}`, target: k }; }
-    const k = pet.branch === "good" ? `${th}.adult.${c.plays >= c.snacks ? "A" : "B"}` : `${th}.adult.${m <= BRANCH.teenFreeMaxMistakes ? "C" : "D"}`;
-    const why = pet.branch === "good" ? `놀이 ${c.plays} · 간식 ${c.snacks}` : `이번 시기 돌봄 실수 ${m}번`;
+    if (secretOpen && secretOk && (pet[sk] || 0) >= smin) { const k = `${th}.adult.S`; return { text: `조건을 다 채웠어요 → 이대로면 ${nm(k)}${tag(k)}`, target: k }; }
+    const k = pet.branch === "good" ? `${th}.adult.${(c[rule.a] || 0) >= (c[rule.b] || 0) ? "A" : "B"}` : `${th}.adult.${m <= BRANCH.teenFreeMaxMistakes ? "C" : "D"}`;
+    const why = pet.branch === "good" ? `${GROW_LABEL[rule.a]} ${c[rule.a] || 0} · ${GROW_LABEL[rule.b]} ${c[rule.b] || 0}` : `이번 시기 돌봄 실수 ${m}번`;
     return { text: `${nm(currentKey(pet))} · ${why} → 이대로면 ${nm(k)}${tag(k)}${secretLine}`, target: k };
   }
   return { text: `어른이 됐어요: ${nm(currentKey(pet))}`, target: currentKey(pet) };
@@ -217,6 +225,7 @@ export function renderCollection(box, profile, opts = {}) {
     const keys = formOrder(theme);
     const seenN = keys.filter((k) => profile.seen[k]).length;
     box.append(el("h3", { text: `${hasCrown(profile, theme) ? "👑 " : ""}${THEME_KO[theme]} ${seenN}/${keys.length}` }));
+    box.append(el("p", { class: "small dim likes", text: `♥ 좋아하는 것: ${likesOf(theme)}` }));
     const tree = el("div", { class: "tree" });
     const cell = (k, cls = "") => {
       const seen = !!profile.seen[k];

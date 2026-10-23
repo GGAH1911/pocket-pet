@@ -4,11 +4,11 @@
 // - 무슨 일이 생겼는지(events)를 돌려준다 → "자리를 비운 동안" 요약과 알림 예측에 쓴다.
 import {
   SPEEDS, PER_HOUR_AWAKE, PER_HOUR_ASLEEP, ASLEEP_FLOOR, MOOD_PER_POOP_PER_HOUR, HEALTH_PER_HOUR, BUSY_FACTOR,
-  POOP, CLEAN, SICK, SNACK_BINGE, NAP_MIN, NAP_ENERGY_PER_HOUR, NAP_LIGHT_BELOW, ACTIONS, STAGE_MIN, BRANCH, MISTAKE, CALL, DEFAULT_SETTINGS, ENDING, SECRET,
-} from "./rules.js?v=7fbf949-1792323726";
-import { clampStat } from "./state.js?v=7fbf949-1792323726";
-import { nextRandom, randomInt } from "./rng.js?v=7fbf949-1792323726";
-import { isSleepTime, isBusyTime } from "./daytime.js?v=7fbf949-1792323726";
+  POOP, CLEAN, SICK, SNACK_BINGE, NAP_MIN, NAP_ENERGY_PER_HOUR, NAP_LIGHT_BELOW, ACTIONS, STAGE_MIN, BRANCH, MISTAKE, CALL, DEFAULT_SETTINGS, ENDING, SECRET, GROW_V, WASH_COUNT_BELOW, growRule,
+} from "./rules.js?v=a964465-1792756245";
+import { clampStat } from "./state.js?v=a964465-1792756245";
+import { nextRandom, randomInt } from "./rng.js?v=a964465-1792756245";
+import { isSleepTime, isBusyTime } from "./daytime.js?v=a964465-1792756245";
 
 const MINUTE = 60000;
 const NEXT_STAGE = { egg: "baby", baby: "child", child: "teen", teen: "adult" };
@@ -32,16 +32,18 @@ function growUp(pet, ts, events) {
   if (from === "child") {
     branch = pet.mistakes.stage <= BRANCH.childGoodMaxMistakes ? "good" : "normal";
   } else if (from === "teen") {
-    if (pet.mistakes.total <= SECRET.maxMistakes && (pet.pats || 0) >= SECRET.minPats) branch = "S"; // 숨은 어른
-    else if (pet.branch === "good") branch = pet.counts.plays >= pet.counts.snacks ? "A" : "B";
+    const rule = growRule(pet); // 청소년이 된 시점의 규칙(표시 없으면 옛 규칙)
+    if (pet.mistakes.total <= SECRET.maxMistakes && (pet[rule.secret.key] || 0) >= rule.secret.min) branch = "S"; // 숨은 어른
+    else if (pet.branch === "good") branch = (pet.counts[rule.a] || 0) >= (pet.counts[rule.b] || 0) ? "A" : "B";
     else branch = pet.mistakes.stage <= BRANCH.teenFreeMaxMistakes ? "C" : "D";
     pet.lifespan = randomInt(pet, ENDING.classicLifeMin[0], ENDING.classicLifeMin[1]);
   }
+  if (from === "child") pet.growV = GROW_V; // 이 친구는 새 규칙으로 큰다
   pet.stage = to;
   pet.branch = branch;
   pet.stageMin -= limit;
   pet.mistakes.stage = 0;
-  pet.counts = { plays: 0, snacks: 0 };
+  pet.counts = { plays: 0, snacks: 0, naps: 0, washes: 0, walks: 0 };
   events.push({ t: ts, type: from === "egg" ? "hatch" : "evolve", stage: to, branch });
 }
 
@@ -110,6 +112,7 @@ export function tickMinute(pet, ts, settings = DEFAULT_SETTINGS, events = []) {
     pet.sleptAt = ts;
     pet.napLeft = 0; pet.napManual = false;
     pet.lightMistakeTonight = false;
+    if (!pet.lightOn) pet.darkNights = (pet.darkNights || 0) + 1; // 잠들기 전에 불을 미리 꺼 둔 밤
     events.push({ t: ts, type: "sleep", lightOn: pet.lightOn });
   } else if (!sleepNow && pet.asleep) {
     pet.asleep = false;
@@ -144,7 +147,7 @@ export function tickMinute(pet, ts, settings = DEFAULT_SETTINGS, events = []) {
     } else {
       s.mood += ((PER_HOUR_AWAKE.mood + MOOD_PER_POOP_PER_HOUR * pet.poops) / 60) * f;
       s.energy += (PER_HOUR_AWAKE.energy / 60) * f;
-      if (s.energy <= 0) { pet.napLeft = NAP_MIN; events.push({ t: ts, type: "nap" }); }
+      if (s.energy <= 0) { pet.napLeft = NAP_MIN; countNap(pet); events.push({ t: ts, type: "nap" }); }
     }
 
     // 똥
@@ -274,6 +277,8 @@ export function play(pet, now, settings = DEFAULT_SETTINGS, { win = true } = {})
   return r;
 }
 
+function countNap(pet) { pet.counts.naps = (pet.counts.naps || 0) + 1; }
+
 // 산책: 기분 +30, 기운 -10, 배부름 -5, 깨끗함 -5(비·눈 오는 날 -15), 몸무게 -1. 놀아준 횟수로 센다.
 export function walk(pet, now, settings = DEFAULT_SETTINGS, { wet = false } = {}) {
   const r = begin(pet, now, settings);
@@ -286,6 +291,8 @@ export function walk(pet, now, settings = DEFAULT_SETTINGS, { wet = false } = {}
   pet.stats.clean -= wet ? CLEAN.walkWetCost : CLEAN.walkCost;
   pet.weight = Math.max(5, pet.weight + a.weight);
   pet.counts.plays++;
+  pet.counts.walks = (pet.counts.walks || 0) + 1;
+  pet.walks = (pet.walks || 0) + 1;
   clampAll(pet);
   return r;
 }
@@ -294,6 +301,7 @@ export function walk(pet, now, settings = DEFAULT_SETTINGS, { wet = false } = {}
 export function wash(pet, now, settings = DEFAULT_SETTINGS) {
   const r = begin(pet, now, settings);
   if (!r.ok) return r;
+  if (pet.stats.clean <= WASH_COUNT_BELOW) { pet.counts.washes = (pet.counts.washes || 0) + 1; pet.washes = (pet.washes || 0) + 1; }
   pet.stats.clean = 100;
   return r;
 }
@@ -317,7 +325,7 @@ export function toggleLight(pet, now, settings = DEFAULT_SETTINGS) {
   let napped = false, woke = false, notSleepy = false;
   if (!pet.asleep) {
     if (!pet.lightOn && pet.napLeft <= 0) {
-      if (pet.stats.energy < NAP_LIGHT_BELOW) { pet.napLeft = NAP_MIN; pet.napManual = true; napped = true; events.push({ t: now, type: "nap", manual: true }); }
+      if (pet.stats.energy < NAP_LIGHT_BELOW) { pet.napLeft = NAP_MIN; pet.napManual = true; napped = true; countNap(pet); events.push({ t: now, type: "nap", manual: true }); }
       else notSleepy = true;
     } else if (pet.lightOn && pet.napLeft > 0) { pet.napLeft = 0; pet.napManual = false; woke = true; events.push({ t: now, type: "nap-end", woke: true }); }
   }

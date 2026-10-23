@@ -1,5 +1,5 @@
 // 펫 상태의 단일 정의. 화면·저장 코드는 이 모양만 믿어요.
-import { SPEEDS, POOP } from "./rules.js?v=7fbf949-1792323726";
+import { SPEEDS, POOP } from "./rules.js?v=a964465-1792756245";
 
 export const SAVE_VERSION = 3;
 
@@ -45,9 +45,11 @@ export function createPet({ now, seed = 1, theme = "animal", name = "", speed = 
     timers: { hungerZero: 0, moodZero: 0, sick: 0 }, // 깨어 있는 게임 분
     flags: { hungerMistake: false, moodMistake: false, sickMistake: false },
     mistakes: { total: 0, stage: 0 },
-    counts: { plays: 0, snacks: 0 }, // 이번 단계
+    counts: { plays: 0, snacks: 0, naps: 0, washes: 0, walks: 0 }, // 이번 단계
     snackTimes: [], // 최근 간식 시각(게임 분)
     pats: 0, // 평생 쓰다듬은 횟수(숨은 어른 조건)
+    darkNights: 0, washes: 0, walks: 0, // 평생: 불 미리 꺼 둔 밤 / 씻긴 횟수 / 산책 횟수(테마별 숨은 어른 조건)
+    growV: null, // 청소년이 될 때 2로 표시 → 테마별 어른 규칙. 없으면 옛 규칙
     zeroHealthMin: 0, // 건강 0인 채로 지난 게임 분
     lifespan: null, // 원작 방식 어른 수명(게임 분), 어른이 될 때 정해짐
     endSwitch: null, // { mode, stage, at } 끝 방식을 바꾼 시점

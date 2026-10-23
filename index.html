@@ -162,7 +162,7 @@
     #start h1 { font-size: 22px; margin: 0 0 6px; } #start p { margin: 0 0 18px; opacity: .8; }
     .choices { display: grid; gap: 12px; }
     .choice { border: 0; border-radius: 18px; background: var(--cream); box-shadow: 0 3px 0 var(--line); padding: 16px; text-align: left; }
-    .choice b { display: block; font-size: 17px; margin-bottom: 2px; } .choice span { font-size: 13px; opacity: .75; }
+    .choice b { display: block; font-size: 17px; margin-bottom: 2px; } .choice span { font-size: 13px; opacity: .75; } .choice .likes { display: block; margin-top: 3px; color: #c2527a; opacity: 1; }
     .choice.locked { background: #f3ebe4; } .choice.locked b, .choice.locked span { opacity: .7; }
     .choice .lockline { display: block; margin-top: 6px; font-style: normal; font-size: 13px; font-weight: 800; color: var(--deep); }
     #name-input { width: 100%; font-size: 18px; text-align: center; margin-bottom: 8px; }
@@ -336,10 +336,10 @@
         <h1>어떤 알을 키울까요?</h1>
         <p>알에 따라 자라는 친구들이 달라요</p>
         <div class="choices">
-          <button class="choice" data-theme="animal"><b>점박이 알 · 동물</b><span>털뭉치 → 강아지·고양이 → 시바, 코기, 여우 고양이…</span></button>
-          <button class="choice" data-theme="fantasy"><b>무지개 알 · 상상 속 생물</b><span>말랑이 → 아기 용·꼬마 구름 → 무지개 용, 구름 고래…</span><em class="lockline" hidden></em></button>
-          <button class="choice" data-theme="sea"><b>바닷가 알 · 바닷가 친구들</b><span>솜방울 → 물범·펭귄 → 돌고래, 통통 물범, 멋쟁이 펭귄…</span><em class="lockline" hidden></em></button>
-          <button class="choice" data-theme="forest"><b>숲속 알 · 숲속 친구들</b><span>도토리 털뭉치 → 청설모·고슴도치 → 날다람쥐, 꽃 고슴도치…</span><em class="lockline" hidden></em></button>
+          <button class="choice" data-theme="animal"><b>점박이 알 · 동물</b><span>털뭉치 → 강아지·고양이 → 시바, 코기, 여우 고양이…</span><span class="likes">♥ 놀아 주면 씩씩하게 커요</span></button>
+          <button class="choice" data-theme="fantasy"><b>무지개 알 · 상상 속 생물</b><span>말랑이 → 아기 용·꼬마 구름 → 무지개 용, 구름 고래…</span><span class="likes">♥ 많이 놀면 무지개 용, 낮잠을 많이 자면 통통 용</span><em class="lockline" hidden></em></button>
+          <button class="choice" data-theme="sea"><b>바닷가 알 · 바닷가 친구들</b><span>솜방울 → 물범·펭귄 → 돌고래, 통통 물범, 멋쟁이 펭귄…</span><span class="likes">♥ 물놀이(씻기)를 좋아해요</span><em class="lockline" hidden></em></button>
+          <button class="choice" data-theme="forest"><b>숲속 알 · 숲속 친구들</b><span>도토리 털뭉치 → 청설모·고슴도치 → 날다람쥐, 꽃 고슴도치…</span><span class="likes">♥ 산책을 좋아해요</span><em class="lockline" hidden></em></button>
         </div>
       </div>
       <div class="step" data-step="egg" hidden>
@@ -364,6 +364,6 @@
       </div>
     </div>
   </div>
-  <script type="module" src="src/main.js?v=7fbf949-1792323726"></script>
+  <script type="module" src="src/main.js?v=a964465-1792756245"></script>
 </body>
 </html>
