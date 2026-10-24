@@ -21,6 +21,9 @@
     header { display: flex; align-items: center; gap: 6px; padding: calc(var(--safe-area-inset-top, env(safe-area-inset-top, 0px)) + 10px) 16px 8px; }
     header .name { font-weight: 800; font-size: 18px; }
     header .sub { font-size: 12px; opacity: .7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } /* 좁은 폰에서 여러 줄로 꺾이지 않게 */
+    header .subrow { display: flex; align-items: center; gap: 6px; min-width: 0; } header .subrow .sub { flex: 0 1 auto; min-width: 0; }
+    .big-n { font-size: 20px; font-weight: 800; margin: 6px 0; }
+    .mbadge { border: 0; background: #fff; border-radius: 999px; padding: 1px 8px; font-size: 11px; font-weight: 700; color: #8a5a44; box-shadow: 0 1px 0 var(--line); white-space: nowrap; flex: none; min-height: 20px; }
     header .who { flex: 1; min-width: 0; } header .name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .coin { border: 0; display: flex; align-items: center; gap: 4px; background: #fff; border-radius: 999px; padding: 4px 9px 4px 5px; min-height: 36px; /* 터치 크기(전수 조사 C1) */ box-shadow: 0 2px 0 var(--line); font-weight: 800; font-size: 13px; font-variant-numeric: tabular-nums; transition: transform .15s; }
     .coin canvas { width: 16px; height: 16px; image-rendering: pixelated; }
@@ -228,7 +231,7 @@
     <header>
       <div class="who">
         <div class="name" id="petname">알모찌</div>
-        <div class="sub" id="sub"></div>
+        <div class="subrow"><div class="sub" id="sub"></div><button class="mbadge" id="mbadge" type="button" aria-label="돌봄 실수 보기" hidden></button></div>
       </div>
       <button class="coin" id="coin-star" aria-label="별사탕 (상점 열기)"><canvas data-sprite="coinStar"></canvas><b id="n-star">0</b></button>
       <button class="coin" id="coin-gem" aria-label="하트 보석 (보석 사기)"><canvas data-sprite="coinGem"></canvas><b id="n-gem">0</b><span class="plus">+</span></button>
@@ -275,6 +278,11 @@
       <div class="shop-top"><b>꾸미기</b><span class="small dim">바꾸면 바로 저장돼요</span><span class="sp"></span><button class="x" data-close aria-label="닫기">✕</button></div>
       <div class="slots" id="deco-slots"></div>
       <div class="strip" id="deco-strip"></div>
+    </section>
+    <section class="sheet" data-sheet="mistakes" hidden>
+      <h2>돌봄 실수</h2>
+      <div id="mistakes-body"></div>
+      <button class="big ghost" id="mistakes-close">닫기</button>
     </section>
     <section class="sheet" data-sheet="help" hidden>
       <h2>도움말</h2>
@@ -364,6 +372,6 @@
       </div>
     </div>
   </div>
-  <script type="module" src="src/main.js?v=a964465-1792756245"></script>
+  <script type="module" src="src/main.js?v=63140c8-1792840001"></script>
 </body>
 </html>

@@ -1,8 +1,8 @@
 // 저장: 휴대폰 브라우저 저장소(localStorage). 직전 저장본을 백업으로 하나 더 둔다.
-import { DEFAULT_SETTINGS } from "../core/rules.js?v=a964465-1792756245";
-import { SAVE_VERSION, migratePet } from "../core/state.js?v=a964465-1792756245";
-import { newEcon, normalizeEcon, grant, equip } from "../core/economy.js?v=a964465-1792756245";
-import { ensureBasics, ITEM } from "../core/catalog.js?v=a964465-1792756245";
+import { DEFAULT_SETTINGS } from "../core/rules.js?v=63140c8-1792840001";
+import { SAVE_VERSION, migratePet } from "../core/state.js?v=63140c8-1792840001";
+import { newEcon, normalizeEcon, grant, equip } from "../core/economy.js?v=63140c8-1792840001";
+import { ensureBasics, ITEM } from "../core/catalog.js?v=63140c8-1792840001";
 
 const KEY = "pocket-pet:save";
 const BACKUP = "pocket-pet:save:backup";

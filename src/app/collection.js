@@ -1,16 +1,16 @@
 // 도감: 본 적 있는 모습 표시, 지금까지 키운 펫 기록, 초상화 그리기
-import { FORMS, buildCreature, paintGrid, formKey, lookOf, SEA_EGG, FOREST_EGG } from "../render/creature.js?v=a964465-1792756245";
-import { drawFace, POOLS } from "../render/face.js?v=a964465-1792756245";
-import { SPRITES, drawSprite } from "../render/sprites.js?v=a964465-1792756245";
-import { BRANCH, SECRET, THEME_GROW, THEME_LIKES, GROW_LABEL, growRule } from "../core/rules.js?v=a964465-1792756245";
+import { FORMS, buildCreature, paintGrid, formKey, lookOf, SEA_EGG, FOREST_EGG } from "../render/creature.js?v=63140c8-1792840001";
+import { drawFace, POOLS } from "../render/face.js?v=63140c8-1792840001";
+import { SPRITES, drawSprite } from "../render/sprites.js?v=63140c8-1792840001";
+import { BRANCH, SECRET, THEME_GROW, THEME_LIKES, GROW_LABEL, growRule } from "../core/rules.js?v=63140c8-1792840001";
 
 // 숨은 어른 조건 문장(친구 4종을 다 만난 뒤에만 도감에 열림)
 const SECRET_TEXT = { animal: `쓰다듬기(펫을 톡) ${THEME_GROW.animal.secret.min}번`, fantasy: `잠들기 전에 불을 미리 꺼 둔 밤 ${THEME_GROW.fantasy.secret.min}번`, sea: `씻기 ${THEME_GROW.sea.secret.min}번`, forest: `산책 ${THEME_GROW.forest.secret.min}번` };
 const SECRET_SHORT = { animal: "쓰다듬기", fantasy: "불 미리 끈 밤", sea: "씻기", forest: "산책" };
 const ruleFor = (pet) => (pet.stage === "teen" || pet.stage === "adult" ? growRule(pet) : THEME_GROW[pet.theme]);
 export const likesOf = (theme) => THEME_LIKES[theme] || "";
-import { EGGS, foundCount } from "./eggs.js?v=a964465-1792756245";
-import { canRevive } from "../core/revive.js?v=a964465-1792756245";
+import { EGGS, foundCount } from "./eggs.js?v=63140c8-1792840001";
+import { canRevive } from "../core/revive.js?v=63140c8-1792840001";
 
 export const THEME_KO = { animal: "동물", fantasy: "상상 속 생물", sea: "바닷가 친구들", forest: "숲속 친구들" };
 export const HOW_KO = { journey: "여행을 떠남", runaway: "서운해서 할머니 댁에 감", star: "별이 됨", retired: "친구 마을로 이사" };
@@ -101,6 +101,19 @@ export function hintFor(key, profile) {
     return "아직 비밀이에요";
   }
   return "";
+}
+
+// 돌봄 실수 보기(홈 이름 줄 "실수 n"과 눌렀을 때 창). 어느 단계에서나 숫자를 낸다(알은 0). 숨은 어른 조건은 여기서 안 보여 준다
+export function mistakeInfo(pet, profile) {
+  if (!pet || !pet.mistakes) return null;
+  const stage = pet.mistakes.stage || 0, total = pet.mistakes.total || 0;
+  let rule = "";
+  if (pet.stage === "egg" || pet.stage === "baby") rule = "어린이가 되면 이번 시기 숫자로 크는 모습이 정해져요";
+  else if (pet.stage === "child") rule = `이번 시기에 ${BRANCH.childGoodMaxMistakes}번까지만 놓치면 좋은 쪽으로 커요`;
+  else if (pet.stage === "teen") rule = pet.branch === "good" ? "좋은 쪽으로 잘 크고 있어요. 어른 모습은 좋아하는 일을 얼마나 해 줬는지로 정해져요" : `이번 시기에 ${BRANCH.teenFreeMaxMistakes}번까지만 놓치면 자유형으로 커요`;
+  else rule = "다 자랐어요. 돌봄 실수는 기록으로만 남아요";
+  const ol = profile ? outlook(pet, profile) : null;
+  return { stage, total, rule, outlook: ol ? ol.text : "", badge: `실수 ${stage}` };
 }
 
 // 지금 친구가 이대로면 어디로 가는지
@@ -265,7 +278,7 @@ export function renderCollection(box, profile, opts = {}) {
       if (pp.stage === "egg") { const c2 = cv.getContext("2d"); c2.imageSmoothingEnabled = false; drawSprite(c2, SPRITES.egg, 20, 12, 1); } else portrait(cv, formKey(pp.theme, pp.stage, pp.branch), lookOf(pp));
       const row = el("div", { class: "pastrow" }, cv, el("div", {},
         el("b", { text: `${pp.name} · ${pp.stage === "egg" ? "알" : FORMS[formKey(pp.theme, pp.stage, pp.branch)]?.name || ""}` }),
-        el("div", { class: "small dim", text: `${fmtDate(v.movedAt)}에 이사 왔어요` })));
+        el("div", { class: "small dim", text: `${fmtDate(v.movedAt)}에 이사 왔어요 · 돌봄 실수 ${pp.mistakes?.total || 0}번` })));
       const b = el("button", { class: "ghost small revive", text: opts.canSwap ? "데려오기" : "내일 또" });
       if (!opts.canSwap) b.disabled = true;
       b.addEventListener("click", (ev) => { ev.stopPropagation(); opts.onSwap?.(i); });
