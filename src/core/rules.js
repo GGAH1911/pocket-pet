@@ -71,7 +71,7 @@ export const WASH_COUNT_BELOW = 80; // 깨끗함이 이 값 이하일 때 씻긴
 export const THEME_GROW = {
   animal: { a: "plays", b: "snacks", secret: { key: "pats", min: SECRET.minPats } },
   fantasy: { a: "plays", b: "naps", secret: { key: "darkNights", min: 3 } }, // 잠들기 전에 불을 미리 꺼 둔 밤
-  sea: { a: "washes", b: "snacks", secret: { key: "washes", min: 15 } },
+  sea: { a: "washes", b: "snacks", secret: { key: "washes", min: 8 } },
   forest: { a: "walks", b: "snacks", secret: { key: "walks", min: 5 } },
 };
 export const GROW_LEGACY = THEME_GROW.animal;
