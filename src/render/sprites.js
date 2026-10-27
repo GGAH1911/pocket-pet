@@ -1,5 +1,5 @@
 // 코드 속 도트 그림. 한 글자 = 한 도트, 색은 palette.js.
-import { PALETTE } from "./palette.js?v=2db423f-1793081168";
+import { PALETTE } from "./palette.js?v=1055cb0-1793081568";
 
 export const SPRITES = {
   egg: [

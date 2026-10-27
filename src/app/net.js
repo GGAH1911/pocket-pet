@@ -5,7 +5,7 @@
 // 이름(닉네임)은 보내지도 보이지도 않아요(info 는 비워 둠). 알모찌 놀이 로직은 playnet.js.
 //
 // 쓰는 법
-//   import { Net, NetSession } from "./net.js?v=2db423f-1793081168";
+//   import { Net, NetSession } from "./net.js?v=1055cb0-1793081568";
 //   const s = Net;                       // 기본 세션 (new NetSession() 으로 더 만들 수도 있어요: 시험용)
 //   const code = await s.host();         // 방 만들기 -> "471953" (6자리, crypto 난수)
 //   await s.join("471953");              // 방 들어가기
