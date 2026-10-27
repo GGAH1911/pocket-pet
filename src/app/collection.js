@@ -1,16 +1,16 @@
 // 도감: 본 적 있는 모습 표시, 지금까지 키운 펫 기록, 초상화 그리기
-import { FORMS, buildCreature, paintGrid, formKey, lookOf, SEA_EGG, FOREST_EGG } from "../render/creature.js?v=cf0773e-1793082250";
-import { drawFace, POOLS } from "../render/face.js?v=cf0773e-1793082250";
-import { SPRITES, drawSprite } from "../render/sprites.js?v=cf0773e-1793082250";
-import { BRANCH, SECRET, THEME_GROW, THEME_LIKES, GROW_LABEL, growRule } from "../core/rules.js?v=cf0773e-1793082250";
+import { FORMS, buildCreature, paintGrid, formKey, lookOf, SEA_EGG, FOREST_EGG } from "../render/creature.js?v=88743da-1793082714";
+import { drawFace, POOLS } from "../render/face.js?v=88743da-1793082714";
+import { SPRITES, drawSprite } from "../render/sprites.js?v=88743da-1793082714";
+import { BRANCH, SECRET, THEME_GROW, THEME_LIKES, GROW_LABEL, growRule } from "../core/rules.js?v=88743da-1793082714";
 
 // 숨은 어른 조건 문장(친구 4종을 다 만난 뒤에만 도감에 열림)
 const SECRET_TEXT = { animal: `쓰다듬기(펫을 톡) ${THEME_GROW.animal.secret.min}번`, fantasy: `잠들기 전에 불을 미리 꺼 둔 밤 ${THEME_GROW.fantasy.secret.min}번`, sea: `씻기 ${THEME_GROW.sea.secret.min}번`, forest: `산책 ${THEME_GROW.forest.secret.min}번` };
 const SECRET_SHORT = { animal: "쓰다듬기", fantasy: "불 미리 끈 밤", sea: "씻기", forest: "산책" };
 const ruleFor = (pet) => (pet.stage === "teen" || pet.stage === "adult" ? growRule(pet) : THEME_GROW[pet.theme]);
 export const likesOf = (theme) => THEME_LIKES[theme] || "";
-import { EGGS, foundCount } from "./eggs.js?v=cf0773e-1793082250";
-import { canRevive } from "../core/revive.js?v=cf0773e-1793082250";
+import { EGGS, foundCount } from "./eggs.js?v=88743da-1793082714";
+import { canRevive } from "../core/revive.js?v=88743da-1793082714";
 
 export const THEME_KO = { animal: "동물", fantasy: "상상 속 생물", sea: "바닷가 친구들", forest: "숲속 친구들" };
 export const HOW_KO = { journey: "여행을 떠남", runaway: "서운해서 할머니 댁에 감", star: "별이 됨", retired: "친구 마을로 이사" };
