@@ -1,17 +1,17 @@
 // 상점·꾸미기·매일 선물 화면. 상태와 규칙은 core/economy.js·catalog.js, 여기는 DOM만.
-import { ITEMS, ITEM, SLOTS, TABS, PICKS, PACKS, SOON, UNLOCK, UNLOCKS, STAR_SWAPS, STAR_SWAP_WEEK_GEMS, ROOM, ROOMS } from "../core/catalog.js?v=63140c8-1792840001";
-import { placedElsewhere } from "../core/rooms.js?v=63140c8-1792840001";
-import { eggSpriteFor } from "../render/creature.js?v=63140c8-1792840001";
-import { THEME_KO } from "./collection.js?v=63140c8-1792840001";
-import { EXTRA_GAMES, GAME_NAMES, GAME_DESC } from "./games.js?v=63140c8-1792840001";
-import { GAME_UNLOCK } from "../core/catalog.js?v=63140c8-1792840001";
+import { ITEMS, ITEM, SLOTS, TABS, PICKS, PACKS, SOON, UNLOCK, UNLOCKS, STAR_SWAPS, STAR_SWAP_WEEK_GEMS, ROOM, ROOMS } from "../core/catalog.js?v=2db423f-1793081168";
+import { placedElsewhere } from "../core/rooms.js?v=2db423f-1793081168";
+import { eggSpriteFor } from "../render/creature.js?v=2db423f-1793081168";
+import { THEME_KO } from "./collection.js?v=2db423f-1793081168";
+import { EXTRA_GAMES, GAME_NAMES, GAME_DESC } from "./games.js?v=2db423f-1793081168";
+import { GAME_UNLOCK } from "../core/catalog.js?v=2db423f-1793081168";
 const GAME_THUMB = { snack: ["apple", "candy"], face: ["heart"], odd: ["starYellow", "starPink"], tidy: ["ball", "book"], count: ["starBlue", "starBlue", "starBlue"] };
 function drawGameThumb(cv, k) { const c = cv.getContext("2d"); c.imageSmoothingEnabled = false; c.fillStyle = "#fbefe3"; c.fillRect(0, 0, cv.width, cv.height); const sp = GAME_THUMB[k] || []; sp.forEach((n, i) => { const s = SPRITES[n]; if (s) drawSprite(c, s, 4 + i * 12, 10, 2); }); }
-import { drawCourseThumb } from "../render/walk-courses.js?v=63140c8-1792840001";
-import { canAfford, gems, DAILY, purchaseHistory, themeOpen, FORGIVE, forgiveState, candyPrice } from "../core/economy.js?v=63140c8-1792840001";
-import { gemButtonState } from "../core/wallet.js?v=63140c8-1792840001";
-import { drawThumb } from "../render/deco.js?v=63140c8-1792840001";
-import { SPRITES, drawSprite, spriteSize } from "../render/sprites.js?v=63140c8-1792840001";
+import { drawCourseThumb } from "../render/walk-courses.js?v=2db423f-1793081168";
+import { canAfford, gems, DAILY, purchaseHistory, themeOpen, FORGIVE, forgiveState, candyPrice } from "../core/economy.js?v=2db423f-1793081168";
+import { gemButtonState } from "../core/wallet.js?v=2db423f-1793081168";
+import { drawThumb } from "../render/deco.js?v=2db423f-1793081168";
+import { SPRITES, drawSprite, spriteSize } from "../render/sprites.js?v=2db423f-1793081168";
 
 const el = (tag, attrs = {}, ...kids) => {
   const e = document.createElement(tag);
@@ -97,16 +97,15 @@ export function renderShop(tabsEl, bodyEl, ctx) {
     for (const [i, s] of SOON.entries()) { const cv = cards.children[i].querySelector("canvas"); const c = cv.getContext("2d"); c.fillStyle = "#fbefe3"; c.fillRect(0, 0, 56, 46); const sp = SPRITES[s.id.startsWith("egg") ? "eggRainbow" : "ball"]; if (sp) drawSprite(c, sp, 20, 12, 1); c.fillStyle = "#3b2c35"; c.font = "bold 9px system-ui"; c.textAlign = "center"; c.fillText("준비 중", 28, 42); }
     return;
   }
-  if (state.tab === "pick" && ctx.pet) { // 새 마음 사탕: 이번 단계 실수 지우기(별사탕, 단계마다 1번)
+  if (state.tab === "pick" && ctx.pet) { // 새 마음 사탕: 이번 단계 실수 지우기(별사탕)
     const fs = forgiveState(econ, ctx.pet), m = ctx.pet.mistakes?.stage || 0;
     const have = econ.candy || 0, buyMode = fs.reason === "nocandy";
     const note = fs.ok || buyMode ? `이번 단계 돌봄 실수 ${m}개를 지워요. 다음 모습이 바뀔 수 있어요. 평생 기록은 그대로예요.`
-      : fs.reason === "used" ? "이번 단계에는 이미 먹었어요. 다음 단계에 또 먹을 수 있어요."
       : fs.reason === "none" ? "이번 단계엔 지울 실수가 없어요. 잘 돌보고 있어요!"
       : fs.reason === "egg" ? "알에서 깨어나면 먹을 수 있어요."
       : "";
     bodyEl.append(el("div", { class: "banner" }, el("b", { text: `${FORGIVE.name} (가진 것 ${have}개)` }), document.createTextNode(note),
-      el("div", { class: "row", style: "margin-top:8px" }, el("span", { class: "small dim", style: "flex:1", text: "매일 선물 7일째에 1개(최대 3개) · 단계마다 한 번 · 살수록 비싸져요(새 친구는 처음 값부터)" }),
+      el("div", { class: "row", style: "margin-top:8px" }, el("span", { class: "small dim", style: "flex:1", text: "매일 선물 7일째에 1개 · 몇 개든 모아서 몇 번이든 · 살수록 비싸져요(새 친구는 처음 값부터)" }),
         buyMode ? el("button", { onclick: () => ctx.onForgive?.(true) }, priceEl({ gem: candyPrice(ctx.pet?.candyBuys) }), document.createTextNode(" 사서 먹이기"))
           : el("button", { disabled: !fs.ok, onclick: () => ctx.onForgive?.(false) }, document.createTextNode("먹이기")))));
   }

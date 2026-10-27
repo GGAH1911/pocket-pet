@@ -1,8 +1,7 @@
 // 하트 보석 서버 지갑: 기기 쪽 네트워크(서버 /wallet…). 규칙은 core/wallet.js, 설계 docs/wallet.md
 // 지갑 열쇠는 기기가 만든 무작위 32바이트. 서버엔 해시만 간다. 보석은 서버에 닿을 때만 받고 쓸 수 있다.
-import { PUSH_SERVER } from "./push.js?v=63140c8-1792840001";
-import { walletOf, applyServerWallet, migratePayload } from "../core/wallet.js?v=63140c8-1792840001";
-import { CANDY_MAX } from "../core/economy.js?v=63140c8-1792840001";
+import { PUSH_SERVER } from "./push.js?v=2db423f-1793081168";
+import { walletOf, applyServerWallet, migratePayload } from "../core/wallet.js?v=2db423f-1793081168";
 
 const b64u = (bytes) => btoa(String.fromCharCode(...bytes)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 export const newWalletKey = () => b64u(crypto.getRandomValues(new Uint8Array(32)));
@@ -83,7 +82,7 @@ export async function flushEarn(profile, save) {
       const it = wl.queue[0];
       const r = await call("POST", "/wallet/earn", wl.key, { op: it.op, kind: it.kind, id: it.id || undefined });
       if (r.status === 0 || r.status >= 500 || r.status === 429) break;
-      if (r.status === 200 && !r.data.again) { got += r.data.gained || 0; if (it.candy) profile.econ.candy = Math.min(CANDY_MAX, (profile.econ.candy || 0) + it.candy); } // 사탕은 서버가 받아 준 매일 선물에만
+      if (r.status === 200 && !r.data.again) { got += r.data.gained || 0; if (it.candy) profile.econ.candy = (profile.econ.candy || 0) + it.candy; } // 사탕은 서버가 받아 준 매일 선물에만
       if (r.data?.w) applyServerWallet(profile, r.data);
       wl.queue.shift(); save();
     }

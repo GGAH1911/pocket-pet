@@ -5,7 +5,7 @@
 // 상세 근거: docs/plan-v2-release.md 1절
 // 2026-10-06부터 하트 보석은 서버 지갑이 관리한다(docs/wallet.md): 여기서는 보석을 늘리거나 줄이지 않고 "받을 보석 수"만 돌려준다.
 // gemFree/gemPaid는 서버 값의 사본. 보석 상품 사기·무료 보석 적립·결제 지급은 app/wallet.js가 서버를 거쳐 한다.
-import { takeFromOtherRooms, normalizeRooms } from "./rooms.js?v=63140c8-1792840001";
+import { takeFromOtherRooms, normalizeRooms } from "./rooms.js?v=2db423f-1793081168";
 
 export const EARN = {
   care: { meal: 5, wash: 5, poop: 3, lightOff: 10, medicine: 5 }, // 필요한 돌봄을 했을 때만(판단은 호출하는 쪽)
@@ -18,7 +18,6 @@ export const EARN = {
 // 매일 선물: 7칸. 하루 빠져도 처음으로 안 돌아가고 다음 칸이 이어진다.
 // 7일째(한 주 다 채운 칸)에 하트 보석 5 + 새 마음 사탕 1개 = 7번 받을 때마다 1개(하루 1번이라 일주일에 1개). 사용자 결정 + 경제 자문(2026-10-08)
 export const DAILY = [{ star: 30 }, { star: 30 }, { star: 40 }, { star: 40 }, { star: 50 }, { star: 60 }, { gem: 5, candy: 1 }];
-export const CANDY_MAX = 3; // 쌓아 둘 수 있는 최대(세대마다 쓸모 있는 갈림 2번 + 예비 1)
 
 export function newEcon() {
   return {
@@ -55,16 +54,14 @@ export function normalizeEcon(e) {
 }
 
 // ---- 새 마음 사탕: 이번 단계 돌봄 실수를 지움. 매일 선물 4일째에 1개, 더 필요하면 하트 보석으로 1개씩(사용자 결정 2026-10-08).
-// 단계마다 1번, 평생 실수·숨은 친구 조건은 그대로(경제 자문) ----
+// 한 단계에 여러 번·몇 개든 보관 가능(사용자 결정 2026-10-27 "제한 없애"). 평생 실수·숨은 친구 조건은 그대로 ----
 export const FORGIVE = { id: "forgive", name: "새 마음 사탕", price: { gem: 60 } }; // 60 = 상점 최저 유료가(30이면 갈림을 싸게 상시 확정할 수 있어 올림, 경제 자문)
 // 살수록 비싸짐: 60 → 90 → 120(그 뒤 120). 친구(세대)마다 처음 값으로: 새 알에서 태어난 친구는 60부터(2026-10-09 사용자 결정, 경제 자문 추천). 값은 서버가 정함
 export const CANDY_PRICES = [60, 90, 120];
 export const candyPrice = (buys) => CANDY_PRICES[Math.min(Math.max(0, buys | 0), CANDY_PRICES.length - 1)]; // price = 하트 보석으로 1개 살 때
-export const stageTag = (pet) => `${pet.stage}|${pet.branch || ""}|${pet.ageMin - pet.stageMin}`; // 지금 단계를 가리키는 값(진화하면 바뀜)
 export function forgiveState(e, pet) {
   if (!pet || pet.ended || pet.stage === "egg") return { ok: false, reason: "egg" };
   if ((pet.mistakes?.stage || 0) <= 0) return { ok: false, reason: "none" };
-  if (pet.forgiven === stageTag(pet)) return { ok: false, reason: "used" };
   if ((e.candy || 0) <= 0) return { ok: false, reason: "nocandy", n: pet.mistakes.stage }; // 하트 보석으로 사서 먹일 수 있음
   return { ok: true, n: pet.mistakes.stage };
 }
@@ -73,7 +70,6 @@ export function forgiveStage(e, pet) {
   if (!st.ok) return st;
   e.candy -= 1;
   pet.mistakes.stage = 0; // 평생 실수(total)는 그대로: 숨은 친구는 정말 실수 없이 키워야
-  pet.forgiven = stageTag(pet);
   return { ok: true, n: st.n };
 }
 
