@@ -99,3 +99,10 @@ export function guessLocation(tz, offsetMin) {
   if (c) return { lat: c[0], lon: c[1], label: `${c[2]}(시간대로 추정)`, source: "tz" };
   return { lat: 37, lon: Math.round((-offsetMin / 4) * 10) / 10, label: "시간대로 추정", source: "tz" };
 }
+
+// 창밖 달이 보이는 정도(0~1). 해가 지평선 위(고도 0° 이상)면 0(낮에는 안 그림), 해가 0° → -3°로 내려가는 동안 서서히 나타남.
+// 떠 있거나(달 고도 -1° 초과) 해가 충분히 진 밤(-4° 미만)이어야 그린다(밤에 지평선 아래면 창 오른쪽 위에 그리는 규칙 그대로)
+export function moonVisibility(sunAlt, moonAlt) {
+  const fade = Math.max(0, Math.min(1, -sunAlt / 3));
+  return moonAlt > -1 || sunAlt < -4 ? fade : 0;
+}

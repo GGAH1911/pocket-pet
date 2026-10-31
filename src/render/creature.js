@@ -2,7 +2,7 @@
 // 몸 모양(타원·물방울·구름) + 귀·뿔·날개·꼬리·발·무늬를 도트 격자(칸)에 칠하고,
 // 바깥 테두리와 그림자를 자동으로 입힌다. 자세(늘어남·찌그러짐·바라보는 방향)는 매 프레임 반영된다.
 // 얼굴(표정)은 face.js 가 이 격자 위에 따로 얹는다.
-import { PALETTE } from "./palette.js?v=88743da-1793082714";
+import { PALETTE } from "./palette.js?v=01e3559-1793422303";
 
 const GW = 76, GH = 50; // 격자 크기(칸): 가장 큰 형태가 통통+늘어남이어도 안 잘리게
 
@@ -87,8 +87,8 @@ function highlight(g, P) {
   put(g, P.cx - P.rx * 0.5, P.cy - P.ry * 0.55, "w"); put(g, P.cx - P.rx * 0.5 + 1, P.cy - P.ry * 0.62, "w");
 }
 
-import { FORMS_SEA, SEA_EGG } from "./creature-sea.js?v=88743da-1793082714";
-import { FORMS_FOREST, FOREST_EGG } from "./creature-forest.js?v=88743da-1793082714";
+import { FORMS_SEA, SEA_EGG } from "./creature-sea.js?v=01e3559-1793422303";
+import { FORMS_FOREST, FOREST_EGG } from "./creature-forest.js?v=01e3559-1793422303";
 export const FORMS = {
   // ===== 동물 =====
   "animal.baby": { name: "털뭉치", size: [7.5, 7], draw(g, P) {

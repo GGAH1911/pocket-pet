@@ -1,6 +1,6 @@
 // 창밖 하늘: 실제 시각과 위치의 해 고도로 하늘색을 정하고(낮·노을·박명·밤),
 // 해와 달은 실제 방향·높이에 맞춰 창 안에 그린다. 달 모양은 실제 위상.
-import { sunPosition, moonPosition, moonIllumination } from "../core/astro.js?v=88743da-1793082714";
+import { sunPosition, moonPosition, moonIllumination, moonVisibility } from "../core/astro.js?v=01e3559-1793422303";
 
 // 해 고도(도) → [위쪽 하늘, 지평선 쪽 하늘]
 const KEYS = [
@@ -55,8 +55,8 @@ function toWindow(az, alt, r, south, R = 0) {
 
 const STARS = [[0.12, 0.15], [0.3, 0.32], [0.46, 0.1], [0.62, 0.26], [0.8, 0.12], [0.9, 0.4], [0.2, 0.5], [0.55, 0.45], [0.72, 0.55], [0.38, 0.6], [0.06, 0.38]];
 
-function drawMoon(ctx, cx, cy, R, phase, south, alpha, day = false, fraction = 1) {
-  if (fraction < 0.03 && !day) { // 삭 무렵: 거의 안 보이는 달, 흐린 윤곽만
+function drawMoon(ctx, cx, cy, R, phase, south, alpha, fraction = 1) {
+  if (fraction < 0.03) { // 삭 무렵: 거의 안 보이는 달, 흐린 윤곽만
     for (let a = 0; a < 24; a++) { const ang = (a / 24) * Math.PI * 2; ctx.fillStyle = `rgba(150,160,200,${alpha * 0.35})`; ctx.fillRect(Math.round(cx + Math.cos(ang) * R), Math.round(cy + Math.sin(ang) * R), 1, 1); }
     return;
   }
@@ -69,8 +69,7 @@ function drawMoon(ctx, cx, cy, R, phase, south, alpha, day = false, fraction = 1
       let xs = south ? -x : x;
       const term = Math.cos(2 * Math.PI * p) * half;
       const lit = p < 0.5 ? xs > term : xs < -term;
-      if (!lit && day) continue; // 낮달은 밝은 부분만
-      ctx.fillStyle = lit ? (day ? `rgba(255,255,255,${alpha})` : `rgba(255,244,194,${alpha})`) : `rgba(70,82,130,${alpha * 0.55})`;
+      ctx.fillStyle = lit ? `rgba(255,244,194,${alpha})` : `rgba(70,82,130,${alpha * 0.55})`;
       ctx.fillRect(Math.round(cx + x), Math.round(cy + y), 1, 1);
     }
   }
@@ -122,14 +121,13 @@ export function drawSky(ctx, r, wall, loc, t, weather = CLEAR) {
   }
   // 달
   // 달: 떠 있으면 실제 자리. 밤인데 지평선 아래면 창 오른쪽 위에(밤에는 늘 달이 보이게, 모양은 실제)
-  const night = alt < -4;
-  if (moon.altitude > -1 || night) {
+  const vis = moonVisibility(alt, moon.altitude); // 해가 떠 있는 낮에는 0(그리지 않음)
+  if (vis > 0) {
     const R = Math.max(3, Math.round(r.w / 12));
     const real = moon.altitude > -1;
     const mp = real ? toWindow(moon.azimuth, moon.altitude, r, south, R) : toWindow(south ? 65 : 245, 50, r, south, R);
-    const day = alt > 3;
     const cloudDim = Math.max(0.5, 1 - wx.cloud * 0.45); // 구름 낀 밤에도 달은 보이게(조금 흐리게)
-    drawMoon(ctx, mp.x, mp.y, R, ill.phase, south, (day ? 0.6 : 1) * cloudDim, day, ill.fraction);
+    drawMoon(ctx, mp.x, mp.y, R, ill.phase, south, vis * cloudDim, ill.fraction);
   }
   // 해
   if (alt > -1.5 && sp.inside) {
